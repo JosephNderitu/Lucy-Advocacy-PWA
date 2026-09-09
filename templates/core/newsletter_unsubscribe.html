@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block content %}
+<section class="py-24 bg-brand-mist-50 min-h-[60vh] flex items-center">
+  <div class="max-w-md mx-auto px-4 text-center">
+    {% if error == "expired" %}
+      <i class="fa-solid fa-clock text-brand-ink-900/30 text-4xl mb-5"></i>
+      <h1 class="font-serif text-2xl font-bold text-brand-ink-900 mb-3">This link has expired</h1>
+      <p class="text-brand-ink-700">Unsubscribe links are only valid for a limited time. Contact us and we will remove you from the list.</p>
+    {% elif error == "invalid" %}
+      <i class="fa-solid fa-triangle-exclamation text-brand-ink-900/30 text-4xl mb-5"></i>
+      <h1 class="font-serif text-2xl font-bold text-brand-ink-900 mb-3">This link isn't valid</h1>
+      <p class="text-brand-ink-700">Double check the link from your email, or contact us and we will unsubscribe you directly.</p>
+    {% else %}
+      <i class="fa-solid fa-circle-check text-brand-teal-600 text-4xl mb-5"></i>
+      <h1 class="font-serif text-2xl font-bold text-brand-ink-900 mb-3">You're unsubscribed</h1>
+      <p class="text-brand-ink-700">
+        {{ subscriber.email }} will no longer receive updates from us.
+        Changed your mind? You can subscribe again any time from the homepage.
+      </p>
+    {% endif %}
+    <a href="{% url 'core:home' %}"
+       class="mt-9 inline-flex items-center gap-2 rounded-full border border-brand-teal-600 px-6 py-3 text-base font-semibold text-brand-teal-600 hover:bg-brand-teal-600 hover:text-white transition-colors duration-300">
+      Back to homepage
+    </a>
+  </div>
+</section>
+{% endblock %}

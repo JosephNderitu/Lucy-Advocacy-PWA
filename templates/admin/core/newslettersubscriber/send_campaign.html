@@ -1,0 +1,98 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-6">
+  <p class="text-sm text-gray-500 mb-6">
+    Sending to <strong>{{ subscriber_count }}</strong> active subscriber{{ subscriber_count|pluralize }}.
+  </p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-6 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    {% csrf_token %}
+
+    <div class="space-y-5">
+      <div>
+        <label for="id_subject" class="block text-sm font-semibold text-gray-800 mb-1.5">Subject line</label>
+        {{ form.subject }}
+      </div>
+      <div>
+        <label for="id_message" class="block text-sm font-semibold text-gray-800 mb-1.5">Message body</label>
+        {{ form.message }}
+        <p class="text-xs text-gray-500 mt-1.5">Plain text. Leave a blank line between paragraphs.</p>
+      </div>
+
+      {% if form.subject.errors or form.message.errors %}
+        <p class="text-sm text-red-600">Please fill in both fields before sending.</p>
+      {% endif %}
+
+      <button
+        type="submit"
+        onclick="return confirm('Send this to all ' + document.getElementById('recipient-count').textContent + ' active subscribers now?');"
+        class="inline-flex items-center gap-2 bg-[#E8631F] hover:bg-[#c9530f] text-white font-semibold px-6 py-3 rounded-full transition-colors"
+      >
+        Send to <span id="recipient-count">{{ subscriber_count }}</span> subscriber{{ subscriber_count|pluralize }}
+      </button>
+    </div>
+
+    <!-- Live email preview -->
+    <div class="lg:sticky lg:top-6 self-start">
+      <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Preview</p>
+      <div class="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <div style="background:#10192A;" class="px-6 py-5 text-center">
+          <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" class="h-9 mx-auto">
+        </div>
+        <div class="bg-white px-6 py-8">
+          <h2 id="preview-subject" class="text-xl font-bold text-[#10192A] mb-4">Your subject appears here</h2>
+          <div id="preview-message" class="text-sm text-gray-700 leading-relaxed space-y-3">Your message appears here as you type.</div>
+          <div class="mt-6 text-center">
+            <span class="inline-block bg-[#E8631F] text-white text-sm font-semibold px-5 py-2.5 rounded-full">Visit Our Website</span>
+          </div>
+        </div>
+        <div style="background:#10192A;" class="px-6 py-5 text-center">
+          <p class="text-[11px] text-gray-400">Ngima Wangai &amp; Company Advocates</p>
+          <p class="text-[11px] text-gray-500 mt-1">Unsubscribe</p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  const subjectInput = document.getElementById('id_subject');
+  const messageInput = document.getElementById('id_message');
+  const previewSubject = document.getElementById('preview-subject');
+  const previewMessage = document.getElementById('preview-message');
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function updatePreview() {
+    previewSubject.textContent = subjectInput.value || 'Your subject appears here';
+    const paragraphs = (messageInput.value || 'Your message appears here as you type.')
+      .split(/\n{2,}/)
+      .map(p => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+      .join('');
+    previewMessage.innerHTML = paragraphs;
+  }
+
+  subjectInput.addEventListener('input', updatePreview);
+  messageInput.addEventListener('input', updatePreview);
+  updatePreview();
+</script>
+{% endblock %}

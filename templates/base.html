@@ -1,0 +1,439 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Ngima Wangai & Company Advocates | Nairobi Law Firm{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Ngima Wangai & Company Advocates is a full-service law firm in Nairobi specializing in commercial, corporate, banking, dispute resolution, and family law.{% endblock %}">
+  <meta name="theme-color" content="#22252E">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="{% static 'images/static_images/favicons/favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/static_images/favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/static_images/favicons/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/static_images/favicons/apple-touch-icon.png' %}">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Tailwind CSS (CDN build w/ brand theme extension) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal:   { 50: '#EEF7F8', 100: '#D9EEF0', 500: '#5BB5BD', 600: '#3F9199', 700: '#2F7178' },
+              ink:    { 700: '#454A58', 800: '#2F3340', 900: '#22252E' },
+              orange: { 500: '#F4791F', 600: '#DD6812' },
+              mist:   { 50: '#F4F8F8' },
+            },
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          keyframes: {
+            fadeUp: {
+              '0%':   { opacity: 0, transform: 'translateY(18px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+            fadeIn: {
+              '0%':   { opacity: 0 },
+              '100%': { opacity: 1 },
+            },
+          },
+          animation: {
+            'fade-up': 'fadeUp 0.7s ease-out both',
+            'fade-in': 'fadeIn 0.8s ease-out both',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Alpine.js: powers the mobile sidebar, the scroll-aware nav shadow, and
+       scroll-triggered reveal animations. Intersect plugin must load before core. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.14.1/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+
+  <!-- The only hand-written CSS on the page: Alpine needs this one rule to prevent
+       a flash of unstyled content before it boots up. Everything else is Tailwind. -->
+  <style>[x-cloak] { display: none !important; }</style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="font-sans text-brand-ink-800 antialiased bg-white" x-data="{ mobileMenuOpen: false }" x-cloak x-bind:class="{ 'overflow-hidden': mobileMenuOpen }">
+
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[70] focus:bg-white focus:text-brand-ink-900 focus:px-4 focus:py-2 focus:rounded">
+    Skip to content
+  </a>
+
+  <!-- Brand accent bar: mirrors the one at the top of the footer, bookending every page -->
+  <div class="h-1 bg-gradient-to-r from-brand-teal-500 via-brand-teal-600 to-brand-orange-500"></div>
+
+  <!-- Slim trust bar: contact info + socials. Scrolls away naturally with the page. -->
+  <div class="hidden md:block bg-brand-ink-900 text-gray-300 text-xs border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2.5">
+      <div class="flex items-center gap-6">
+        <a href="tel:+254714535492" class="hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-phone mr-1.5"></i>+254 714 535 492</a>
+        <a href="mailto:nwangailawadvocates@gmail.com" class="hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-envelope mr-1.5"></i>nwangailawadvocates@gmail.com</a>
+      </div>
+      <div class="flex items-center gap-5">
+        <a href="#" class="hover:text-brand-teal-400 transition-colors font-medium"><i class="fa-solid fa-lock mr-1.5"></i>Client Portal</a>
+        <div class="flex items-center gap-4 border-l border-white/10 pl-5">
+          <a href="#" aria-label="Facebook" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" aria-label="LinkedIn" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="X (Twitter)" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MAIN NAV: dark, premium, matches the footer's palette exactly ============ -->
+  <header
+    x-data="{ scrolled: false }"
+    x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 8)"
+    x-bind:class="scrolled ? 'shadow-2xl shadow-black/20' : 'shadow-none'"
+    class="sticky top-0 z-40 bg-brand-ink-900 transition-shadow duration-300"
+  >
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Primary">
+      <div class="flex items-center justify-between h-20 lg:h-24">
+
+        <!-- Logo: real text, not a raster image, so it stays crisp at every size -->
+        <a href="{% url 'core:home' %}" aria-label="Ngima Wangai and Company Advocates, home" class="flex items-center gap-3 shrink-0 group">
+          <img src="{% static 'images/static_images/logo-icon.png' %}" alt="" aria-hidden="true"
+               class="h-10 sm:h-11 lg:h-12 w-auto rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105">
+          <span class="flex flex-col leading-none">
+            <span class="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-tight whitespace-nowrap">
+              Ngima Wangai
+            </span>
+            <span class="hidden sm:block text-[10px] lg:text-[11px] uppercase tracking-[0.25em] text-brand-teal-200 font-semibold mt-1">
+              Company Advocates
+            </span>
+          </span>
+        </a>
+
+        <!-- Desktop links -->
+        <div class="hidden lg:flex items-center gap-1.5">
+          <a href="{% url 'core:home' %}"
+             class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide transition-colors {% if request.resolver_match.url_name == 'home' %}bg-brand-teal-600 text-white{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %}">
+            Home
+          </a>
+          <a href="{% url 'core:about' %}"
+             class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide transition-colors {% if request.resolver_match.url_name == 'about' %}bg-brand-teal-600 text-white{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %}">
+            About Us
+          </a>
+          <a href="{% url 'core:home' %}#practice-areas"
+             class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
+            Practice Areas
+          </a>
+          <a href="{% url 'core:contact' %}"
+             class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide transition-colors {% if request.resolver_match.url_name == 'contact' %}bg-brand-teal-600 text-white{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %}">
+            Contact
+          </a>
+        </div>
+
+        <!-- Desktop actions -->
+        <div class="hidden lg:flex items-center gap-5">
+          <a href="#" class="text-[15px] font-semibold text-gray-300 hover:text-brand-teal-400 transition-colors">
+            <i class="fa-solid fa-lock mr-1.5"></i>Client Portal
+          </a>
+          <a href="{% url 'core:contact' %}"
+             class="inline-flex items-center bg-brand-orange-500 hover:bg-brand-orange-600 text-white text-[15px] font-semibold px-6 py-2.5 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-orange-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange-600">
+            Book a Consultation
+          </a>
+        </div>
+
+        <!-- Mobile trigger: opens the sidebar -->
+        <button
+          type="button"
+          @click="mobileMenuOpen = true"
+          class="lg:hidden inline-flex items-center justify-center h-11 w-11 rounded-full text-white hover:bg-white/10 transition-colors"
+          aria-label="Open menu"
+        >
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============ MOBILE SIDEBAR ============ -->
+  <div
+    x-show="mobileMenuOpen"
+    x-cloak
+    class="fixed inset-0 z-50 lg:hidden"
+    @keydown.escape.window="mobileMenuOpen = false"
+  >
+    <!-- Backdrop -->
+    <div
+      x-show="mobileMenuOpen"
+      x-transition:enter="transition-opacity ease-out duration-300"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition-opacity ease-in duration-200"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      @click="mobileMenuOpen = false"
+      class="absolute inset-0 bg-brand-ink-900/70 backdrop-blur-sm"
+    ></div>
+
+    <!-- Panel -->
+    <div
+      x-show="mobileMenuOpen"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="translate-x-full"
+      x-transition:enter-end="translate-x-0"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="translate-x-0"
+      x-transition:leave-end="translate-x-full"
+      class="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col"
+    >
+      <!-- Brand accent -->
+      <div class="h-1.5 bg-gradient-to-r from-brand-teal-500 via-brand-teal-600 to-brand-orange-500 shrink-0"></div>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-5 border-b border-gray-100 shrink-0">
+        <a href="{% url 'core:home' %}" aria-label="Ngima Wangai and Company Advocates, home" class="flex items-center gap-2.5">
+          <img src="{% static 'images/static_images/logo-icon.png' %}" alt="" aria-hidden="true" class="h-9 w-auto rounded-lg shadow-sm">
+          <span class="flex flex-col leading-none">
+            <span class="font-serif text-base font-bold text-brand-ink-900 tracking-tight">Ngima Wangai</span>
+            <span class="text-[9px] uppercase tracking-[0.2em] text-brand-teal-600 font-semibold mt-0.5">Company Advocates</span>
+          </span>
+        </a>
+        <button
+          type="button"
+          @click="mobileMenuOpen = false"
+          class="inline-flex items-center justify-center h-10 w-10 rounded-full text-brand-ink-900 hover:bg-brand-mist-50 transition-colors"
+          aria-label="Close menu"
+        >
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Links -->
+      <nav class="flex-1 overflow-y-auto px-4 py-6">
+        <div class="flex flex-col gap-1">
+          <a href="{% url 'core:home' %}"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'home' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
+            <i class="fa-solid fa-house w-5 text-center"></i>Home
+          </a>
+          <a href="{% url 'core:about' %}"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'about' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
+            <i class="fa-solid fa-building-columns w-5 text-center"></i>About Us
+          </a>
+          <a href="{% url 'core:home' %}#practice-areas"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold text-brand-ink-800 hover:bg-brand-mist-50 transition-colors">
+            <i class="fa-solid fa-scale-balanced w-5 text-center"></i>Practice Areas
+          </a>
+          <a href="{% url 'core:contact' %}"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'contact' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
+            <i class="fa-solid fa-envelope w-5 text-center"></i>Contact
+          </a>
+          <a href="#"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold text-brand-ink-800 hover:bg-brand-mist-50 transition-colors">
+            <i class="fa-solid fa-lock w-5 text-center"></i>Client Portal
+          </a>
+        </div>
+
+        <a href="{% url 'core:contact' %}"
+           class="mt-6 flex items-center justify-center bg-brand-orange-500 hover:bg-brand-orange-600 text-white text-[15px] font-semibold px-5 py-3.5 rounded-xl transition-colors">
+          Book a Consultation
+        </a>
+      </nav>
+
+      <!-- Footer of the drawer: quick contact -->
+      <div class="px-5 py-5 border-t border-gray-100 bg-brand-mist-50 shrink-0">
+        <div class="flex flex-col gap-2 text-sm text-brand-ink-700">
+          <a href="tel:+254714535492" class="flex items-center gap-2.5 hover:text-brand-teal-600 transition-colors">
+            <i class="fa-solid fa-phone w-4 text-center"></i>+254 714 535 492
+          </a>
+          <a href="mailto:nwangailawadvocates@gmail.com" class="flex items-center gap-2.5 hover:text-brand-teal-600 transition-colors break-all">
+            <i class="fa-solid fa-envelope w-4 text-center"></i>nwangailawadvocates@gmail.com
+          </a>
+        </div>
+        <div class="flex items-center gap-3 mt-4">
+          <a href="#" aria-label="Facebook" class="flex items-center justify-center h-9 w-9 rounded-full bg-white text-brand-ink-700 hover:bg-brand-teal-600 hover:text-white transition-colors shadow-sm"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+          <a href="#" aria-label="LinkedIn" class="flex items-center justify-center h-9 w-9 rounded-full bg-white text-brand-ink-700 hover:bg-brand-teal-600 hover:text-white transition-colors shadow-sm"><i class="fa-brands fa-linkedin-in text-sm"></i></a>
+          <a href="#" aria-label="X (Twitter)" class="flex items-center justify-center h-9 w-9 rounded-full bg-white text-brand-ink-700 hover:bg-brand-teal-600 hover:text-white transition-colors shadow-sm"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <main id="main-content">
+    {% block content %}{% endblock %}
+    <!-- ============ FLOATING ACTION STACK: WhatsApp, phone, chatbot =========== -->
+    <div
+      x-data="{ chatbotOpen: false, visible: false }"
+      x-init="setTimeout(() => visible = true, 400)"
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex flex-col gap-3 sm:gap-3.5"
+    >
+
+      <!-- Chatbot: placeholder feedback only, real RAG wiring comes later -->
+      <div class="relative">
+        <!-- Popover -->
+        <div
+          x-show="chatbotOpen"
+          x-cloak
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0 translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100 translate-y-0"
+          x-transition:leave-end="opacity-0 translate-y-2"
+          @click.outside="chatbotOpen = false"
+          class="absolute bottom-14 sm:bottom-16 right-0 w-64 max-w-[calc(100vw-2.5rem)] bg-white/90 backdrop-blur-md rounded-xl shadow-2xl shadow-brand-ink-900/20 border border-white/40 p-4"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-sm font-semibold text-brand-ink-900">Chat assistant</p>
+            <button type="button" @click="chatbotOpen = false" aria-label="Close" class="text-brand-ink-700/50 hover:text-brand-ink-900 transition-colors">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+          <p class="text-xs text-brand-ink-700 leading-relaxed mt-2">
+            Our chat assistant is being set up. In the meantime, reach us directly on WhatsApp or by phone, or
+            <a href="{% url 'core:contact' %}" class="text-brand-teal-600 font-semibold hover:text-brand-teal-700 underline underline-offset-2">send us a message</a>.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          @click="chatbotOpen = !chatbotOpen"
+          :class="visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+          class="transition-all duration-300 relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-brand-orange-500/80 backdrop-blur-md hover:bg-brand-orange-600/90 text-white shadow-lg shadow-brand-orange-500/30 hover:shadow-xl hover:-translate-y-0.5 border border-white/20"
+          aria-label="Open chat assistant"
+        >
+          <i class="fa-solid fa-robot text-lg sm:text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Phone -->
+      <div class="relative group">
+        <span class="pointer-events-none absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 whitespace-nowrap bg-brand-ink-900/90 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-md opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 hidden sm:block">
+          Call us
+        </span>
+        <a
+          href="tel:+254714535492"
+          :class="visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+          style="transition-delay: 60ms"
+          class="transition-all duration-300 flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-brand-ink-900/80 backdrop-blur-md hover:bg-brand-teal-600/90 text-white shadow-lg shadow-brand-ink-900/30 hover:shadow-xl hover:-translate-y-0.5 border border-white/20"
+          aria-label="Call Ngima Wangai and Company Advocates"
+        >
+          <i class="fa-solid fa-phone text-base sm:text-lg"></i>
+        </a>
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="relative group">
+        <span class="pointer-events-none absolute right-14 sm:right-16 top-1/2 -translate-y-1/2 whitespace-nowrap bg-brand-ink-900/90 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-md opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 hidden sm:block">
+          Chat on WhatsApp
+        </span>
+        <a
+          href="https://wa.me/254714535492?text=Hello%2C%20I%20would%20like%20to%20speak%20with%20an%20advocate."
+          target="_blank"
+          rel="noopener noreferrer"
+          :class="visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+          style="transition-delay: 120ms"
+          class="transition-all duration-300 flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-[#25D366]/80 backdrop-blur-md hover:bg-[#1EBE5A]/90 text-white shadow-lg shadow-[#25D366]/40 hover:shadow-xl hover:-translate-y-0.5 border border-white/20"
+          aria-label="Chat with us on WhatsApp"
+        >
+          <i class="fa-brands fa-whatsapp text-xl sm:text-2xl"></i>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="bg-gradient-to-b from-brand-ink-900 to-[#181A21] text-gray-300">
+    <div class="h-1 bg-gradient-to-r from-brand-teal-500 via-brand-teal-600 to-brand-orange-500"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-y-12 gap-x-8">
+
+      <!-- About / logo -->
+      <div>
+        <div class="inline-block bg-white rounded-lg p-3 mb-5 shadow-lg shadow-black/20">
+          <img src="{% static 'images/static_images/logo-icon.png' %}" alt="Ngima Wangai & Company Advocates" class="h-14 sm:h-16 w-auto">
+        </div>
+        <p class="text-[15px] leading-relaxed text-gray-400 max-w-sm">
+          A full-service law firm in Nairobi offering a customized, personal approach to commercial, corporate, and dispute resolution matters.
+        </p>
+        <div class="flex items-center gap-3 mt-6">
+          <a href="#" aria-label="Facebook" class="flex items-center justify-center h-10 w-10 rounded-full bg-white/5 text-gray-300 hover:bg-brand-teal-500 hover:text-white transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" aria-label="LinkedIn" class="flex items-center justify-center h-10 w-10 rounded-full bg-white/5 text-gray-300 hover:bg-brand-teal-500 hover:text-white transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="X (Twitter)" class="flex items-center justify-center h-10 w-10 rounded-full bg-white/5 text-gray-300 hover:bg-brand-teal-500 hover:text-white transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+      </div>
+
+      <!-- Practice areas -->
+      <div>
+        <h3 class="font-serif text-white text-lg font-semibold mb-5 pb-3 border-b border-white/10">Practice Areas</h3>
+        <ul class="space-y-3 text-[15px] text-gray-400">
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Banking & Financial Institutions</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Alternative Dispute Resolution</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Immigration & Private International Law</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Conveyancing & Real Estate Law</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Insurance Law</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Legal Audit & Training</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Probate Law & Estate Planning</a></li>
+          <li><a href="{% url 'core:home' %}#practice-areas" class="hover:text-brand-teal-500 transition-colors">Family Law</a></li>
+        </ul>
+      </div>
+
+      <!-- Quick links -->
+      <div>
+        <h3 class="font-serif text-white text-lg font-semibold mb-5 pb-3 border-b border-white/10">Quick Links</h3>
+        <ul class="space-y-3 text-[15px] text-gray-400">
+          <li><a href="{% url 'core:home' %}" class="hover:text-brand-teal-500 transition-colors">Home</a></li>
+          <li><a href="{% url 'core:about' %}" class="hover:text-brand-teal-500 transition-colors">About Us</a></li>
+          <li><a href="{% url 'core:contact' %}" class="hover:text-brand-teal-500 transition-colors">Contact</a></li>
+          <li><a href="#" class="hover:text-brand-teal-500 transition-colors"><i class="fa-solid fa-lock mr-2 text-brand-teal-500"></i>Client Portal</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="font-serif text-white text-lg font-semibold mb-5 pb-3 border-b border-white/10">Contact Us</h3>
+        <ul class="space-y-4 text-[15px] text-gray-400">
+          <li class="flex items-start gap-3">
+            <span class="flex items-center justify-center h-9 w-9 rounded-full bg-white/5 text-brand-teal-500 shrink-0"><i class="fa-solid fa-location-dot"></i></span>
+            <span class="pt-1.5">P.O. Box 000-00100<br>Nairobi, Kenya</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex items-center justify-center h-9 w-9 rounded-full bg-white/5 text-brand-teal-500 shrink-0"><i class="fa-solid fa-phone"></i></span>
+            <a href="tel:+254714535492" class="hover:text-brand-teal-500 transition-colors">+254 714 535 492</a>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex items-center justify-center h-9 w-9 rounded-full bg-white/5 text-brand-teal-500 shrink-0"><i class="fa-solid fa-phone"></i></span>
+            <a href="tel:+254728472202" class="hover:text-brand-teal-500 transition-colors">+254 728 472 202</a>
+          </li>
+          <li class="flex items-center gap-3">
+            <span class="flex items-center justify-center h-9 w-9 rounded-full bg-white/5 text-brand-teal-500 shrink-0"><i class="fa-solid fa-envelope"></i></span>
+            <a href="mailto:nwangailawadvocates@gmail.com" class="hover:text-brand-teal-500 transition-colors break-all">nwangailawadvocates@gmail.com</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+        <p>&copy; {% now "Y" %} Ngima Wangai & Company Advocates. All rights reserved.</p>
+        <p>Nairobi, Kenya</p>
+      </div>
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
