@@ -125,6 +125,13 @@ USE_I18N = True
 
 USE_TZ = True
 
+AUTHENTICATION_BACKENDS = [
+    "core.backends.CaseCredentialsBackend",  # client login: case number + ID number
+    "django.contrib.auth.backends.ModelBackend",  # keeps staff/admin username+password login working
+]
+ 
+LOGIN_URL = "core:portal_login"
+LOGIN_REDIRECT_URL = "core:portal_dashboard"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
@@ -138,6 +145,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'   # used only by collectstatic in product
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Guard rails for local storage, since videos can be large.
+# 75MB is enforced again in DocumentUploadForm.clean_file() — this is the
+# server-side backstop so a huge request can't exhaust memory/disk mid-upload.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 75 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 75 * 1024 * 1024
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

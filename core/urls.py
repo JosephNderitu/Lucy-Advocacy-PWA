@@ -16,4 +16,10 @@ urlpatterns = [
     
     path("newsletter/subscribe/", views.newsletter_subscribe, name="newsletter_subscribe"),
     path("newsletter/unsubscribe/<str:token>/", views.newsletter_unsubscribe, name="newsletter_unsubscribe"),
+    
+    path("portal/login/", views.portal_login, name="portal_login"),
+    path("portal/logout/", views.portal_logout, name="portal_logout"),
+    path("portal/", views.portal_dashboard, name="portal_dashboard"),
+    path("portal/documents/<int:pk>/delete/", views.portal_document_delete, name="portal_document_delete"),
+    path("portal/activity/", views.portal_activity_log, name="portal_activity_log"),
 ]

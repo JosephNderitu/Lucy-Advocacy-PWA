@@ -285,3 +285,128 @@ def newsletter_unsubscribe(request, token):
         subscriber.save(update_fields=["is_active", "unsubscribed_at"])
 
     return render(request, "core/newsletter_unsubscribe.html", {"subscriber": subscriber})
+# --- Append to core/views.py ---
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.shortcuts import render, redirect, get_object_or_404
+
+from .forms import ClientLoginForm, DocumentUploadForm
+from .models import Case, CaseDocument, DocumentRequest, ActivityLog
+
+LOGIN_ATTEMPT_LIMIT = 5
+LOGIN_LOCKOUT_SECONDS = 15 * 60
+
+
+def _client_ip(request):
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+def _get_client_case(request):
+    """MVP assumption: one active case per client. Extend with a case-picker
+    if a client will ever have more than one."""
+    profile = getattr(request.user, "client_profile", None)
+    if not profile:
+        return None
+    return profile.cases.order_by("-created_at").first()
+
+
+def _log_activity(case, actor, actor_role, action, description=""):
+    ActivityLog.objects.create(case=case, actor=actor, actor_role=actor_role, action=action, description=description)
+
+
+def portal_login(request):
+    if request.user.is_authenticated and hasattr(request.user, "client_profile"):
+        return redirect("core:portal_dashboard")
+
+    form = ClientLoginForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        throttle_key = f"portal_login_attempts:{_client_ip(request)}"
+        attempts = cache.get(throttle_key, 0)
+        if attempts >= LOGIN_ATTEMPT_LIMIT:
+            messages.error(request, "Too many failed attempts. Please try again in 15 minutes.")
+            return render(request, "core/login.html", {"form": form})
+
+        user = authenticate(
+            request,
+            case_number=form.cleaned_data["case_number"],
+            id_no=form.cleaned_data["id_no"],
+        )
+        if user is not None:
+            cache.delete(throttle_key)
+            login(request, user)
+            case = _get_client_case(request)
+            if case:
+                _log_activity(case, user, "client", "logged_in")
+            return redirect("core:portal_dashboard")
+
+        cache.set(throttle_key, attempts + 1, LOGIN_LOCKOUT_SECONDS)
+        messages.error(request, "Case number and ID number did not match our records.")
+
+    return render(request, "core/login.html", {"form": form})
+
+
+def portal_logout(request):
+    logout(request)
+    return redirect("core:portal_login")
+
+
+@login_required
+def portal_dashboard(request):
+    case = _get_client_case(request)
+    if not case:
+        messages.error(request, "No case is linked to your account yet. Contact the firm.")
+        return redirect("core:portal_login")
+
+    documents = case.documents.select_related("confirmed_by")
+    pending_requests = case.document_requests.filter(status="pending")
+    recent_activity = case.activity_log.all()[:6]
+    doc_counts = {
+        "total": documents.count(),
+        "pending": documents.filter(status="pending").count(),
+        "confirmed": documents.filter(status="confirmed").count(),
+        "rejected": documents.filter(status="rejected").count(),
+    }
+
+    if request.method == "POST":
+        form = DocumentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.case = case
+            doc.uploaded_by = request.user
+            doc.save()
+            _log_activity(case, request.user, "client", "uploaded", doc.original_filename)
+            messages.success(request, "Document uploaded and pending review.")
+            return redirect("core:portal_dashboard")
+    else:
+        form = DocumentUploadForm()
+
+    return render(request, "core/dashboard.html", {
+        "case": case, "documents": documents, "pending_requests": pending_requests,
+        "recent_activity": recent_activity, "form": form, "doc_counts": doc_counts,
+    })
+
+
+@login_required
+def portal_document_delete(request, pk):
+    case = _get_client_case(request)
+    doc = get_object_or_404(CaseDocument, pk=pk, case=case)
+    if doc.is_locked():
+        messages.error(request, "This document is confirmed and can't be deleted. Upload a new version instead.")
+    else:
+        _log_activity(case, request.user, "client", "deleted", doc.original_filename)
+        doc.file.delete(save=False)
+        doc.delete()
+        messages.success(request, "Document deleted.")
+    return redirect("core:portal_dashboard")
+
+
+@login_required
+def portal_activity_log(request):
+    case = _get_client_case(request)
+    if not case:
+        return redirect("core:portal_login")
+    entries = case.activity_log.all()
+    return render(request, "core/activity_log.html", {"case": case, "entries": entries})

@@ -8,6 +8,7 @@ from django.utils import cache, timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import timedelta
+import os
 
 def group_name_for_email(email):
     return f"chat_{email.replace('@', '_at_').replace('.', '_dot_')}"
@@ -204,3 +205,114 @@ class NewsletterCampaign(models.Model):
 
     def __str__(self):
         return f"{self.subject} ({self.sent_at:%Y-%m-%d})"
+    
+
+# --- Append to core/models.py ---
+# Uses your existing User model (django.contrib.auth.models.User) as the login account.
+
+class ClientProfile(models.Model):
+    """Links a Django User to a portal client. Admin creates the User (name as
+    username, e.g. 'john.mwangi') and this profile from the admin panel."""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="client_profile")
+    id_no = models.CharField("National ID number", max_length=20)
+    phone = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+
+
+class Case(models.Model):
+    STATUS_CHOICES = [("open", "Open"), ("closed", "Closed"), ("on_hold", "On hold")]
+
+    client = models.ForeignKey(ClientProfile, on_delete=models.CASCADE, related_name="cases")
+    case_number = models.CharField(max_length=30, unique=True, help_text="Used by the client to log in.")
+    title = models.CharField(max_length=255)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="open")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="cases_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.case_number} — {self.title}"
+
+
+def case_document_path(instance, filename):
+    return f"case_documents/{instance.case.case_number}/{filename}"
+
+
+class CaseDocument(models.Model):
+    STATUS_CHOICES = [("pending", "Pending review"), ("confirmed", "Confirmed"), ("rejected", "Rejected")]
+
+    ALLOWED_EXTENSIONS = {
+        ".pdf": "pdf", ".doc": "word", ".docx": "word",
+        ".jpg": "image", ".jpeg": "image", ".png": "image",
+        ".mp4": "video", ".mov": "video",
+    }
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="documents")
+    file = models.FileField(upload_to=case_document_path)
+    original_filename = models.CharField(max_length=255, blank=True)
+    file_type = models.CharField(max_length=20, blank=True)  # pdf / word / image / video
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="documents_uploaded")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    admin_note = models.TextField(blank=True)
+    confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents_confirmed")
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    # A confirmed document is locked. A client re-upload creates a NEW row that
+    # points back here, preserving the confirmed original for the case record.
+    supersedes = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="superseded_by_set")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def save(self, *args, **kwargs):
+        if self.file and not self.original_filename:
+            self.original_filename = os.path.basename(self.file.name)
+        if self.file:
+            ext = os.path.splitext(self.file.name)[1].lower()
+            self.file_type = self.ALLOWED_EXTENSIONS.get(ext, "other")
+        super().save(*args, **kwargs)
+
+    def is_locked(self):
+        return self.status == "confirmed"
+
+    def __str__(self):
+        return f"{self.original_filename} ({self.case.case_number})"
+
+
+class DocumentRequest(models.Model):
+    STATUS_CHOICES = [("pending", "Pending"), ("fulfilled", "Fulfilled")]
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="document_requests")
+    description = models.CharField(max_length=255, help_text="What you're asking the client to provide.")
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="document_requests_made")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    fulfilled_document = models.ForeignKey(CaseDocument, on_delete=models.SET_NULL, null=True, blank=True, related_name="fulfills_request")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.description} ({self.case.case_number})"
+
+
+class ActivityLog(models.Model):
+    ACTOR_ROLE_CHOICES = [("client", "Client"), ("admin", "Admin"), ("system", "System")]
+    ACTION_CHOICES = [
+        ("uploaded", "Uploaded document"), ("deleted", "Deleted document"),
+        ("confirmed", "Confirmed document"), ("rejected", "Rejected document"),
+        ("requested", "Requested document"), ("commented", "Added note"),
+        ("logged_in", "Logged in"),
+    ]
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="activity_log")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    actor_role = models.CharField(max_length=10, choices=ACTOR_ROLE_CHOICES)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    description = models.CharField(max_length=255, blank=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"[{self.case.case_number}] {self.get_action_display()}"

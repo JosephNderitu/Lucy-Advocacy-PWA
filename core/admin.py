@@ -217,3 +217,234 @@ class NewsletterCampaignAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False  # campaigns are only ever created via "Send Campaign"
+    
+# --- REPLACES the previous admin_addition.py content in core/admin.py ---
+import random
+import string
+
+from django.contrib import admin, messages
+from django.contrib.auth.models import User
+from django.db.models import Count, Q
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import path, reverse
+from django.utils import timezone
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.text import slugify
+
+from . import forms as admin_forms  # CaseAdminForm — see admin_forms.py
+from .models import ClientProfile, Case, CaseDocument, DocumentRequest, ActivityLog
+
+admin.site.site_header = "Ngima Wangai & Company Advocates — Firm Admin"
+admin.site.site_title = "NWC Admin"
+admin.site.index_title = "Case Management"
+
+
+# ---------------------------------------------------------------- helpers --
+
+def generate_unique_username(full_name):
+    base = slugify(full_name).replace("-", ".") or "client"
+    username, suffix = base, 1
+    while User.objects.filter(username=username).exists():
+        suffix += 1
+        username = f"{base}{suffix}"
+    return username
+
+
+def generate_random_password(length=16):
+    chars = string.ascii_letters + string.digits
+    return "".join(random.choice(chars) for _ in range(length))
+
+
+# ------------------------------------------------------- client profile ---
+# Kept registered (so its change page still works when opened via the link
+# on a Case) but hidden from the admin index — clients are created and
+# managed from the Case screen now, not here directly.
+
+@admin.register(ClientProfile)
+class ClientProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "id_no", "phone", "created_at")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "id_no")
+
+    def has_module_permission(self, request):
+        return False
+
+
+# ------------------------------------------------------------- documents --
+# Also hidden from the index — documents are managed as an inline on the
+# Case page. Kept registered only so the "Confirm" link/URL works.
+
+class CaseDocumentInline(admin.TabularInline):
+    model = CaseDocument
+    extra = 0
+    fields = ("file", "file_type", "status", "uploaded_by", "uploaded_at", "admin_note", "confirm_link")
+    readonly_fields = ("file_type", "uploaded_by", "uploaded_at", "confirm_link")
+
+    def confirm_link(self, obj):
+        if not obj.pk:
+            return "—"
+        if obj.status == "confirmed":
+            return mark_safe('<span style="color:#2F7178;font-weight:600;">✓ Confirmed</span>')
+        url = reverse("admin:core_casedocument_confirm", args=[obj.pk])
+        return format_html(
+            '<a class="button" style="background:#3F9199;color:#fff;" href="{}">Confirm</a>', url
+        )
+    confirm_link.short_description = "Action"
+
+
+@admin.register(CaseDocument)
+class CaseDocumentAdmin(admin.ModelAdmin):
+    list_display = ("original_filename", "case", "status", "uploaded_at")
+
+    def has_module_permission(self, request):
+        return False
+
+    def get_urls(self):
+        return [
+            path("<int:pk>/confirm/", self.admin_site.admin_view(self.confirm_view),
+                 name="core_casedocument_confirm"),
+        ] + super().get_urls()
+
+    def confirm_view(self, request, pk):
+        doc = get_object_or_404(CaseDocument, pk=pk)
+        doc.status = "confirmed"
+        doc.confirmed_by = request.user
+        doc.confirmed_at = timezone.now()
+        doc.save()
+        ActivityLog.objects.create(case=doc.case, actor=request.user, actor_role="admin",
+                                    action="confirmed", description=doc.original_filename)
+        messages.success(request, f"'{doc.original_filename}' confirmed.")
+        return redirect(request.META.get("HTTP_REFERER") or "admin:core_case_changelist")
+
+
+class DocumentRequestInline(admin.TabularInline):
+    model = DocumentRequest
+    extra = 1
+    fields = ("description", "status", "requested_by", "created_at")
+    readonly_fields = ("requested_by", "created_at")
+
+
+# ------------------------------------------------------------------ case --
+# This is the one screen the admin lives in: create a client + case together,
+# review/confirm documents, request more, add notes — all in one place.
+
+@admin.register(Case)
+class CaseAdmin(admin.ModelAdmin):
+    form = admin_forms.CaseAdminForm
+    inlines = [CaseDocumentInline, DocumentRequestInline]
+    list_display = ("case_number", "title", "client_name", "status_badge", "documents_badge", "created_at")
+    list_filter = ("status",)
+    search_fields = ("case_number", "title", "client__user__first_name", "client__user__last_name", "client__id_no")
+    readonly_fields = ("client_display", "created_by", "created_at")
+
+    class Media:
+        css = {"all": ("core/admin/portal_admin.css",)}
+
+    def get_fieldsets(self, request, obj=None):
+        if obj:  # editing an existing case — client is already set
+            return (
+                ("Case", {"fields": ("case_number", "title", "status")}),
+                ("Client", {"fields": ("client_display",)}),
+                ("Record", {"fields": ("created_by", "created_at")}),
+            )
+        return (
+            ("New client", {
+                "fields": ("client_full_name", "client_id_no", "client_phone"),
+                "description": (
+                    "A portal login is created automatically for this client — "
+                    "they'll sign in with the case number below and this ID number. "
+                    "No password to set."
+                ),
+            }),
+            ("Case", {"fields": ("case_number", "title", "status")}),
+        )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("client__user").annotate(
+            pending_count=Count("documents", filter=Q(documents__status="pending"), distinct=True),
+            doc_count=Count("documents", distinct=True),
+        )
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            full_name = form.cleaned_data["client_full_name"].strip()
+            id_no = form.cleaned_data["client_id_no"].strip()
+            phone = form.cleaned_data.get("client_phone", "").strip()
+            first_name, _, last_name = full_name.partition(" ")
+
+            user = User.objects.create_user(
+                username=generate_unique_username(full_name),
+                password=generate_random_password(),
+                first_name=first_name,
+                last_name=last_name,
+            )
+            obj.client = ClientProfile.objects.create(user=user, id_no=id_no, phone=phone)
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for obj in formset.deleted_objects:
+            obj.delete()
+        for instance in instances:
+            if isinstance(instance, DocumentRequest) and not instance.pk:
+                instance.requested_by = request.user
+                instance.save()
+                ActivityLog.objects.create(case=instance.case, actor=request.user, actor_role="admin",
+                                            action="requested", description=instance.description)
+            else:
+                instance.save()
+        formset.save_m2m()
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["open_cases"] = Case.objects.filter(status="open").count()
+        extra_context["pending_documents"] = CaseDocument.objects.filter(status="pending").count()
+        extra_context["pending_requests"] = DocumentRequest.objects.filter(status="pending").count()
+        return super().changelist_view(request, extra_context=extra_context)
+
+    # --- display helpers ---
+
+    def client_name(self, obj):
+        return obj.client.user.get_full_name() or obj.client.user.username
+    client_name.short_description = "Client"
+    client_name.admin_order_field = "client__user__first_name"
+
+    def client_display(self, obj):
+        if not obj or not obj.client:
+            return "—"
+        url = reverse("admin:core_clientprofile_change", args=[obj.client.pk])
+        name = obj.client.user.get_full_name() or obj.client.user.username
+        return format_html('<a href="{}">{}</a> &middot; ID {}', url, name, obj.client.id_no)
+    client_display.short_description = "Client"
+
+    def status_badge(self, obj):
+        colors = {"open": "#2F7178", "closed": "#6b7280", "on_hold": "#DD6812"}
+        color = colors.get(obj.status, "#6b7280")
+        return format_html(
+            '<span style="background:{}22;color:{};padding:3px 12px;border-radius:999px;'
+            'font-size:12px;font-weight:600;">{}</span>',
+            color, color, obj.get_status_display(),
+        )
+    status_badge.short_description = "Status"
+
+    def documents_badge(self, obj):
+        if obj.pending_count:
+            return format_html(
+                '<span style="background:#fef3c7;color:#92400e;padding:3px 12px;border-radius:999px;'
+                'font-size:12px;font-weight:600;">{} pending</span>', obj.pending_count,
+            )
+        if obj.doc_count:
+            return mark_safe('<span style="color:#2F7178;font-weight:600;">✓ all reviewed</span>')
+        return mark_safe('<span style="color:#9ca3af;">No documents yet</span>')
+    documents_badge.short_description = "Documents"
+
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display = ("case", "actor_role", "action", "description", "timestamp")
+    list_filter = ("actor_role", "action")
+    readonly_fields = [f.name for f in ActivityLog._meta.fields]
+
+    def has_add_permission(self, request):
+        return False

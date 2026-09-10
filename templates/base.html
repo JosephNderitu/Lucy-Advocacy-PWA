@@ -88,7 +88,7 @@
         <a href="mailto:nwangailawadvocates@gmail.com" class="hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-envelope mr-1.5"></i>nwangailawadvocates@gmail.com</a>
       </div>
       <div class="flex items-center gap-5">
-        <a href="#" class="hover:text-brand-teal-400 transition-colors font-medium"><i class="fa-solid fa-lock mr-1.5"></i>Client Portal</a>
+        <a href="{% url 'core:portal_login' %}" class="hover:text-brand-teal-400 transition-colors font-medium"><i class="fa-solid fa-lock mr-1.5"></i>Client Portal</a>
         <div class="flex items-center gap-4 border-l border-white/10 pl-5">
           <a href="#" aria-label="Facebook" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
           <a href="#" aria-label="LinkedIn" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
@@ -144,7 +144,7 @@
 
         <!-- Desktop actions -->
         <div class="hidden lg:flex items-center gap-5">
-          <a href="#" class="text-[15px] font-semibold text-gray-300 hover:text-brand-teal-400 transition-colors">
+          <a href="{% url "core:portal_login" %}" class="text-[15px] font-semibold text-gray-300 hover:text-brand-teal-400 transition-colors">
             <i class="fa-solid fa-lock mr-1.5"></i>Client Portal
           </a>
           <a href="{% url 'core:contact' %}"
@@ -238,7 +238,7 @@
              class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'contact' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
             <i class="fa-solid fa-envelope w-5 text-center"></i>Contact
           </a>
-          <a href="#"
+          <a href="{% url 'core:portal_login' %}"
              class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold text-brand-ink-800 hover:bg-brand-mist-50 transition-colors">
             <i class="fa-solid fa-lock w-5 text-center"></i>Client Portal
           </a>

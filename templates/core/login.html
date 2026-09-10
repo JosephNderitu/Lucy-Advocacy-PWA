@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Client Portal Login | Ngima Wangai & Company Advocates{% endblock %}
+
+{% block content %}
+<section class="bg-brand-mist-50 min-h-[70vh] flex items-center py-16 px-4">
+  <div class="max-w-md w-full mx-auto bg-white rounded-2xl shadow-xl shadow-black/5 border border-gray-100 p-8 sm:p-10">
+    <div class="text-center mb-8">
+      <span class="inline-flex items-center justify-center h-14 w-14 rounded-full bg-brand-teal-50 text-brand-teal-600 mb-4">
+        <i class="fa-solid fa-lock text-xl"></i>
+      </span>
+      <h1 class="font-serif text-2xl font-bold text-brand-ink-900">Client Portal</h1>
+      <p class="text-sm text-brand-ink-700 mt-2">Log in with the case number and ID number provided by your advocate.</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-5 text-sm rounded-lg px-4 py-3 bg-red-50 text-red-700 border border-red-100">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label for="{{ form.case_number.id_for_label }}" class="block text-sm font-semibold text-brand-ink-800 mb-1.5">Case number</label>
+        {{ form.case_number }}
+        {{ form.case_number.errors }}
+      </div>
+      <div>
+        <label for="{{ form.id_no.id_for_label }}" class="block text-sm font-semibold text-brand-ink-800 mb-1.5">ID number</label>
+        {{ form.id_no }}
+        {{ form.id_no.errors }}
+      </div>
+      <button type="submit"
+        class="w-full bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold py-3 rounded-lg transition-colors">
+        Log In
+      </button>
+    </form>
+
+    <p class="text-xs text-center text-brand-ink-700 mt-6">
+      Trouble logging in? <a href="{% url 'core:contact' %}" class="text-brand-teal-600 font-semibold hover:underline">Contact the firm</a>.
+    </p>
+  </div>
+</section>
+{% endblock %}
