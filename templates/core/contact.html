@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Contact Us — Queens Garden Hotel{% endblock %}
+{% block title %}Contact Us{% endblock %}
 
 {% block content %}
 
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function appendBubble(msg) {
+    function appendBubble(msg, prepend = false) {
         const container = document.getElementById('chat-messages');
         const empty = container.querySelector('.empty-state');
         if (empty) empty.remove();
@@ -293,14 +293,30 @@ document.addEventListener('DOMContentLoaded', function () {
         time.textContent = formatTime(msg.created_at);
         wrap.appendChild(bubble);
         wrap.appendChild(time);
-        container.appendChild(wrap);
-        container.scrollTop = container.scrollHeight;
+
+        if (prepend) {
+            // insertBefore the first message bubble (not the load-more button, which
+            // also lives at the top of this container) so older messages stack correctly
+            const firstMessage = container.querySelector(':scope > div');
+            if (firstMessage) {
+                container.insertBefore(wrap, firstMessage);
+            } else {
+                container.appendChild(wrap);
+            }
+        } else {
+            container.appendChild(wrap);
+            container.scrollTop = container.scrollHeight;
+        }
     }
 
-    function renderMessages(messages) {
+    let oldestLoadedTimestamp = null;
+    let hasMoreMessages = {{ has_more|yesno:"true,false" }};
+
+    function renderMessages(messages, prepend = false) {
         const container = document.getElementById('chat-messages');
-        container.innerHTML = '';
-        if (!messages || messages.length === 0) {
+        if (!prepend) container.innerHTML = '';
+
+        if (messages.length === 0 && !prepend) {
             container.innerHTML = `
                 <div class="empty-state m-auto text-center text-gray-400">
                     <i class="fa-regular fa-comments text-3xl mb-2"></i>
@@ -308,7 +324,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>`;
             return;
         }
-        messages.forEach(appendBubble);
+
+        if (messages.length > 0) oldestLoadedTimestamp = messages[0].created_at;
+
+        const prevScrollHeight = container.scrollHeight;
+        messages.forEach(msg => appendBubble(msg, prepend));
+
+        if (prepend) {
+            container.scrollTop = container.scrollHeight - prevScrollHeight;
+        } else {
+            container.scrollTop = container.scrollHeight;
+        }
+        updateLoadMoreButton();
+    }
+
+    function updateLoadMoreButton() {
+        let btn = document.getElementById('load-more-btn');
+        if (!hasMoreMessages) {
+            if (btn) btn.remove();
+            return;
+        }
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'load-more-btn';
+            btn.className = 'text-xs text-[#0B6B3A] font-semibold hover:underline mx-auto block mb-2';
+            btn.textContent = 'Load earlier messages';
+            btn.onclick = loadOlderMessages;
+            document.getElementById('chat-messages').prepend(btn);
+        }
+    }
+
+    async function loadOlderMessages() {
+        if (!oldestLoadedTimestamp) return;
+        const res = await fetch(`{% url 'core:get_messages' %}?before=${encodeURIComponent(oldestLoadedTimestamp)}`);
+        const data = await res.json();
+        hasMoreMessages = data.has_more;
+        document.getElementById('load-more-btn')?.remove();
+        renderMessages(data.messages, true);
     }
 
     // ---------- WebSocket connection ----------

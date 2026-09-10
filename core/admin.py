@@ -132,6 +132,17 @@ class CampaignForm(forms.Form):
         }),
     )
 
+class ChatMessageInline(admin.TabularInline):
+    model = ChatMessage
+    extra = 1
+    fields = ('sender', 'body', 'created_at')
+    readonly_fields = ('created_at',)
+    ordering = ('created_at',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        recent_ids = qs.order_by('-created_at').values_list('id', flat=True)[:50]
+        return qs.filter(id__in=recent_ids)
 
 @admin.register(NewsletterSubscriber)
 class NewsletterSubscriberAdmin(admin.ModelAdmin):

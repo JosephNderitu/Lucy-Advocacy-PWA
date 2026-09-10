@@ -1,10 +1,332 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}About Us | Ngima Wangai & Company Advocates{% endblock %}
 
 {% block content %}
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-    <h1 class="font-serif text-4xl sm:text-5xl font-bold text-brand-ink-900">About Us</h1>
-    <p class="mt-4 text-brand-ink-700 max-w-2xl">Placeholder — we'll build the full About page (firm story, leadership profiles) when we get to it.</p>
-  </section>
+
+<!-- ============ HERO ============ -->
+<section class="relative overflow-hidden isolate bg-brand-ink-900">
+  <div class="absolute inset-0 z-0">
+    <img src="{% static 'images/static_images/lady-justice.webp' %}" alt=""
+         aria-hidden="true"
+         class="absolute inset-0 h-full w-full object-cover object-[center_25%] opacity-40">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-ink-900/95 via-brand-ink-900/85 to-brand-teal-900/80"></div>
+  </div>
+
+  <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" aria-hidden="true"
+       class="pointer-events-none select-none absolute -right-24 -top-24 z-[5] w-[32rem] opacity-[0.06] rotate-6">
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-24 sm:pb-28">
+    <nav class="animate-fade-up flex items-center gap-2 text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
+      <a href="{% url 'core:home' %}" class="hover:text-white transition-colors">Home</a>
+      <i class="fa-solid fa-chevron-right text-[0.6rem]"></i>
+      <span class="text-white">About Us</span>
+    </nav>
+
+    <p class="animate-fade-up [animation-delay:100ms] inline-flex items-center gap-2 text-brand-teal-500 font-semibold text-sm tracking-wide uppercase mb-5">
+      <span class="h-1.5 w-1.5 rounded-full bg-brand-orange-500"></span>
+      Who We Are
+    </p>
+
+    <h1 class="animate-fade-up [animation-delay:150ms] font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] max-w-3xl">
+      The Firm Behind Your Legal Strategy
+    </h1>
+
+    <p class="animate-fade-up [animation-delay:250ms] mt-6 text-lg text-gray-300 max-w-2xl leading-relaxed">
+      Ngima Wangai & Company Advocates is a full-service law firm built on a simple idea.
+      Every client deserves counsel that is personal, accessible, and genuinely invested
+      in their outcome, not just their case file.
+    </p>
+
+    <div class="animate-fade-up [animation-delay:350ms] mt-10 flex flex-wrap gap-x-10 gap-y-4">
+      <div>
+        <p class="font-serif text-3xl font-bold text-white" x-data="{ foundedYear: 2018 }" x-text="(new Date().getFullYear() - foundedYear) + '+'"></p>
+        <p class="text-sm text-gray-400 mt-1">Years in Practice</p>
+      </div>
+      <div>
+        <p class="font-serif text-3xl font-bold text-white">{{ practice_area_count }}</p>
+        <p class="text-sm text-gray-400 mt-1">Practice Areas</p>
+      </div>
+      <div>
+        <p class="font-serif text-3xl font-bold text-white">3</p>
+        <p class="text-sm text-gray-400 mt-1">Court Levels Handled</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OUR STORY ============ -->
+<section x-data="{ shown: false }" x-intersect.once="shown = true"
+         class="bg-white py-16 sm:py-20 lg:py-24">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+         class="transition-all duration-700">
+      <p class="text-sm font-medium text-[#A9824C] mb-4">Our story</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-[1.15] tracking-tight">
+        Built on Accessibility, Not Bureaucracy
+      </h2>
+
+      <div class="mt-6 space-y-5 text-brand-ink-700 leading-relaxed text-base sm:text-lg text-left sm:text-center">
+        <p>
+          Too many clients experience the law as slow and hard to reach. We built this firm
+          around the opposite idea, that sound legal counsel should be close at hand, clearly
+          explained, and responsive to the pace of your matter, not the pace of the courts.
+        </p>
+        <p>
+          From our base in Nairobi, we've grown into a full-service commercial and corporate
+          practice while keeping the working style of a firm that still answers its own phone.
+          Every matter gets a customized approach and a direct line to the advocate handling it.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW WE WORK ============ -->
+<section x-data="{ shown: false }" x-intersect.once="shown = true"
+         class="bg-brand-mist-50 py-16 sm:py-20 lg:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+         class="transition-all duration-700 text-center max-w-2xl mx-auto mb-14">
+      <p class="text-sm font-medium text-[#A9824C] mb-4">Our process</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
+        How We Work With You
+      </h2>
+    </div>
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
+         class="transition-all duration-700 delay-150 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 relative">
+
+      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
+        <span class="font-serif text-sm text-[#A9824C]">01</span>
+        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Initial Consultation</p>
+        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
+          We listen to your matter in full before offering any view on strategy or cost.
+        </p>
+      </div>
+
+      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
+        <span class="font-serif text-sm text-[#A9824C]">02</span>
+        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Tailored Strategy</p>
+        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
+          A plan built for your specific goals, timeline, and appetite for risk.
+        </p>
+      </div>
+
+      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
+        <span class="font-serif text-sm text-[#A9824C]">03</span>
+        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Active Representation</p>
+        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
+          Regular updates and direct access to the advocate handling your case.
+        </p>
+      </div>
+
+      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
+        <span class="font-serif text-sm text-[#A9824C]">04</span>
+        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Resolution</p>
+        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
+          A clear outcome, with follow-through on anything the resolution requires.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / VALUES ============ -->
+<section x-data="{ shown: false }" x-intersect.once="shown = true"
+         class="bg-white py-16 sm:py-20 lg:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+         class="transition-all duration-700 text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+      <p class="text-sm font-medium text-[#A9824C] mb-4">What guides us</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
+        Our Values
+      </h2>
+    </div>
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
+         class="transition-all duration-700 delay-150 rounded-3xl ring-1 ring-brand-ink-900/5 bg-brand-mist-50/40 overflow-hidden">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y divide-brand-ink-900/10 sm:divide-y-0 sm:divide-x">
+
+        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
+          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Integrity</p>
+            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">Honest counsel, even when it isn't easy to hear</p>
+          </div>
+        </div>
+
+        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
+          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
+            <i class="fa-solid fa-bolt"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Accessibility</p>
+            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">A direct line to your advocate, always</p>
+          </div>
+        </div>
+
+        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
+          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
+            <i class="fa-solid fa-user-check"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Client-Centered</p>
+            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">No templated advice, no cookie-cutter files</p>
+          </div>
+        </div>
+
+        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
+          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
+            <i class="fa-solid fa-briefcase"></i>
+          </span>
+          <div class="min-w-0">
+            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Excellence</p>
+            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">Thorough handling, first call to resolution</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOURS + LOCATION ============ -->
+<section class="bg-white py-16 sm:py-20 lg:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-5 gap-10 lg:gap-12">
+
+    <!-- Hours -->
+    <div class="lg:col-span-2">
+      <p class="text-sm font-medium text-[#A9824C] mb-4">Visit or call us</p>
+      <h2 class="font-serif text-3xl font-bold text-brand-ink-900 leading-tight mb-8">
+        Office Hours &amp; Contact
+      </h2>
+
+      <div class="rounded-3xl bg-brand-mist-50/60 ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="flex items-center justify-center h-10 w-10 rounded-full bg-brand-teal-600/10 text-brand-teal-600">
+            <i class="fa-regular fa-clock"></i>
+          </span>
+          <p class="font-serif font-semibold text-brand-ink-900">Working Hours</p>
+        </div>
+        <dl class="space-y-3 text-sm">
+          <div class="flex items-center justify-between">
+            <dt class="text-brand-ink-700">Monday, Friday</dt>
+            <dd class="font-medium text-brand-ink-900">8:00 AM, 5:00 PM</dd>
+          </div>
+          <div class="flex items-center justify-between">
+            <dt class="text-brand-ink-700">Saturday</dt>
+            <dd class="font-medium text-brand-ink-900">9:00 AM, 1:00 PM</dd>
+          </div>
+          <div class="flex items-center justify-between">
+            <dt class="text-brand-ink-700">Sunday</dt>
+            <dd class="font-medium text-brand-ink-900">Closed</dd>
+          </div>
+        </dl>
+
+        <div class="h-px bg-brand-ink-900/10 my-6"></div>
+
+        <div class="space-y-3 text-sm">
+          <a href="tel:+254714535492" class="flex items-center gap-3 text-brand-ink-700 hover:text-brand-teal-600 transition-colors">
+            <i class="fa-solid fa-phone text-brand-teal-600 w-4"></i>
+            +254 714 535 492
+          </a>
+          <a href="mailto:nwangailawadvocates@gmail.com" class="flex items-center gap-3 text-brand-ink-700 hover:text-brand-teal-600 transition-colors">
+            <i class="fa-solid fa-envelope text-brand-teal-600 w-4"></i>
+            nwangailawadvocates@gmail.com
+          </a>
+          <p class="flex items-center gap-3 text-brand-ink-700">
+            <i class="fa-solid fa-location-dot text-brand-teal-600 w-4"></i>
+            P.O. Box 000-00100, Nairobi
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="lg:col-span-3">
+      <div class="rounded-3xl overflow-hidden ring-1 ring-brand-ink-900/5 h-full min-h-[22rem] shadow-sm">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63776.5!2d36.8172!3d-1.2864!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10d4e26e46c9%3A0x0!2sNairobi%2C%20Kenya!5e0!3m2!1sen!2ske!4v1699999999999"
+          class="w-full h-full min-h-[22rem] border-0"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Firm location on Google Maps">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section x-data="{ shown: false, open: 'q1',
+    toggle(id) { this.open = this.open === id ? null : id }
+  }"
+  x-intersect.once="shown = true"
+  class="bg-brand-mist-50 py-16 sm:py-20 lg:py-28">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+         class="transition-all duration-700 text-center mb-12 lg:mb-16">
+      <p class="text-sm font-medium text-[#A9824C] mb-4">Frequently asked</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
+        Questions Clients Often Ask
+      </h2>
+      <p class="mt-4 text-brand-ink-700 leading-relaxed text-base sm:text-lg">
+        Can't find what you're looking for? <a href="{% url 'core:contact' %}" class="text-brand-teal-600 font-semibold hover:underline">Get in touch</a> directly.
+      </p>
+    </div>
+
+    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
+         class="transition-all duration-700 delay-150 rounded-3xl bg-white ring-1 ring-brand-ink-900/5 divide-y divide-brand-ink-900/10 overflow-hidden">
+
+      {% for faq in faqs %}
+      <div>
+        <button type="button" @click="toggle('q{{ forloop.counter }}')"
+                class="w-full flex items-center justify-between gap-4 text-left px-6 sm:px-8 py-5 sm:py-6 hover:bg-brand-mist-50/60 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600/50">
+          <span class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900">{{ faq.question }}</span>
+          <span :class="open === 'q{{ forloop.counter }}' ? 'rotate-45 bg-brand-teal-600 text-white' : 'text-brand-teal-600'"
+                class="flex items-center justify-center h-8 w-8 rounded-full ring-1 ring-brand-teal-600/30 shrink-0 transition-all duration-300">
+            <i class="fa-solid fa-plus text-xs"></i>
+          </span>
+        </button>
+        <div x-show="open === 'q{{ forloop.counter }}'" x-collapse x-cloak>
+          <p class="px-6 sm:px-8 pb-6 sm:pb-7 text-brand-ink-700 leading-relaxed text-[15px] sm:text-base max-w-2xl">
+            {{ faq.answer }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="py-20 bg-gradient-to-br from-brand-ink-900 to-brand-teal-800 relative overflow-hidden">
+  <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" aria-hidden="true"
+       class="pointer-events-none select-none absolute -left-20 -bottom-20 w-96 opacity-[0.05] -rotate-6">
+
+  <div class="relative max-w-2xl mx-auto px-4 text-center">
+    <i class="fa-solid fa-scale-balanced text-brand-teal-400 text-3xl mb-5"></i>
+    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white">Ready to Talk to an Advocate?</h2>
+    <p class="mt-4 text-gray-300">
+      Tell us about your matter and we'll respond promptly with the next steps.
+    </p>
+    <a href="{% url 'core:contact' %}"
+       class="mt-8 inline-flex items-center justify-center gap-2 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand-orange-500/20">
+      Book a Consultation
+      <i class="fa-solid fa-arrow-right text-sm"></i>
+    </a>
+  </div>
+</section>
+
 {% endblock %}

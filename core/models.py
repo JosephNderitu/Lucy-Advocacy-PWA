@@ -4,7 +4,7 @@ from lawfirmsite import settings
 import random
 from django.core.mail import send_mail
 from django.conf import settings
-from django.utils import timezone
+from django.utils import cache, timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import timedelta
@@ -143,6 +143,10 @@ def notify_admin_on_guest_message(sender, instance, created, **kwargs):
     if not created or instance.sender != 'guest' or not settings.ADMIN_NOTIFICATION_EMAIL:
         return
 
+    debounce_key = f'admin_notify_{instance.conversation_id}'
+    if cache.get(debounce_key):
+        return  # notified recently — admin panel badge still catches this message either way
+
     send_mail(
         subject=f"New message from {instance.conversation.name or instance.conversation.email}",
         message=(
@@ -154,6 +158,8 @@ def notify_admin_on_guest_message(sender, instance, created, **kwargs):
         recipient_list=[settings.ADMIN_NOTIFICATION_EMAIL],
         fail_silently=True,
     )
+
+    cache.set(debounce_key, True, timeout=300)  # 5-minute quiet window per conversation
 
 
 class NewsletterSubscriber(models.Model):
