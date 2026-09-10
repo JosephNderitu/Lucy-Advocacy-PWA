@@ -12,15 +12,13 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-env = environ.Env(
-    DEBUG=(bool, False)
-)
-environ.Env.read_env(BASE_DIR.parent / '.env')
-
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
@@ -145,15 +143,17 @@ MAILERS = {
 MAILERS = {
     'default': {
         'BACKEND': env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend'),
-        'HOST': env('EMAIL_HOST', default='smtp.gmail.com'),
-        'PORT': env.int('EMAIL_PORT', default=587),
-        'USE_TLS': env.bool('EMAIL_USE_TLS', default=True),
-        'USE_SSL': env.bool('EMAIL_USE_SSL', default=False),
-        'USERNAME': env('EMAIL_HOST_USER', default=''),
-        'PASSWORD': env('EMAIL_HOST_PASSWORD', default=''),
-        'TIMEOUT': 10,
+        'OPTIONS': {
+            'host': env('EMAIL_HOST', default='smtp.gmail.com'),
+            'port': env.int('EMAIL_PORT', default=587),
+            'use_tls': env.bool('EMAIL_USE_TLS', default=True),
+            'use_ssl': env.bool('EMAIL_USE_SSL', default=False),
+            'username': env('EMAIL_HOST_USER', default=''),
+            'password': env('EMAIL_HOST_PASSWORD', default=''),
+            'timeout': 10,
+        },
     },
 }
 
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Queens Garden Hotel <noreply@queensgardenhotel.co.ke>')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Ngima Wangai & Company Advocates <noreply@ngimawangai.com>')
 SITE_URL = env('SITE_URL', default='http://localhost:8000')

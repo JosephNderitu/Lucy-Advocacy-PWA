@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.urls import path, reverse
 
 from .models import NewsletterCampaign, NewsletterSubscriber, PracticeArea, Conversation, ChatMessage
-from .newsletter_utils import make_unsubscribe_token
+from .newsletter_utils import make_unsubscribe_token, get_newsletter_connection
 
 
 @admin.register(PracticeArea)
@@ -130,30 +130,36 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
             if form.is_valid():
                 subject = form.cleaned_data["subject"]
                 body = form.cleaned_data["message"]
+                connection = get_newsletter_connection()
+                connection.open()
                 sent = 0
 
-                for subscriber in active_subscribers:
-                    token = make_unsubscribe_token(subscriber.id)
-                    unsubscribe_url = request.build_absolute_uri(
-                        reverse("core:newsletter_unsubscribe", args=[token])
-                    )
-                    html_content = render_to_string("emails/newsletter_campaign.html", {
-                        "subject": subject,
-                        "message": body,
-                        "unsubscribe_url": unsubscribe_url,
-                        "site_url": request.build_absolute_uri("/"),
-                        "logo_url": request.build_absolute_uri(settings.STATIC_URL + "images/static_images/logo-on-teal.png"),
-                        "footer_image_url": request.build_absolute_uri(settings.STATIC_URL + "images/hero/hero2.png"),
-                    })
-                    email = EmailMultiAlternatives(
-                        subject=subject,
-                        body=body,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[subscriber.email],
-                    )
-                    email.attach_alternative(html_content, "text/html")
-                    email.send(fail_silently=True)
-                    sent += 1
+                try:
+                    for subscriber in active_subscribers:
+                        token = make_unsubscribe_token(subscriber.id)
+                        unsubscribe_url = request.build_absolute_uri(
+                            reverse("core:newsletter_unsubscribe", args=[token])
+                        )
+                        html_content = render_to_string("emails/newsletter_campaign.html", {
+                            "subject": subject,
+                            "message": body,
+                            "unsubscribe_url": unsubscribe_url,
+                            "site_url": request.build_absolute_uri("/"),
+                            "logo_url": request.build_absolute_uri(settings.STATIC_URL + "images/static_images/logo-on-teal.png"),
+                            "footer_image_url": request.build_absolute_uri(settings.STATIC_URL + "images/lady-justice.jpg"),
+                        })
+                        email = EmailMultiAlternatives(
+                            subject=subject,
+                            body=body,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[subscriber.email],
+                            connection=connection,
+                        )
+                        email.attach_alternative(html_content, "text/html")
+                        email.send()
+                        sent += 1
+                finally:
+                    connection.close()
 
                 NewsletterCampaign.objects.create(subject=subject, message=body, recipient_count=sent)
                 messages.success(request, f"Campaign sent to {sent} subscriber(s).")
@@ -169,7 +175,6 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
             opts=self.model._meta,
         )
         return render(request, "admin/core/newslettersubscriber/send_campaign.html", context)
-
 
 @admin.register(NewsletterCampaign)
 class NewsletterCampaignAdmin(admin.ModelAdmin):
