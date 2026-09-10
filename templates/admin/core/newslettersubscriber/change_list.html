@@ -1,9 +1,29 @@
 {% extends "admin/change_list.html" %}
+
 {% block object-tools-items %}
-  <li>
-    <a href="{% url 'admin:newsletter_send_campaign' %}" class="button" style="background:#147D74;">
+    <a href="{% url 'admin:newsletter_send_campaign' %}" class="button send-campaign-btn">
       Send Campaign
     </a>
-  </li>
   {{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <style>
+    .send-campaign-btn {
+      background: #147D74;
+      color: #fff !important;
+      padding: 8px 15px;
+      border-radius: 4px;
+      text-decoration: none !important;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-block;
+      transition: background 0.15s ease;
+    }
+    .send-campaign-btn:hover {
+      background: #0f5e57;
+      color: #fff !important;
+    }
+  </style>
 {% endblock %}

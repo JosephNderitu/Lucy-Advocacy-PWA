@@ -50,6 +50,14 @@ class Conversation(models.Model):
     name = models.CharField(max_length=150, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_message_at = models.DateTimeField(auto_now_add=True)
+    admin_read_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def unread_count(self):
+        qs = self.messages.filter(sender='guest')
+        if self.admin_read_at:
+            qs = qs.filter(created_at__gt=self.admin_read_at)
+        return qs.count()
 
     def __str__(self):
         return f"Conversation with {self.email}"
@@ -85,14 +93,15 @@ class EmailVerification(models.Model):
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
 
 @receiver(post_save, sender=ChatMessage)
 def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
     if not created or instance.sender != 'staff':
         return
 
-    # Push it live over WebSocket first, this is what makes it feel instant.
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         group_name_for_email(instance.conversation.email),
@@ -106,24 +115,45 @@ def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
         },
     )
 
-    # Still email them too, in case they've closed the tab entirely.
     if not instance.notified:
-        send_mail(
-            subject="New reply from Ngima Wangai & Company Advocates",
-            message=(
-                f"Hi {instance.conversation.name or ''},\n\n"
-                f"You have a new reply from Ngima Wangai & Company Advocates:\n\n"
-                f"\"{instance.body}\"\n\n"
-                f"Visit {settings.SITE_URL}/contact/ and verify with this email "
-                f"to continue the conversation.\n\n"
-                f"Ngima Wangai & Company Advocates"
-            ),
+        context = {
+            'subject': "New reply from Ngima Wangai & Company Advocates",
+            'name': instance.conversation.name,
+            'message': instance.body,
+            'site_url': f"{settings.SITE_URL}/contact/",
+            'logo_url': f"{settings.SITE_URL}/static/images/static_images/logo-icon.png",
+            'footer_image_url': f"{settings.SITE_URL}/static/images/static_images/logo-icon.png",
+        }
+        html_body = render_to_string('emails/staff_reply.html', context)
+
+        email = EmailMultiAlternatives(
+            subject=context['subject'],
+            body=strip_tags(html_body),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[instance.conversation.email],
-            fail_silently=True,
+            to=[instance.conversation.email],
         )
+        email.attach_alternative(html_body, "text/html")
+        email.send(fail_silently=True)
+
         instance.notified = True
         instance.save(update_fields=['notified'])
+        
+@receiver(post_save, sender=ChatMessage)
+def notify_admin_on_guest_message(sender, instance, created, **kwargs):
+    if not created or instance.sender != 'guest' or not settings.ADMIN_NOTIFICATION_EMAIL:
+        return
+
+    send_mail(
+        subject=f"New message from {instance.conversation.name or instance.conversation.email}",
+        message=(
+            f"{instance.conversation.name or instance.conversation.email} wrote:\n\n"
+            f"{instance.body}\n\n"
+            f"Reply from the admin panel: {settings.SITE_URL}/admin/core/conversation/{instance.conversation.id}/change/"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[settings.ADMIN_NOTIFICATION_EMAIL],
+        fail_silently=True,
+    )
 
 
 class NewsletterSubscriber(models.Model):

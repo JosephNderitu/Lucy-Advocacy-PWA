@@ -25,15 +25,28 @@ class PracticeAreaAdmin(admin.ModelAdmin):
     
 import json
 from django.http import JsonResponse
+from django.utils import timezone
+from django.utils.html import format_html
 
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('email', 'name', 'message_count', 'last_message_display')
+    list_display = ('email', 'name', 'unread_badge', 'message_count', 'last_message_display')
     search_fields = ('email', 'name')
-    ordering = ('-last_message_at',)  # most recently active conversation first
-    change_form_template = 'admin/public_site/conversation/change_form.html'
+    ordering = ('-last_message_at',)
+    change_form_template = 'admin/core/conversation/change_form.html'
     fields = ('email', 'name')
+
+    @admin.display(description='')
+    def unread_badge(self, obj):
+        count = obj.unread_count
+        if count == 0:
+            return ''
+        return format_html(
+            '<span style="background:#DC2626; color:#fff; font-weight:bold; '
+            'font-size:11px; padding:2px 9px; border-radius:999px;">{} new</span>',
+            count,
+        )
 
     @admin.display(description='Messages')
     def message_count(self, obj):
@@ -55,10 +68,17 @@ class ConversationAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         conversation = self.get_object(request, object_id)
+
+        # Opening the page marks it read — GET only, so it doesn't
+        # fire again on the POST that follows a form save.
+        if conversation and request.method == 'GET':
+            conversation.admin_read_at = timezone.now()
+            conversation.save(update_fields=['admin_read_at'])
+
         extra_context = extra_context or {}
         extra_context['conversation'] = conversation
         extra_context['chat_messages'] = (
-            conversation.messages.order_by('created_at') if conversation else []  # chronological, oldest first
+            conversation.messages.order_by('created_at') if conversation else []
         )
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
@@ -83,6 +103,10 @@ class ConversationAdmin(admin.ModelAdmin):
 
         msg = ChatMessage.objects.create(conversation=conversation, sender='staff', body=body)
 
+        # Replying obviously means they've seen it too
+        conversation.admin_read_at = timezone.now()
+        conversation.save(update_fields=['admin_read_at'])
+
         return JsonResponse({
             'success': True,
             'message': {
@@ -91,7 +115,6 @@ class ConversationAdmin(admin.ModelAdmin):
                 'created_at': msg.created_at.strftime('%b %d, %H:%M'),
             },
         })
-
 
 class CampaignForm(forms.Form):
     subject = forms.CharField(

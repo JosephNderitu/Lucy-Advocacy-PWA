@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'channels',
 ]
+
+ASGI_APPLICATION = 'lawfirmsite.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -155,5 +165,6 @@ MAILERS = {
     },
 }
 
+ADMIN_NOTIFICATION_EMAIL = env('ADMIN_NOTIFICATION_EMAIL', default='Ngima Wangai & Company Advocates <noreply@ngimawangai.com>')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Ngima Wangai & Company Advocates <noreply@ngimawangai.com>')
 SITE_URL = env('SITE_URL', default='http://localhost:8000')
