@@ -1,0 +1,66 @@
+/* core/static/core/admin/portal_admin.css
+   Loaded only on the Case admin (via CaseAdmin.Media). Light-touch polish —
+   doesn't fight Django admin's own styling, just brands it. */
+
+:root {
+  --nwc-teal: #3F9199;
+  --nwc-teal-dark: #2F7178;
+  --nwc-orange: #F4791F;
+  --nwc-ink: #22252E;
+}
+
+#header {
+  background: var(--nwc-ink);
+}
+
+#branding h1 {
+  font-weight: 700;
+}
+
+div.breadcrumbs {
+  background: var(--nwc-teal-dark);
+}
+
+.module h2, .module caption, .inline-group h2 {
+  background: var(--nwc-teal-dark);
+}
+
+a:link, a:visited {
+  color: var(--nwc-teal-dark);
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  background: var(--nwc-teal);
+  border-radius: 6px;
+}
+
+.button:hover, input[type=submit]:hover {
+  background: var(--nwc-teal-dark);
+}
+
+.button.default, input[type=submit].default {
+  background: var(--nwc-orange);
+}
+
+.button.default:hover {
+  background: #DD6812;
+}
+
+.object-tools a {
+  background: var(--nwc-orange);
+  border-radius: 6px;
+}
+
+#changelist-filter {
+  border-radius: 8px;
+}
+
+.results {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+fieldset.module {
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}

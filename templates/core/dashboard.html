@@ -31,27 +31,62 @@
             <i class="fa-solid fa-clock-rotate-left sm:mr-2 text-sm"></i>
             <span class="hidden sm:inline text-sm font-semibold">Activity</span>
           </button>
+
+          <!-- Backdrop, mobile only -->
+          <div x-show="open" x-cloak @click="open = false"
+               x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+               x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+               class="fixed inset-0 bg-brand-ink-900/40 z-30 sm:hidden"></div>
+
+          <!-- Mobile: bottom sheet. Desktop (sm:): anchored dropdown. -->
           <div
             x-show="open" x-cloak @click.outside="open = false"
-            x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-            class="absolute right-0 mt-2 w-[90vw] max-w-sm bg-white rounded-2xl shadow-2xl shadow-black/10 border border-gray-100 p-4 z-30"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:-translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0"
+            class="fixed inset-x-3 bottom-3 sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96
+                   bg-white rounded-2xl shadow-2xl shadow-black/20 border border-gray-100 p-4 z-40
+                   max-h-[75vh] sm:max-h-[26rem] flex flex-col"
           >
-            <p class="text-sm font-semibold text-brand-ink-900 mb-3">Recent activity</p>
-            <ul class="space-y-3 max-h-72 overflow-y-auto">
+            <div class="flex items-center justify-between mb-3 shrink-0">
+              <p class="text-sm font-semibold text-brand-ink-900 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-teal-600"></i>Recent activity
+              </p>
+              <button @click="open = false" aria-label="Close" class="sm:hidden h-7 w-7 flex items-center justify-center rounded-full hover:bg-brand-mist-50 text-brand-ink-700">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <ul class="space-y-1 overflow-y-auto pr-1 -mr-1">
               {% for entry in recent_activity %}
-              <li class="flex gap-3 text-sm">
-                <span class="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-teal-500 shrink-0"></span>
+              <li class="flex gap-3 text-sm py-2 {% if not forloop.last %}border-b border-gray-50{% endif %}">
+                <span class="mt-0.5 flex items-center justify-center h-7 w-7 rounded-full shrink-0
+                  {% if entry.action == 'confirmed' %}bg-brand-teal-50 text-brand-teal-600
+                  {% elif entry.action == 'rejected' %}bg-rose-50 text-rose-600
+                  {% elif entry.action == 'requested' %}bg-brand-orange-50 text-brand-orange-600
+                  {% elif entry.action == 'uploaded' %}bg-brand-mist-50 text-brand-ink-700
+                  {% else %}bg-gray-100 text-gray-500{% endif %}">
+                  <i class="fa-solid text-xs
+                    {% if entry.action == 'confirmed' %}fa-check
+                    {% elif entry.action == 'rejected' %}fa-xmark
+                    {% elif entry.action == 'requested' %}fa-envelope
+                    {% elif entry.action == 'uploaded' %}fa-arrow-up
+                    {% elif entry.action == 'deleted' %}fa-trash
+                    {% elif entry.action == 'commented' %}fa-note-sticky
+                    {% else %}fa-right-to-bracket{% endif %}"></i>
+                </span>
                 <div class="min-w-0">
                   <p class="text-brand-ink-800 leading-snug">
                     <span class="font-medium">{{ entry.get_action_display }}</span>
                     {% if entry.description %}<span class="text-brand-ink-700"> — {{ entry.description }}</span>{% endif %}
                   </p>
-                  <p class="text-xs text-brand-ink-700/60">{{ entry.timestamp|date:"d M, H:i" }} · {{ entry.get_actor_role_display }}</p>
+                  <p class="text-xs text-brand-ink-700/60 mt-0.5">{{ entry.timestamp|date:"d M, H:i" }} · {{ entry.get_actor_role_display }}</p>
                 </div>
               </li>
               {% empty %}
-              <li class="text-sm text-brand-ink-700">Nothing yet — activity on this case will show up here.</li>
+              <li class="text-sm text-brand-ink-700 py-2">Nothing yet — activity on this case will show up here.</li>
               {% endfor %}
             </ul>
           </div>
@@ -131,29 +166,35 @@
 
       <form method="post" enctype="multipart/form-data"
             x-data="{ fileName: '', dragging: false }"
-            @submit="if(!fileName){ $event.preventDefault(); }">
+            @submit="if(!$refs.fileInput.files.length){ $event.preventDefault(); fileName = ''; }">
         {% csrf_token %}
 
-        <label
+        <div
+          @click="$refs.fileInput.click()"
+          @keydown.enter="$refs.fileInput.click()"
+          @keydown.space.prevent="$refs.fileInput.click()"
           @dragover.prevent="dragging = true"
           @dragleave.prevent="dragging = false"
           @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; fileName = $event.dataTransfer.files[0]?.name || ''"
-          :class="dragging ? 'border-brand-teal-500 bg-brand-teal-50' : 'border-gray-300 bg-brand-mist-50'"
-          class="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl px-4 py-7 sm:py-10 text-center cursor-pointer transition-colors"
+          :class="dragging ? 'border-brand-teal-500 bg-brand-teal-50 scale-[1.01]' : 'border-gray-300 bg-brand-mist-50'"
+          role="button" tabindex="0" aria-label="Choose or drop a file to upload"
+          class="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl px-4 py-7 sm:py-10 text-center cursor-pointer transition-all duration-150"
         >
-          <i class="fa-solid fa-cloud-arrow-up text-2xl sm:text-3xl mb-1" :class="dragging ? 'text-brand-teal-600' : 'text-brand-ink-700/40'"></i>
+          <i class="fa-solid fa-cloud-arrow-up text-2xl sm:text-3xl mb-1 transition-transform" :class="dragging ? 'text-brand-teal-600 scale-110' : 'text-brand-ink-700/40'"></i>
           <p class="text-sm font-semibold text-brand-ink-900" x-show="!fileName">
             <span class="sm:hidden">Tap to choose a file</span>
-            <span class="hidden sm:inline">Drag & drop a file here, or click to browse</span>
+            <span class="hidden sm:inline">Drag & drop a file here, or <span class="text-brand-teal-600 underline">browse</span></span>
           </p>
-          <p class="text-sm font-semibold text-brand-teal-700 max-w-full truncate px-4" x-show="fileName" x-text="fileName" x-cloak></p>
+          <p class="text-sm font-semibold text-brand-teal-700 max-w-full truncate px-4 flex items-center gap-2" x-show="fileName" x-cloak>
+            <i class="fa-regular fa-file"></i><span x-text="fileName"></span>
+          </p>
           <p class="text-xs text-brand-ink-700/70">PDF, Word, images or video · Max 75MB</p>
           {{ form.file }}
-        </label>
+        </div>
 
         <div class="flex justify-end mt-4">
           <button type="submit"
-            class="w-full sm:w-auto bg-brand-teal-600 hover:bg-brand-teal-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors">
+            class="w-full sm:w-auto bg-brand-teal-600 hover:bg-brand-teal-700 active:bg-brand-teal-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors">
             Upload
           </button>
         </div>

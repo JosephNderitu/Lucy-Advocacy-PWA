@@ -26,9 +26,9 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = 'django-insecure-*=9pk2h!0lzy(jmfln+$-fh&s4%s_5cr3yy8yq$2pgqyu9ou)&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Allow all hosts for development; restrict in production
 
 
 # Application definition
@@ -56,6 +56,7 @@ CHANNEL_LAYERS = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -141,6 +142,19 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'   # used only by collectstatic in production
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        # Adds a content hash to each filename (e.g. app.a1b2c3.css) so you
+        # can cache static files aggressively without worrying about serving
+        # stale CSS/JS after a deploy.
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+ 
+
 # Media files (user/admin-uploaded content — attorney photos, blog images, etc.)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -180,3 +194,12 @@ MAILERS = {
 ADMIN_NOTIFICATION_EMAIL = env('ADMIN_NOTIFICATION_EMAIL', default='Ngima Wangai & Company Advocates <noreply@ngimawangai.com>')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Ngima Wangai & Company Advocates <noreply@ngimawangai.com>')
 SITE_URL = env('SITE_URL', default='http://localhost:8000')
+
+ 
+# --- Production hardening, active only when DEBUG=False ---
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1 week to start; raise once confirmed working
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
