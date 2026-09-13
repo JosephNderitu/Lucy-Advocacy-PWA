@@ -22,4 +22,6 @@ urlpatterns = [
     path("portal/", views.portal_dashboard, name="portal_dashboard"),
     path("portal/documents/<int:pk>/delete/", views.portal_document_delete, name="portal_document_delete"),
     path("portal/activity/", views.portal_activity_log, name="portal_activity_log"),
+    
+    path('sw.js', views.service_worker, name='service_worker'),
 ]

@@ -9,7 +9,9 @@ from .models import Conversation, ChatMessage, EmailVerification
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-
+import os
+from django.conf import settings
+from django.http import HttpResponse
 
 def home(request):
     practice_areas = list(
@@ -434,3 +436,13 @@ def portal_activity_log(request):
         return redirect("core:portal_login")
     entries = case.activity_log.all()
     return render(request, "core/activity_log.html", {"case": case, "entries": entries})
+
+def service_worker(request):
+    """Serves static/sw.js at the true site root (/sw.js), not /static/sw.js.
+    A service worker's scope defaults to the directory it's served from —
+    serving it under /static/ would limit it to controlling only /static/*,
+    not the whole site."""
+    path = os.path.join(settings.BASE_DIR, 'static', 'sw.js')
+    with open(path, 'r') as f:
+        content = f.read()
+    return HttpResponse(content, content_type='application/javascript')
