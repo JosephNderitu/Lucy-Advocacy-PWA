@@ -64,7 +64,6 @@
     }
     .chat-timestamp { font-size: 10px; color: #9CA3AF; margin-top: 3px; }
 
-    /* Fixed height so long conversations scroll inside the box, never the page */
     #step-chat { height: 600px; max-height: 75vh; }
     #chat-messages {
         scroll-behavior: smooth;
@@ -91,7 +90,7 @@
     <div class="text-center mb-10">
         <p class="text-[#0B6B3A] font-semibold uppercase tracking-wider text-sm mb-2">Get In Touch</p>
         <h1 class="gold-underline text-3xl md:text-4xl font-bold text-black pb-3">Chat With Us</h1>
-        <p class="text-gray-600 mt-4 max-w-md mx-auto">Verify your email once, then message our front desk anytime. Replies show up here instantly, and by email if you've left the page.</p>
+        <p class="text-gray-600 mt-4 max-w-md mx-auto">Verify your email once, then message our front desk anytime. Replies show up here, and by email if you've left the page.</p>
     </div>
 
     <!-- STEP 1: Email entry -->
@@ -186,7 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const stepChat = document.getElementById('step-chat');
 
     let pendingEmail = '';
-    let socket = null;
+    let pollTimer = null;
+    let lastSeenId = 0;
+    const POLL_INTERVAL_MS = 3000;
 
     function showError(el, msg) {
         el.querySelector('span').textContent = msg;
@@ -270,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
         stepCode.classList.add('hidden');
         stepChat.classList.remove('hidden');
         renderMessages(data.messages);
-        connectSocket();
+        startPolling();
     });
 
     // ---------- Chat rendering ----------
@@ -279,11 +280,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendBubble(msg, prepend = false) {
+        if (msg.id) lastSeenId = Math.max(lastSeenId, msg.id);
+
         const container = document.getElementById('chat-messages');
         const empty = container.querySelector('.empty-state');
         if (empty) empty.remove();
 
         const wrap = document.createElement('div');
+        wrap.dataset.msgId = msg.id;
         wrap.className = `flex flex-col max-w-[75%] ${msg.sender === 'guest' ? 'self-end items-end' : 'self-start items-start'}`;
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble-${msg.sender} px-4 py-2.5 text-sm`;
@@ -295,8 +299,6 @@ document.addEventListener('DOMContentLoaded', function () {
         wrap.appendChild(time);
 
         if (prepend) {
-            // insertBefore the first message bubble (not the load-more button, which
-            // also lives at the top of this container) so older messages stack correctly
             const firstMessage = container.querySelector(':scope > div');
             if (firstMessage) {
                 container.insertBefore(wrap, firstMessage);
@@ -307,6 +309,10 @@ document.addEventListener('DOMContentLoaded', function () {
             container.appendChild(wrap);
             container.scrollTop = container.scrollHeight;
         }
+    }
+
+    function isAlreadyRendered(id) {
+        return !!document.querySelector(`#chat-messages [data-msg-id="${id}"]`);
     }
 
     let oldestLoadedTimestamp = null;
@@ -363,32 +369,65 @@ document.addEventListener('DOMContentLoaded', function () {
         renderMessages(data.messages, true);
     }
 
-    // ---------- WebSocket connection ----------
+    // ---------- Polling (replaces the old WebSocket connection) ----------
     function setConnStatus(online) {
         document.getElementById('conn-dot').className = `conn-dot ${online ? 'online' : 'offline'}`;
-        document.getElementById('conn-label').textContent = online ? 'Live' : 'Connecting...';
+        document.getElementById('conn-label').textContent = online ? 'Live' : 'Reconnecting...';
     }
 
-    function connectSocket() {
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat/`);
-
-        socket.onopen = () => setConnStatus(true);
-        socket.onclose = () => {
+    async function pollForNewMessages() {
+        try {
+            const res = await fetch(`{% url 'core:get_messages' %}?after=${lastSeenId}`);
+            if (!res.ok) throw new Error('poll failed');
+            const data = await res.json();
+            setConnStatus(true);
+            data.messages.forEach(msg => {
+                if (!isAlreadyRendered(msg.id)) appendBubble(msg);
+            });
+        } catch (err) {
             setConnStatus(false);
-            setTimeout(connectSocket, 3000); // auto-reconnect
-        };
-        socket.onerror = () => setConnStatus(false);
-        socket.onmessage = (e) => appendBubble(JSON.parse(e.data));
+        }
+    }
+
+    function startPolling() {
+        setConnStatus(true);
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollForNewMessages, POLL_INTERVAL_MS);
+        // Also poll immediately when the tab regains focus, so a reply sent
+        // while the tab was in the background shows up right away instead
+        // of waiting up to POLL_INTERVAL_MS.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') pollForNewMessages();
+        });
+    }
+
+    function stopPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = null;
     }
 
     // ---------- Sending a message ----------
-    function sendChatMessage() {
+    async function sendChatMessage() {
         const input = document.getElementById('chat-input');
         const body = input.value.trim();
-        if (!body || !socket || socket.readyState !== WebSocket.OPEN) return;
-        socket.send(JSON.stringify({ body }));
+        if (!body) return;
         input.value = '';
+
+        try {
+            const res = await fetch("{% url 'core:send_message' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                body: JSON.stringify({ body }),
+            });
+            const data = await res.json();
+            if (data.message && !isAlreadyRendered(data.message.id)) {
+                appendBubble(data.message);
+            }
+        } catch (err) {
+            // Leave the input cleared but let the next poll (or a manual
+            // resend) reconcile — a demo-scale chat doesn't need a retry queue.
+            setConnStatus(false);
+        }
     }
 
     document.getElementById('chat-send-btn').addEventListener('click', sendChatMessage);
@@ -398,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ---------- Logout ----------
     document.getElementById('logout-btn').addEventListener('click', async function () {
-        if (socket) socket.close();
+        stopPolling();
         await fetch("{% url 'core:contact_logout' %}", {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
@@ -407,13 +446,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stepEmail.classList.remove('hidden');
         document.getElementById('input-email').value = '';
         document.getElementById('input-code').value = '';
+        lastSeenId = 0;
     });
 
-    // ---------- If already verified this session, load history and connect ----------
+    // ---------- If already verified this session, load history and poll ----------
     {% if session_email %}
     const initialMessages = JSON.parse(document.getElementById('initial-messages').textContent);
     renderMessages(initialMessages);
-    connectSocket();
+    startPolling();
     {% endif %}
 
 });

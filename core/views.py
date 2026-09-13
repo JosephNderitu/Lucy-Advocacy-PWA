@@ -78,7 +78,6 @@ def about(request):
 
 
 MESSAGES_PAGE_SIZE = 30
-
 def contact(request):
     session_email = request.session.get('contact_email')
     conversation = None
@@ -88,7 +87,7 @@ def contact(request):
         conversation = Conversation.objects.filter(email=session_email).first()
         if conversation:
             recent = list(conversation.messages.order_by('-created_at')[:MESSAGES_PAGE_SIZE]
-                           .values('sender', 'body', 'created_at'))
+                           .values('id', 'sender', 'body', 'created_at'))
             messages = list(reversed(recent))
             has_more = conversation.messages.count() > MESSAGES_PAGE_SIZE
 
@@ -97,7 +96,8 @@ def contact(request):
         'messages': messages,
         'has_more': has_more,
     })
-    
+
+ 
 from django.core.cache import cache
 
 @require_POST
@@ -132,7 +132,6 @@ def send_verification_code(request):
     cache.set(cooldown_key, True, timeout=60)
     return JsonResponse({'success': True})
 
-
 @require_POST
 def verify_code(request):
     data = json.loads(request.body)
@@ -153,14 +152,14 @@ def verify_code(request):
     ).order_by('-created_at').first()
 
     if not verification:
-        cache.set(attempts_key, attempts + 1, timeout=600)  # matches code's 10-min lifetime
+        cache.set(attempts_key, attempts + 1, timeout=600)
         return JsonResponse({'error': 'Invalid code.'}, status=400)
 
     if verification.is_expired():
         cache.set(attempts_key, attempts + 1, timeout=600)
         return JsonResponse({'error': 'That code has expired. Request a new one.'}, status=400)
 
-    cache.delete(attempts_key)  # reset on success
+    cache.delete(attempts_key)
 
     verification.is_used = True
     verification.save(update_fields=['is_used'])
@@ -173,11 +172,17 @@ def verify_code(request):
     request.session['contact_email'] = email
     request.session.set_expiry(60 * 60 * 24 * 30)
 
-    messages = list(conversation.messages.values('sender', 'body', 'created_at'))
+    messages = list(conversation.messages.values('id', 'sender', 'body', 'created_at'))
     return JsonResponse({'success': True, 'messages': messages})
 
 
 def get_messages(request):
+    """Two modes, chosen by which query param is present:
+    - ?before=<id>  — older history, for the "Load earlier messages" button.
+    - ?after=<id>   — new messages since the client's last-seen id. This is
+      the one the polling loop calls every few seconds.
+    Neither should be sent in the same request; before wins if both are.
+    """
     email = request.session.get('contact_email')
     if not email:
         return JsonResponse({'error': 'Not verified.'}, status=401)
@@ -187,13 +192,24 @@ def get_messages(request):
         return JsonResponse({'messages': [], 'has_more': False})
 
     before = request.GET.get('before')
-    qs = conversation.messages.order_by('-created_at')
-    if before:
-        qs = qs.filter(created_at__lt=before)
+    after = request.GET.get('after')
 
-    page = list(qs[:MESSAGES_PAGE_SIZE].values('sender', 'body', 'created_at'))
+    if before:
+        qs = conversation.messages.filter(created_at__lt=before).order_by('-created_at')
+        page = list(qs[:MESSAGES_PAGE_SIZE].values('id', 'sender', 'body', 'created_at'))
+        has_more = qs.count() > MESSAGES_PAGE_SIZE
+        return JsonResponse({'messages': list(reversed(page)), 'has_more': has_more})
+
+    if after:
+        qs = conversation.messages.filter(id__gt=after).order_by('created_at')[:100]
+        return JsonResponse({'messages': list(qs.values('id', 'sender', 'body', 'created_at')), 'has_more': False})
+
+    # Neither param — just the latest page, same as the initial page load.
+    qs = conversation.messages.order_by('-created_at')
+    page = list(qs[:MESSAGES_PAGE_SIZE].values('id', 'sender', 'body', 'created_at'))
     has_more = qs.count() > MESSAGES_PAGE_SIZE
     return JsonResponse({'messages': list(reversed(page)), 'has_more': has_more})
+
 
 @require_POST
 def send_message(request):
@@ -207,12 +223,20 @@ def send_message(request):
         return JsonResponse({'error': 'Message cannot be empty.'}, status=400)
 
     conversation, _ = Conversation.objects.get_or_create(email=email)
-    ChatMessage.objects.create(conversation=conversation, sender='guest', body=body)
+    msg = ChatMessage.objects.create(conversation=conversation, sender='guest', body=body)
     conversation.last_message_at = timezone.now()
     conversation.save(update_fields=['last_message_at'])
 
-    return JsonResponse({'success': True})
-
+    # Returning the saved message lets the client render it immediately
+    # instead of waiting for the next poll tick to see its own message.
+    return JsonResponse({
+        'success': True,
+        'message': {
+            'id': msg.id, 'sender': msg.sender, 'body': msg.body,
+            'created_at': msg.created_at.isoformat(),
+        },
+    })
+    
 
 def contact_logout(request):
     request.session.pop('contact_email', None)

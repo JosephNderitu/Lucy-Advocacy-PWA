@@ -45,7 +45,6 @@ class PracticeArea(models.Model):
         return self.title
     
 
-
 class Conversation(models.Model):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=150, blank=True)
@@ -102,20 +101,7 @@ from django.core.mail import EmailMultiAlternatives
 def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
     if not created or instance.sender != 'staff':
         return
-
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        group_name_for_email(instance.conversation.email),
-        {
-            'type': 'chat_message',
-            'message': {
-                'sender': instance.sender,
-                'body': instance.body,
-                'created_at': instance.created_at.isoformat(),
-            },
-        },
-    )
-
+ 
     if not instance.notified:
         context = {
             'subject': "New reply from Ngima Wangai & Company Advocates",
@@ -126,7 +112,7 @@ def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
             'footer_image_url': f"{settings.SITE_URL}/static/images/static_images/logo-icon.png",
         }
         html_body = render_to_string('emails/staff_reply.html', context)
-
+ 
         email = EmailMultiAlternatives(
             subject=context['subject'],
             body=strip_tags(html_body),
@@ -135,10 +121,11 @@ def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
         )
         email.attach_alternative(html_body, "text/html")
         email.send(fail_silently=True)
-
+ 
         instance.notified = True
         instance.save(update_fields=['notified'])
         
+      
 @receiver(post_save, sender=ChatMessage)
 def notify_admin_on_guest_message(sender, instance, created, **kwargs):
     if not created or instance.sender != 'guest' or not settings.ADMIN_NOTIFICATION_EMAIL:
