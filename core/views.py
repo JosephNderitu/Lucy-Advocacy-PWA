@@ -12,6 +12,7 @@ from django.utils import timezone
 import os
 from django.conf import settings
 from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 
 from django.core import signing
 from django.core.exceptions import ValidationError
@@ -27,10 +28,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.shortcuts import render, redirect, get_object_or_404
 
 from .forms import ClientLoginForm, DocumentUploadForm
-from .models import Case, CaseDocument, DocumentRequest, ActivityLog
 
 def home(request):
     practice_areas = list(
