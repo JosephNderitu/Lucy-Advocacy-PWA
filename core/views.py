@@ -593,7 +593,7 @@ def article_detail(request, slug):
         "pages": pages,
         "images": images,
         "contact_email": "nwangailawadvocates@gmail.com",
-        "contact_phone": "+254 7XX XXX XXX",
+        "contact_phone": "+254 714 535 492",
     })
 
 

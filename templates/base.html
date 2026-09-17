@@ -141,6 +141,10 @@
              class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
             Practice Areas
           </a>
+          <a href="{% url 'core:article_list' %}"
+             class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide transition-colors {% if request.resolver_match.url_name == 'article_list' %}bg-brand-teal-600 text-white{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %}">
+            Articles
+          </a>
           <a href="{% url 'core:contact' %}"
              class="px-5 py-2.5 rounded-full text-[15px] font-semibold tracking-wide transition-colors {% if request.resolver_match.url_name == 'contact' %}bg-brand-teal-600 text-white{% else %}text-gray-300 hover:bg-white/10 hover:text-white{% endif %}">
             Contact
@@ -238,6 +242,10 @@
           <a href="{% url 'core:home' %}#practice-areas"
              class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold text-brand-ink-800 hover:bg-brand-mist-50 transition-colors">
             <i class="fa-solid fa-scale-balanced w-5 text-center"></i>Practice Areas
+          </a>
+          <a href="{% url 'core:article_list' %}"
+             class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'article_list' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
+            <i class="fa-solid fa-envelope w-5 text-center"></i>Articles
           </a>
           <a href="{% url 'core:contact' %}"
              class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-semibold transition-colors {% if request.resolver_match.url_name == 'contact' %}bg-brand-teal-600 text-white{% else %}text-brand-ink-800 hover:bg-brand-mist-50{% endif %}">
