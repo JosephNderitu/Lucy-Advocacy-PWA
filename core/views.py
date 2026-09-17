@@ -13,6 +13,25 @@ import os
 from django.conf import settings
 from django.http import HttpResponse
 
+from django.core import signing
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.http import JsonResponse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from .models import *
+from .newsletter_utils import read_unsubscribe_token
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.shortcuts import render, redirect, get_object_or_404
+
+from .forms import ClientLoginForm, DocumentUploadForm
+from .models import Case, CaseDocument, DocumentRequest, ActivityLog
+
 def home(request):
     practice_areas = list(
         PracticeArea.objects.filter(is_active=True).values(
@@ -244,18 +263,6 @@ def contact_logout(request):
     request.session.pop('contact_email', None)
     return JsonResponse({'success': True})
 
-from django.core import signing
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
-from django.views.decorators.http import require_POST
-
-from .models import NewsletterSubscriber
-from .newsletter_utils import read_unsubscribe_token
-
-
 @require_POST
 def newsletter_subscribe(request):
     email = (request.POST.get("email") or "").strip().lower()
@@ -294,7 +301,6 @@ def newsletter_subscribe(request):
         "message": "Welcome back, you're subscribed again.",
     })
 
-
 def newsletter_unsubscribe(request, token):
     try:
         subscriber_id = read_unsubscribe_token(token)
@@ -312,16 +318,6 @@ def newsletter_unsubscribe(request, token):
 
     return render(request, "core/newsletter_unsubscribe.html", {"subscriber": subscriber})
 # --- Append to core/views.py ---
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.core.cache import cache
-from django.shortcuts import render, redirect, get_object_or_404
-
-from .forms import ClientLoginForm, DocumentUploadForm
-from .models import Case, CaseDocument, DocumentRequest, ActivityLog
-
 LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_LOCKOUT_SECONDS = 15 * 60
 
