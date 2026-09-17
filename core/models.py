@@ -9,6 +9,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import timedelta
 import os
+import uuid
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
 
 def group_name_for_email(email):
     return f"chat_{email.replace('@', '_at_').replace('.', '_dot_')}"
@@ -90,12 +97,6 @@ class EmailVerification(models.Model):
     def __str__(self):
         return f"{self.email} — {self.code}"
 
-
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.core.mail import EmailMultiAlternatives
 
 @receiver(post_save, sender=ChatMessage)
 def notify_guest_on_staff_reply(sender, instance, created, **kwargs):
@@ -193,19 +194,22 @@ class NewsletterCampaign(models.Model):
     def __str__(self):
         return f"{self.subject} ({self.sent_at:%Y-%m-%d})"
     
+
 class Review(models.Model):
     RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
 
     name = models.CharField(max_length=100)
     message = models.TextField(max_length=600)
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    edit_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.name} — {self.rating}★"
+        return f"{self.name} - {self.rating} stars"
 
     @property
     def initials(self):
@@ -215,6 +219,11 @@ class Review(models.Model):
         if len(parts) == 1:
             return parts[0][0].upper()
         return (parts[0][0] + parts[-1][0]).upper()
+
+    @property
+    def is_editable(self):
+        return (timezone.now() - self.created_at).total_seconds() <= 60
+    
 
 # Uses your existing User model (django.contrib.auth.models.User) as the login account.
 

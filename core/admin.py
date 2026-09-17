@@ -449,10 +449,10 @@ class ActivityLogAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ("name", "rating", "created_at")
+    list_display = ("name", "rating", "ip_address", "created_at")
     list_filter = ("rating", "created_at")
-    search_fields = ("name", "message")
-    readonly_fields = ("name", "message", "rating", "created_at")  # display only — delete spam, never edit content
+    search_fields = ("name", "message", "ip_address")
+    readonly_fields = ("name", "message", "rating", "ip_address", "edit_token", "created_at")
 
     def has_add_permission(self, request):
-        return False  # reviews only ever come from the public form
+        return False

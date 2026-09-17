@@ -28,27 +28,42 @@ from django.core.cache import cache
 from .forms import *
 from django.db.models import Avg
 
+from datetime import timedelta
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def serialize_review(review, include_private=False):
+    data = {
+        "id": review.id,
+        "name": review.name,
+        "initials": review.initials,
+        "message": review.message,
+        "rating": review.rating,
+        "created_at": review.created_at.strftime("%B %Y"),
+    }
+    if include_private:
+        data["token"] = str(review.edit_token)
+    return data
+
+
 def home(request):
     practice_areas = list(
         PracticeArea.objects.filter(is_active=True).values(
             "id", "title", "description", "icon_class"
         )
     )
-
     review_qs = Review.objects.order_by("-created_at")[:30]
-    reviews = [
-        {
-            "name": r.name,
-            "initials": r.initials,
-            "message": r.message,
-            "rating": r.rating,
-            "created_at": r.created_at.strftime("%B %Y"),
-        }
-        for r in review_qs
-    ]
+    reviews = [serialize_review(r) for r in review_qs]
     agg = Review.objects.aggregate(avg=Avg("rating"))
     review_avg = round(agg["avg"] or 0, 1)
     review_total = Review.objects.count()
+
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "reviews": reviews,
@@ -59,28 +74,80 @@ def home(request):
 
 @require_POST
 def submit_review(request):
+    ip = get_client_ip(request)
+    one_week_ago = timezone.now() - timedelta(days=7)
+    if ip and Review.objects.filter(ip_address=ip, created_at__gte=one_week_ago).exists():
+        return JsonResponse({
+            "status": "error",
+            "message": "Only one review per week is allowed from your connection. Please check back soon.",
+        }, status=429)
+
     form = ReviewForm(request.POST)
     if form.is_valid():
-        review = form.save()
+        review = form.save(commit=False)
+        review.ip_address = ip
+        review.save()
         new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
         return JsonResponse({
             "status": "success",
-            "message": "Thank you for sharing your experience!",
+            "message": "Thank you for sharing your experience.",
             "new_avg": new_avg,
             "new_total": Review.objects.count(),
-            "review": {
-                "name": review.name,
-                "initials": review.initials,
-                "message": review.message,
-                "rating": review.rating,
-                "created_at": review.created_at.strftime("%B %Y"),
-            },
+            "review": serialize_review(review, include_private=True),
         })
     return JsonResponse({
         "status": "error",
         "message": "Please fill in your name, a star rating, and your review.",
     }, status=400)
 
+
+@require_POST
+def update_review(request, review_id):
+    try:
+        review = Review.objects.get(id=review_id)
+    except Review.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Review not found."}, status=404)
+
+    if str(review.edit_token) != request.POST.get("token", ""):
+        return JsonResponse({"status": "error", "message": "You are not allowed to edit this review."}, status=403)
+
+    if not review.is_editable:
+        return JsonResponse({"status": "error", "message": "The one minute edit window has closed."}, status=403)
+
+    form = ReviewForm(request.POST, instance=review)
+    if form.is_valid():
+        form.save()
+        new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+        return JsonResponse({
+            "status": "success",
+            "message": "Your review has been updated.",
+            "new_avg": new_avg,
+            "review": serialize_review(review, include_private=True),
+        })
+    return JsonResponse({"status": "error", "message": "Please check your review and try again."}, status=400)
+
+
+@require_POST
+def delete_review(request, review_id):
+    try:
+        review = Review.objects.get(id=review_id)
+    except Review.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Review not found."}, status=404)
+
+    if str(review.edit_token) != request.POST.get("token", ""):
+        return JsonResponse({"status": "error", "message": "You are not allowed to delete this review."}, status=403)
+
+    if not review.is_editable:
+        return JsonResponse({"status": "error", "message": "The one minute window to delete this review has closed."}, status=403)
+
+    review.delete()
+    new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+    return JsonResponse({
+        "status": "success",
+        "message": "Your review has been deleted.",
+        "new_avg": new_avg,
+        "new_total": Review.objects.count(),
+    })
 
 def about(request):
     practice_area_count = PracticeArea.objects.filter(is_active=True).count()
