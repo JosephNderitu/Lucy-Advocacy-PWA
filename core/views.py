@@ -27,10 +27,6 @@ from django.core.cache import cache
 
 from .forms import *
 from django.db.models import Avg
-import time
-import logging
-
-logger = logging.getLogger(__name__)
 
 def home(request):
     practice_areas = list(
@@ -53,8 +49,6 @@ def home(request):
     agg = Review.objects.aggregate(avg=Avg("rating"))
     review_avg = round(agg["avg"] or 0, 1)
     review_total = Review.objects.count()
-
-    logger.info(f"Home view executed in {time.time() - t0:.2f}s")
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "reviews": reviews,
