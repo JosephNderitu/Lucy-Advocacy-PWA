@@ -563,7 +563,237 @@
     </div>
   </div>
 </section>
+{{ reviews|json_script:"reviews-data" }}
 
+<!-- ============ REVIEWS ============ -->
+<section
+  id="reviews"
+  x-data="reviewsApp()"
+  x-intersect.once="shown = true"
+  data-shown="false"
+  x-init="$el.dataset.shown = 'true'"
+  class="py-20 lg:py-28 bg-brand-mist-50 relative overflow-hidden"
+>
+  <img
+    src="{% static 'images/static_images/logo-on-teal.png' %}"
+    alt=""
+    aria-hidden="true"
+    class="pointer-events-none select-none absolute -right-24 -bottom-24 w-[28rem] opacity-[0.04] rotate-6"
+  >
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Heading + summary -->
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12 lg:mb-16">
+      <div class="max-w-xl">
+        <p class="text-sm font-medium text-[#A9824C] mb-4">Client feedback</p>
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
+          What Our Clients Say
+        </h2>
+        <p class="mt-4 text-brand-ink-700 leading-relaxed text-base sm:text-lg">
+          Unfiltered feedback from people we've represented — every word here comes
+          straight from the client.
+        </p>
+      </div>
+
+      <!-- Rating summary card -->
+      <div class="flex items-center gap-6 bg-white rounded-2xl ring-1 ring-brand-ink-900/5 shadow-sm px-7 py-5 shrink-0">
+        <div class="text-center">
+          <p class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-none" x-text="total"></p>
+          <p class="text-xs text-brand-ink-700 mt-1.5">Review<span x-show="total !== 1">s</span></p>
+        </div>
+        <span class="block w-px h-12 bg-brand-ink-900/10"></span>
+        <div class="text-center">
+          <p class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-none" x-text="avg.toFixed(1)"></p>
+          <div class="flex items-center justify-center gap-0.5 mt-2">
+            <template x-for="i in 5" :key="i">
+              <i
+                class="text-sm"
+                :class="starClassForAvg(i)"
+                style="color:#A9824C"
+              ></i>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carousel -->
+    <div
+      class="relative"
+      @mouseenter="paused = true"
+      @mouseleave="paused = false"
+    >
+      <div
+        x-ref="track"
+        class="flex gap-6 overflow-x-hidden scroll-smooth pb-2"
+      >
+        <template x-for="(review, i) in reviews" :key="review.created_at + review.name + i">
+          <div class="shrink-0 w-[300px] sm:w-[340px] bg-white rounded-3xl ring-1 ring-brand-ink-900/5 shadow-sm p-7 flex flex-col">
+            <div class="flex items-center gap-3.5 mb-5">
+              <span
+                class="flex items-center justify-center h-11 w-11 rounded-full text-white font-serif font-semibold text-sm shrink-0"
+                :style="'background:' + avatarColor(i)"
+                x-text="review.initials"
+              ></span>
+              <div class="min-w-0">
+                <p class="font-serif font-semibold text-brand-ink-900 leading-snug truncate" x-text="review.name"></p>
+                <p class="text-xs text-brand-ink-700/70" x-text="review.created_at"></p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-0.5 mb-4">
+              <template x-for="pos in 5" :key="pos">
+                <i
+                  class="text-[0.8rem]"
+                  :class="pos <= review.rating ? 'fa-solid fa-star' : 'fa-regular fa-star text-brand-ink-900/15'"
+                  :style="pos <= review.rating ? 'color:#A9824C' : ''"
+                ></i>
+              </template>
+            </div>
+
+            <p class="text-[0.9rem] text-brand-ink-700 leading-relaxed flex-1" x-text="review.message"></p>
+          </div>
+        </template>
+
+        <!-- Empty state -->
+        <div
+          x-show="reviews.length === 0"
+          class="w-full text-center py-16 border-2 border-dashed border-brand-ink-900/10 rounded-2xl"
+        >
+          <p class="text-brand-ink-700">Be the first to share your experience with us.</p>
+        </div>
+      </div>
+
+      <!-- Scroll buttons -->
+      <div x-show="reviews.length > 1" class="flex items-center justify-center gap-3 mt-8">
+        <button
+          type="button"
+          @click="prev()"
+          aria-label="Previous review"
+          class="flex items-center justify-center h-11 w-11 rounded-full bg-white ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors duration-300"
+        >
+          <i class="fa-solid fa-chevron-left text-sm"></i>
+        </button>
+        <button
+          type="button"
+          @click="next()"
+          aria-label="Next review"
+          class="flex items-center justify-center h-11 w-11 rounded-full bg-white ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors duration-300"
+        >
+          <i class="fa-solid fa-chevron-right text-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-12">
+      <button
+        type="button"
+        @click="openModal()"
+        class="inline-flex items-center gap-2.5 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand-orange-500/20"
+      >
+        <i class="fa-solid fa-pen-nib text-sm"></i>
+        Share Your Experience
+      </button>
+    </div>
+  </div>
+
+  <!-- Leave-a-review modal -->
+  <div
+    x-show="modalOpen"
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    @keydown.escape.window="closeModal()"
+  >
+    <div
+      x-show="modalOpen"
+      x-transition:enter="transition-opacity ease-out duration-300"
+      x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+      x-transition:leave="transition-opacity ease-in duration-200"
+      x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+      @click="closeModal()"
+      class="absolute inset-0 bg-brand-ink-900/70 backdrop-blur-sm"
+    ></div>
+
+    <div
+      x-show="modalOpen"
+      x-transition:enter="transition ease-out duration-400"
+      x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+      x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
+      class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 sm:p-10"
+    >
+      <button
+        type="button" @click="closeModal()"
+        class="absolute top-5 right-5 h-9 w-9 rounded-full flex items-center justify-center text-brand-ink-700 ring-1 ring-brand-ink-900/10 hover:bg-brand-mist-50 transition-colors"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <p class="text-sm font-medium text-[#A9824C] mb-2">Share your experience</p>
+      <h3 class="font-serif text-2xl font-bold text-brand-ink-900 mb-6">Leave a Review</h3>
+
+      <form @submit.prevent="submitReview()" class="space-y-5">
+        {% csrf_token %}
+        <input type="hidden" x-ref="csrf" value="{{ csrf_token }}">
+
+        <div>
+          <label class="block text-sm font-medium text-brand-ink-800 mb-1.5">Your name</label>
+          <input
+            type="text" x-model="form.name" required maxlength="100"
+            placeholder="e.g. Jane Njoroge"
+            class="w-full px-4 py-3 rounded-xl border border-brand-ink-900/10 focus:outline-none focus:ring-2 focus:ring-brand-teal-600/40"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-brand-ink-800 mb-1.5">Your rating</label>
+          <div class="flex items-center gap-1">
+            <template x-for="pos in 5" :key="pos">
+              <button
+                type="button"
+                @click="form.rating = pos"
+                @mouseenter="hoverRating = pos"
+                @mouseleave="hoverRating = 0"
+                class="text-2xl leading-none px-0.5"
+                :aria-label="'Rate ' + pos + ' out of 5'"
+              >
+                <i
+                  :class="pos <= (hoverRating || form.rating) ? 'fa-solid fa-star' : 'fa-regular fa-star text-brand-ink-900/20'"
+                  :style="pos <= (hoverRating || form.rating) ? 'color:#A9824C' : ''"
+                ></i>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-brand-ink-800 mb-1.5">Your review</label>
+          <textarea
+            x-model="form.message" required rows="4" maxlength="600"
+            placeholder="Tell us about your experience..."
+            class="w-full px-4 py-3 rounded-xl border border-brand-ink-900/10 focus:outline-none focus:ring-2 focus:ring-brand-teal-600/40 resize-none"
+          ></textarea>
+        </div>
+
+        <p x-show="formError" x-text="formError" class="text-sm text-red-500"></p>
+
+        <button
+          type="submit"
+          :disabled="submitting"
+          class="w-full inline-flex items-center justify-center gap-2 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-6 py-3.5 rounded-full transition-all disabled:opacity-70"
+        >
+          <i x-show="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+          <span x-text="submitting ? 'Submitting' : 'Submit Review'"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
 
 <!-- ============ NEWSLETTER ============ -->
 <section
@@ -675,6 +905,90 @@
       },
       close() {
         this.activeArea = null;
+      },
+    };
+  }
+
+  function reviewsApp() {
+    return {
+      reviews: JSON.parse(document.getElementById('reviews-data').textContent),
+      total: {{ review_total }},
+      avg: {{ review_avg }},
+      idx: 0,
+      paused: false,
+      modalOpen: false,
+      form: { name: '', message: '', rating: 0 },
+      hoverRating: 0,
+      submitting: false,
+      formError: '',
+      palette: ['#0F6E63', '#A9824C', '#1A2B3C', '#C4622D'],
+
+      init() {
+        if (this.reviews.length > 1) {
+          this.timer = setInterval(() => { if (!this.paused) this.next(); }, 4500);
+        }
+      },
+      avatarColor(i) {
+        return this.palette[i % this.palette.length];
+      },
+      starClassForAvg(i) {
+        if (i <= Math.floor(this.avg)) return 'fa-solid fa-star';
+        if (i === Math.ceil(this.avg) && !Number.isInteger(this.avg)) return 'fa-solid fa-star-half-stroke';
+        return 'fa-regular fa-star text-brand-ink-900/15';
+      },
+      scrollToIdx() {
+        const track = this.$refs.track;
+        if (!track || !track.children.length) return;
+        const card = track.children[0];
+        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 24);
+        track.scrollTo({ left: this.idx * (card.offsetWidth + gap), behavior: 'smooth' });
+      },
+      next() {
+        if (!this.reviews.length) return;
+        this.idx = (this.idx + 1) % this.reviews.length;
+        this.scrollToIdx();
+      },
+      prev() {
+        if (!this.reviews.length) return;
+        this.idx = (this.idx - 1 + this.reviews.length) % this.reviews.length;
+        this.scrollToIdx();
+      },
+      openModal() { this.modalOpen = true; this.formError = ''; },
+      closeModal() { this.modalOpen = false; },
+      async submitReview() {
+        if (!this.form.name.trim() || !this.form.message.trim() || !this.form.rating) {
+          this.formError = 'Please add your name, a star rating, and your review.';
+          return;
+        }
+        this.submitting = true;
+        this.formError = '';
+        const body = new FormData();
+        body.append('name', this.form.name);
+        body.append('message', this.form.message);
+        body.append('rating', this.form.rating);
+        try {
+          const res = await fetch('{% url "core:submit_review" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': this.$refs.csrf.value },
+            body,
+          });
+          const data = await res.json();
+          if (data.status === 'success') {
+            this.reviews.unshift(data.review);
+            this.total = data.new_total;
+            this.avg = data.new_avg;
+            this.idx = 0;
+            this.$nextTick(() => this.scrollToIdx());
+            this.form = { name: '', message: '', rating: 0 };
+            this.modalOpen = false;
+          } else {
+            this.formError = data.message || 'Something went wrong. Please try again.';
+          }
+        } catch (e) {
+          this.formError = 'Something went wrong. Please try again in a moment.';
+        } finally {
+          this.submitting = false;
+        }
       },
     };
   }

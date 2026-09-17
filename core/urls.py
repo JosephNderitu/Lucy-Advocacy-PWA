@@ -5,6 +5,8 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path("reviews/submit/", views.submit_review, name="submit_review"),
+    
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
     #conversation and chat message endpoints

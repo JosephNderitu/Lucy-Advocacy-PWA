@@ -6,8 +6,12 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import path, reverse
 
-from .models import NewsletterCampaign, NewsletterSubscriber, PracticeArea, Conversation, ChatMessage
+from .models import *
 from .newsletter_utils import make_unsubscribe_token, get_newsletter_connection
+import json
+from django.http import JsonResponse
+from django.utils import timezone
+from django.utils.html import format_html
 
 
 @admin.register(PracticeArea)
@@ -18,16 +22,9 @@ class PracticeAreaAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
     ordering = ("order",)
     
-
 # ---------------------------------------------------------------------------
 # ContactMessage — read-only inbox
 # ---------------------------------------------------------------------------
-    
-import json
-from django.http import JsonResponse
-from django.utils import timezone
-from django.utils.html import format_html
-
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
@@ -448,3 +445,14 @@ class ActivityLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+    
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("name", "rating", "created_at")
+    list_filter = ("rating", "created_at")
+    search_fields = ("name", "message")
+    readonly_fields = ("name", "message", "rating", "created_at")  # display only — delete spam, never edit content
+
+    def has_add_permission(self, request):
+        return False  # reviews only ever come from the public form

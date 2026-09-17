@@ -193,8 +193,29 @@ class NewsletterCampaign(models.Model):
     def __str__(self):
         return f"{self.subject} ({self.sent_at:%Y-%m-%d})"
     
+class Review(models.Model):
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
 
-# --- Append to core/models.py ---
+    name = models.CharField(max_length=100)
+    message = models.TextField(max_length=600)
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} — {self.rating}★"
+
+    @property
+    def initials(self):
+        parts = [p for p in self.name.strip().split() if p]
+        if not parts:
+            return "?"
+        if len(parts) == 1:
+            return parts[0][0].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
+
 # Uses your existing User model (django.contrib.auth.models.User) as the login account.
 
 class ClientProfile(models.Model):

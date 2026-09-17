@@ -1,6 +1,6 @@
 # --- Append to core/forms.py ---
 from django import forms
-from .models import CaseDocument
+from .models import CaseDocument, Review, Case
 
 INPUT_CLS = (
     "w-full rounded-lg border border-gray-300 px-4 py-3 text-sm "
@@ -43,10 +43,6 @@ class DocumentUploadForm(forms.ModelForm):
             raise forms.ValidationError(f"File is too large. Maximum size is {MAX_UPLOAD_MB}MB.")
         return f
     
-# --- Append to core/forms.py, alongside ClientLoginForm / DocumentUploadForm ---
-from django import forms
-from .models import Case
-
 
 class CaseAdminForm(forms.ModelForm):
     """Used only in the admin. On a new Case, these three extra fields create
@@ -83,3 +79,21 @@ class CaseAdminForm(forms.ModelForm):
             if not cleaned.get("client_id_no", "").strip():
                 self.add_error("client_id_no", "Required for a new case.")
         return cleaned
+    
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["name", "message", "rating"]
+
+    def clean_name(self):
+        return self.cleaned_data["name"].strip()
+
+    def clean_message(self):
+        return self.cleaned_data["message"].strip()
+
+    def clean_rating(self):
+        rating = self.cleaned_data["rating"]
+        if rating not in (1, 2, 3, 4, 5):
+            raise forms.ValidationError("Rating must be between 1 and 5.")
+        return rating

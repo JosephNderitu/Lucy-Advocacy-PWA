@@ -10,16 +10,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 import os
-from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.http import JsonResponse
-from django.utils import timezone
-from django.views.decorators.http import require_POST
 
 from .models import *
 from .newsletter_utils import read_unsubscribe_token
@@ -29,7 +25,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
-from .forms import ClientLoginForm, DocumentUploadForm
+from .forms import *
+from django.db.models import Avg
+import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     practice_areas = list(
@@ -37,7 +38,54 @@ def home(request):
             "id", "title", "description", "icon_class"
         )
     )
-    return render(request, "core/home.html", {"practice_areas": practice_areas})
+
+    review_qs = Review.objects.order_by("-created_at")[:30]
+    reviews = [
+        {
+            "name": r.name,
+            "initials": r.initials,
+            "message": r.message,
+            "rating": r.rating,
+            "created_at": r.created_at.strftime("%B %Y"),
+        }
+        for r in review_qs
+    ]
+    agg = Review.objects.aggregate(avg=Avg("rating"))
+    review_avg = round(agg["avg"] or 0, 1)
+    review_total = Review.objects.count()
+
+    logger.info(f"Home view executed in {time.time() - t0:.2f}s")
+    return render(request, "core/home.html", {
+        "practice_areas": practice_areas,
+        "reviews": reviews,
+        "review_avg": review_avg,
+        "review_total": review_total,
+    })
+
+
+@require_POST
+def submit_review(request):
+    form = ReviewForm(request.POST)
+    if form.is_valid():
+        review = form.save()
+        new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+        return JsonResponse({
+            "status": "success",
+            "message": "Thank you for sharing your experience!",
+            "new_avg": new_avg,
+            "new_total": Review.objects.count(),
+            "review": {
+                "name": review.name,
+                "initials": review.initials,
+                "message": review.message,
+                "rating": review.rating,
+                "created_at": review.created_at.strftime("%B %Y"),
+            },
+        })
+    return JsonResponse({
+        "status": "error",
+        "message": "Please fill in your name, a star rating, and your review.",
+    }, status=400)
 
 
 def about(request):
