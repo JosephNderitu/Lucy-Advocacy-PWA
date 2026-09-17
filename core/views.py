@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 import os
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
 from django.core import signing
@@ -29,6 +29,9 @@ from .forms import *
 from django.db.models import Avg
 
 from datetime import timedelta
+from django.core.paginator import Paginator
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 
 def get_client_ip(request):
@@ -63,12 +66,14 @@ def home(request):
     agg = Review.objects.aggregate(avg=Avg("rating"))
     review_avg = round(agg["avg"] or 0, 1)
     review_total = Review.objects.count()
+    latest_articles = Article.objects.filter(status="published")[:4]
 
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "reviews": reviews,
         "review_avg": review_avg,
         "review_total": review_total,
+        "latest_articles": latest_articles,
     })
 
 
@@ -550,3 +555,65 @@ def service_worker(request):
     with open(path, 'r') as f:
         content = f.read()
     return HttpResponse(content, content_type='application/javascript')
+
+
+def paginate_article_body(body, words_per_page=550):
+    paragraphs = [p.strip() for p in body.split("\n\n") if p.strip()]
+    pages = []
+    current_page = []
+    current_words = 0
+    for para in paragraphs:
+        word_count = len(para.split())
+        if current_page and current_words + word_count > words_per_page:
+            pages.append(current_page)
+            current_page = []
+            current_words = 0
+        current_page.append(para)
+        current_words += word_count
+    if current_page:
+        pages.append(current_page)
+    return pages or [[]]
+
+
+def article_list(request):
+    articles = Article.objects.filter(status="published")
+    paginator = Paginator(articles, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    return render(request, "core/article_list.html", {"page_obj": page_obj})
+
+
+def article_detail(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    if article.status != "published" and not request.user.is_staff:
+        raise Http404
+    pages = paginate_article_body(article.body)
+    images = list(article.images.all())
+    return render(request, "core/article_detail.html", {
+        "article": article,
+        "pages": pages,
+        "images": images,
+        "contact_email": "nwangailawadvocates@gmail.com",
+        "contact_phone": "+254 7XX XXX XXX",
+    })
+
+
+def article_pdf(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    if article.status != "published" and not request.user.is_staff:
+        raise Http404
+    pages = paginate_article_body(article.body)
+    images = list(article.images.all())
+    template = get_template("core/article_pdf.html")
+    html = template.render({
+        "article": article,
+        "pages": pages,
+        "images": images,
+        "contact_email": "nwangailawadvocates@gmail.com",
+        "contact_phone": "+254 7XX XXX XXX",
+    })
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{article.slug}.pdf"'
+    result = pisa.CreatePDF(html, dest=response)
+    if result.err:
+        return HttpResponse("Could not generate the PDF for this article.", status=500)
+    return response

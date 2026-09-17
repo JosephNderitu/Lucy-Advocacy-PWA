@@ -456,3 +456,31 @@ class ReviewAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+    
+
+
+class ArticleImageInline(admin.TabularInline):
+    model = ArticleImage
+    extra = 1
+    fields = ("image", "caption", "order")
+
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ("title", "status", "published_at", "preview_link")
+    list_filter = ("status",)
+    search_fields = ("title", "headline", "body")
+    prepopulated_fields = {"slug": ("title",)}
+    inlines = [ArticleImageInline]
+    fieldsets = (
+        (None, {"fields": ("title", "slug", "status")}),
+        ("Newspaper layout", {"fields": ("headline", "subheadline", "excerpt", "author_name")}),
+        ("Content", {"fields": ("body",)}),
+    )
+
+    def preview_link(self, obj):
+        if not obj.pk:
+            return "Save to preview"
+        url = reverse("core:article_detail", args=[obj.slug])
+        return format_html('<a href="{}" target="_blank">Preview live design</a>', url)
+    preview_link.short_description = "Preview"

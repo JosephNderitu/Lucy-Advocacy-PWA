@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Articles | Ngima Wangai & Company Advocates{% endblock %}
+
+{% block content %}
+<section class="py-14 lg:py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <p class="text-sm font-medium text-[#A9824C] mb-3">Insights</p>
+      <h1 class="font-serif text-4xl sm:text-5xl font-bold text-brand-ink-900">Articles</h1>
+      <p class="mt-4 text-brand-ink-700 leading-relaxed">
+        Legal insight and commentary from our team, written to help you understand the issues that affect you.
+      </p>
+    </div>
+
+    {% if page_obj.object_list %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      {% for article in page_obj %}
+      <div class="bg-white rounded-2xl ring-1 ring-brand-ink-900/5 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-300">
+        {% if article.cover_image %}
+          <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="w-full h-36 object-cover">
+        {% else %}
+          <div class="w-full h-36 bg-brand-mist-50 flex items-center justify-center text-brand-ink-900/20">
+            <i class="fa-solid fa-newspaper text-3xl"></i>
+          </div>
+        {% endif %}
+        <div class="p-5 flex flex-col flex-1">
+          <p class="text-xs text-brand-ink-700/70 mb-1.5">
+            {{ article.published_at|date:"F j, Y" }}
+          </p>
+          <h3 class="font-serif font-semibold text-brand-ink-900 leading-snug mb-2 line-clamp-3">
+            {{ article.title }}
+          </h3>
+          <p class="text-sm text-brand-ink-700 leading-relaxed line-clamp-3 flex-1">
+            {{ article.excerpt }}
+          </p>
+          <a href="{% url 'core:article_detail' article.slug %}"
+             class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-teal-600 hover:text-brand-teal-700">
+            Read more
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="flex items-center justify-center gap-2 mt-12">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}"
+         class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors">
+        <i class="fa-solid fa-chevron-left text-sm"></i>
+      </a>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        <a href="?page={{ num }}"
+           class="h-10 w-10 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
+             {% if num == page_obj.number %}bg-brand-teal-600 text-white{% else %}ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-mist-50{% endif %}">
+          {{ num }}
+        </a>
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}"
+         class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors">
+        <i class="fa-solid fa-chevron-right text-sm"></i>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-16 border-2 border-dashed border-brand-ink-900/10 rounded-2xl">
+      <p class="text-brand-ink-700">No articles published yet, check back soon.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

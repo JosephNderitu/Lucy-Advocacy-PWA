@@ -563,6 +563,45 @@
     </div>
   </div>
 </section>
+
+<!-- ============ LATEST ARTICLES ============ -->
+{% if latest_articles %}
+<section class="py-14 lg:py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p class="text-sm font-medium text-[#A9824C] mb-2">Insights</p>
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900">Latest Articles</h2>
+      </div>
+      <a href="{% url 'core:article_list' %}"
+         class="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-brand-teal-600 hover:text-brand-teal-700">
+        Find more
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% for article in latest_articles %}
+      <div class="bg-white rounded-2xl ring-1 ring-brand-ink-900/5 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-300">
+        {% if article.cover_image %}
+        <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="w-full h-36 object-cover">
+        {% endif %}
+        <div class="p-5 flex flex-col flex-1">
+          <h3 class="font-serif font-semibold text-brand-ink-900 leading-snug mb-2 line-clamp-3">{{ article.title }}</h3>
+          <p class="text-sm text-brand-ink-700 leading-relaxed line-clamp-3 flex-1">{{ article.excerpt }}</p>
+          <a href="{% url 'core:article_detail' article.slug %}" class="mt-4 text-sm font-semibold text-brand-teal-600 hover:text-brand-teal-700">Read more</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="sm:hidden text-center mt-8">
+      <a href="{% url 'core:article_list' %}" class="text-sm font-semibold text-brand-teal-600">Find more articles</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {{ reviews|json_script:"reviews-data" }}
 
 <!-- ============ REVIEWS ============ -->

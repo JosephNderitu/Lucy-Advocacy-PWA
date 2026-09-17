@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ article.title }} | Ngima Wangai & Company Advocates{% endblock %}
+
+{% block content %}
+<section
+  x-data="{ activePage: 1, totalPages: {{ pages|length }} }"
+  class="bg-brand-mist-50 py-8 lg:py-12"
+>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+    <div class="flex items-center justify-between mb-5">
+      <a href="{% url 'core:article_pdf' article.slug %}"
+         class="inline-flex items-center gap-2 text-sm font-semibold text-brand-teal-600 hover:text-brand-teal-700">
+        <i class="fa-solid fa-file-pdf"></i>
+        Download PDF
+      </a>
+      <a href="{% url 'core:article_list' %}"
+         class="inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-700 hover:text-brand-ink-900">
+        Close
+        <i class="fa-solid fa-xmark"></i>
+      </a>
+    </div>
+
+    <article class="bg-white rounded-2xl shadow-lg ring-1 ring-brand-ink-900/5 p-6 sm:p-10 lg:p-14">
+
+      <div class="flex items-center justify-between border-b border-brand-ink-900/10 pb-6 mb-6">
+        <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="Firm logo" class="h-10 opacity-80">
+        <div class="text-center">
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-brand-ink-900 tracking-tight">
+            Ngima Wangai & Company
+          </h2>
+          <p class="text-xs uppercase tracking-[0.3em] text-[#A9824C] mt-1">Legal Insights</p>
+        </div>
+        <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" class="h-10 opacity-80" aria-hidden="true">
+      </div>
+
+      <p class="text-center text-sm text-brand-ink-700 mb-8">
+        <span class="font-semibold">{{ article.published_at|date:"F j, Y" }}</span>
+        &nbsp;by {{ article.display_author }}
+      </p>
+
+      <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-orange-500 text-center leading-tight mb-8">
+        {{ article.headline }}
+      </h1>
+
+      <div class="border-t border-brand-ink-900/10 pt-8">
+        {% for page in pages %}
+        <div x-show="activePage === {{ forloop.counter }}">
+
+          {% if forloop.first %}
+          <div class="grid sm:grid-cols-2 gap-8 mb-8 items-start">
+            <div>
+              {% if article.subheadline %}
+              <h2 class="font-serif text-xl font-bold text-brand-ink-900 mb-4">{{ article.subheadline }}</h2>
+              {% endif %}
+              {% if page|length > 0 %}
+              <p class="text-[0.95rem] text-brand-ink-700 leading-relaxed">{{ page.0 }}</p>
+              {% endif %}
+            </div>
+            {% if images.0 %}
+            <div>
+              <img src="{{ images.0.image.url }}" alt="{{ images.0.caption }}" class="w-full rounded-xl object-cover aspect-[4/3]">
+              {% if images.0.caption %}
+              <p class="text-xs text-center uppercase tracking-wide text-brand-ink-700/70 mt-2">{{ images.0.caption }}</p>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+
+          {% if images|length > 1 %}
+          <div class="flex gap-4 overflow-x-auto mb-8 pb-2">
+            {% for img in images|slice:"1:" %}
+            <div class="shrink-0 w-48">
+              <img src="{{ img.image.url }}" alt="{{ img.caption }}" class="w-full h-32 object-cover rounded-lg">
+              {% if img.caption %}
+              <p class="text-xs text-center text-brand-ink-700/70 mt-1">{{ img.caption }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="[column-fill:balance] sm:[column-count:2] lg:[column-count:3] gap-8 text-[0.92rem] text-brand-ink-700 leading-relaxed space-y-4">
+            {% for para in page|slice:"1:" %}
+            <p class="break-inside-avoid-column">{{ para }}</p>
+            {% endfor %}
+          </div>
+
+          {% else %}
+          <div class="[column-fill:balance] sm:[column-count:2] lg:[column-count:3] gap-8 text-[0.92rem] text-brand-ink-700 leading-relaxed space-y-4">
+            {% for para in page %}
+            <p class="break-inside-avoid-column">{{ para }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+
+        {% if pages|length > 1 %}
+        <div class="flex items-center justify-center gap-4 mt-10 pt-6 border-t border-brand-ink-900/10">
+          <button type="button" @click="activePage = Math.max(1, activePage - 1)" :disabled="activePage === 1"
+            class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors disabled:opacity-30">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+          </button>
+          <span class="text-sm font-semibold text-brand-ink-900" x-text="'Page ' + activePage + ' of ' + totalPages"></span>
+          <button type="button" @click="activePage = Math.min(totalPages, activePage + 1)" :disabled="activePage === totalPages"
+            class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors disabled:opacity-30">
+            <i class="fa-solid fa-chevron-right text-sm"></i>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="mt-10 pt-6 border-t-2 border-brand-ink-900 flex flex-wrap items-center justify-center gap-6 text-sm font-semibold text-brand-ink-900">
+        <span><i class="fa-solid fa-envelope mr-1.5 text-brand-teal-600"></i>{{ contact_email }}</span>
+        <span><i class="fa-solid fa-phone mr-1.5 text-brand-teal-600"></i>{{ contact_phone }}</span>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

@@ -8,7 +8,7 @@ urlpatterns = [
     path("reviews/submit/", views.submit_review, name="submit_review"),
     path("reviews/<int:review_id>/update/", views.update_review, name="update_review"),
     path("reviews/<int:review_id>/delete/", views.delete_review, name="delete_review"),
-    
+
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
     #conversation and chat message endpoints
@@ -26,6 +26,10 @@ urlpatterns = [
     path("portal/", views.portal_dashboard, name="portal_dashboard"),
     path("portal/documents/<int:pk>/delete/", views.portal_document_delete, name="portal_document_delete"),
     path("portal/activity/", views.portal_activity_log, name="portal_activity_log"),
+    
+    path("articles/", views.article_list, name="article_list"),
+    path("articles/<slug:slug>/", views.article_detail, name="article_detail"),
+    path("articles/<slug:slug>/pdf/", views.article_pdf, name="article_pdf"),
     
     path('sw.js', views.service_worker, name='service_worker'),
 ]

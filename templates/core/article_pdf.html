@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #1A2B3C; }
+  .masthead { text-align: center; border-bottom: 2px solid #1A2B3C; padding-bottom: 12px; margin-bottom: 12px; }
+  .masthead h2 { font-size: 20px; margin: 0; }
+  .masthead p { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #A9824C; margin: 4px 0 0; }
+  .meta { text-align: center; font-size: 11px; margin-bottom: 16px; }
+  .headline { text-align: center; font-size: 26px; font-weight: bold; color: #C4622D; margin-bottom: 20px; }
+  .subheadline { font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+  .cover-image { width: 100%; margin-bottom: 6px; }
+  .caption { text-align: center; font-size: 9px; text-transform: uppercase; color: #666; margin-bottom: 18px; }
+  p.body-text { font-size: 11px; line-height: 1.6; margin-bottom: 10px; text-align: justify; }
+  .page-break { page-break-after: always; }
+  .footer { text-align: center; border-top: 2px solid #1A2B3C; padding-top: 10px; margin-top: 20px; font-size: 11px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <h2>Ngima Wangai &amp; Company</h2>
+  <p>Legal Insights</p>
+</div>
+
+<div class="meta">{{ article.published_at|date:"F j, Y" }} by {{ article.display_author }}</div>
+<div class="headline">{{ article.headline }}</div>
+
+{% for page in pages %}
+  {% if forloop.first and article.subheadline %}
+  <div class="subheadline">{{ article.subheadline }}</div>
+  {% endif %}
+
+  {% if forloop.first and images.0 %}
+  <img class="cover-image" src="{{ images.0.image.path }}">
+  {% if images.0.caption %}<div class="caption">{{ images.0.caption }}</div>{% endif %}
+  {% endif %}
+
+  {% for para in page %}
+  <p class="body-text">{{ para }}</p>
+  {% endfor %}
+
+  {% if not forloop.last %}<div class="page-break"></div>{% endif %}
+{% endfor %}
+
+<div class="footer">{{ contact_email }} &nbsp;|&nbsp; {{ contact_phone }}</div>
+
+</body>
+</html>

@@ -333,3 +333,63 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"[{self.case.case_number}] {self.get_action_display()}"
+    
+from django.utils.text import slugify
+from django.utils import timezone
+
+
+class Article(models.Model):
+    STATUS_CHOICES = [("draft", "Draft"), ("published", "Published")]
+
+    title = models.CharField(max_length=200, help_text="Used for the card, the URL, and search.")
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
+    headline = models.CharField(max_length=200, help_text="The big, bold headline at the top of the article.")
+    subheadline = models.CharField(max_length=200, blank=True, help_text="Smaller headline shown above the body text.")
+    excerpt = models.CharField(max_length=300, blank=True, help_text="Short summary shown on the article cards.")
+    author_name = models.CharField(max_length=150, blank=True, help_text="Leave blank to use the firm name.")
+    body = models.TextField(help_text="Separate paragraphs with a blank line. This gets split into pages automatically based on length.")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="draft")
+    published_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-published_at", "-created_at"]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)[:200] or "article"
+            slug = base_slug
+            counter = 1
+            while Article.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                counter += 1
+                slug = f"{base_slug}-{counter}"
+            self.slug = slug
+        if self.status == "published" and not self.published_at:
+            self.published_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    @property
+    def display_author(self):
+        return self.author_name or "Ngima Wangai & Company Advocates"
+
+    @property
+    def cover_image(self):
+        first = self.images.first()
+        return first.image if first else None
+
+
+class ArticleImage(models.Model):
+    article = models.ForeignKey(Article, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="articles/%Y/%m/")
+    caption = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"Image for {self.article.title}"
