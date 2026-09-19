@@ -231,7 +231,18 @@ def contact(request):
         'has_more': has_more,
     })
 
+def privacy_policy(request):
+    return render(request, "core/privacy_policy.html")
  
+ 
+def terms_conditions(request):
+    return render(request, "core/terms_conditions.html")
+ 
+ 
+def cookie_policy(request):
+    return render(request, "core/cookie_policy.html")
+
+
 from django.core.cache import cache
 
 @require_POST

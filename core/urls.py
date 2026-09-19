@@ -31,5 +31,9 @@ urlpatterns = [
     path("articles/<slug:slug>/", views.article_detail, name="article_detail"),
     path("articles/<slug:slug>/pdf/", views.article_pdf, name="article_pdf"),
     
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('terms-and-conditions/', views.terms_conditions, name='terms_conditions'),
+    path('cookie-policy/', views.cookie_policy, name='cookie_policy'),
+    
     path('sw.js', views.service_worker, name='service_worker'),
 ]
