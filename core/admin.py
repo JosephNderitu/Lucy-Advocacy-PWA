@@ -48,7 +48,6 @@ from .newsletter_utils import get_newsletter_connection, make_unsubscribe_token
 admin.site.site_header = "Ngima Wangai & Company Advocates"
 admin.site.site_title = "NWC Admin"
 admin.site.index_title = "Firm administration"
-admin.site.register(NewsletterCampaign)
 
 
 # =============================================================================
