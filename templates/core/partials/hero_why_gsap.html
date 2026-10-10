@@ -29,40 +29,20 @@
   /* Why-choose-us nodes: colour + pop handled by CSS, line drawing by GSAP */
   .why-node { transition: background-color .5s ease, color .5s ease, box-shadow .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1); }
   .why-node.is-on { background-color: #393C48; color: #C9A24B; box-shadow: 0 0 0 5px rgba(201,162,75,.22); transform: scale(1.08); }
-
-  /* Practice-area panel progress bar (advances the panel on animationend) */
-  .hero-bar { animation: hero-progress 5s linear forwards; }
-  @media (prefers-reduced-motion: reduce) { .hero-bar { animation: none; } }
-
-  /* SVG strokes start undrawn only while GSAP is active */
-  .hero-anim [data-underline], .hero-anim [data-arch-outline] path { stroke-dashoffset: 1; }
-
-  /* Why-choose-us node: one gold ripple when it lights up */
-  @keyframes why-ping { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.9); opacity: 0; } }
-  .why-node::after { content: ''; position: absolute; inset: 0; border-radius: 9999px; border: 2px solid #C9A24B; opacity: 0; pointer-events: none; }
-  .why-node.is-on::after { animation: why-ping .9s ease-out; }
 </style>
 
 <!-- ============ HERO ============ -->
 <section
   id="hero"
-  class="relative z-10 bg-[#FAF7F2] min-h-[92svh] flex items-center overflow-x-clip"
+  class="relative z-10 bg-[#FAF7F2] min-h-[92svh] flex items-center"
   x-data="{
     active: 0,
-    hover: false,
     paused: false,
     count: {{ practice_areas|length|default:0 }},
-    get n() { return Math.min(this.count, 4) },
-    init() { this.$watch('active', () => this.restartBar()) },
-    restartBar() {
-      const b = this.$refs.bar; if (!b) return;
-      b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
-      b.style.animationPlayState = (this.hover || this.paused) ? 'paused' : 'running';
-    },
-    next() { this.active = (this.active + 1) % Math.max(this.n, 1) },
-    pick(i) {
-      this.active = i; this.paused = true; clearTimeout(this.rt);
-      this.rt = setTimeout(() => { this.paused = false }, 8000);
+    init() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || this.count <= 1) return;
+      const n = Math.min(this.count, 4);
+      this.timer = setInterval(() => { if (!this.paused) this.active = (this.active + 1) % n }, 4000);
     }
   }"
 >
@@ -89,11 +69,7 @@
 
         <h1 data-h data-split class="mt-5 font-serif font-bold text-brand-ink-900 leading-[1.08] text-[clamp(2.25rem,5.4vw,4.25rem)]">
           Trusted Legal Counsel for
-          <span class="relative inline-block whitespace-nowrap italic text-[#A9824C]">Every Chapter
-            <svg class="absolute left-0 -bottom-1.5 h-2.5 w-full overflow-visible" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
-              <path data-underline d="M1 6 C 15 1, 30 9, 50 5 S 85 2, 99 6" fill="none" stroke="#C9A24B" stroke-width="2.2" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
-            </svg>
-          </span>
+          <span class="italic text-[#A9824C]">Every Chapter</span>
           of Your Journey
         </h1>
 
@@ -123,96 +99,75 @@
         </ul>
       </div>
 
-      <!-- ===== Lady Justice in an arch frame (works with any photo backdrop) ===== -->
-      <div class="lg:col-span-5 relative mx-auto w-full max-w-[22rem] sm:max-w-[26rem] lg:max-w-none">
-        <div class="relative mx-auto lg:mx-0 lg:ml-3 w-[80%] sm:w-[78%] lg:w-[68%] xl:w-[70%]">
-
-          <!-- rings -->
-          <div class="absolute inset-0 grid place-items-center pointer-events-none" aria-hidden="true">
-            <div data-h data-ring data-sink="0.3" class="col-start-1 row-start-1 aspect-square w-[138%] rounded-full border border-[#C9A24B]/20"></div>
-            <div data-h data-ring data-spin data-sink="0.22" class="col-start-1 row-start-1 aspect-square w-[114%] rounded-full border border-dashed border-[#C9A24B]/40"></div>
-          </div>
-
-          <div data-h data-arch data-sink="0.2" class="hero-float relative aspect-[4/5]">
-            <!-- gold outline that draws itself -->
-            <svg data-arch-outline class="absolute -left-3 -top-3 sm:-left-4 sm:-top-4 w-[calc(100%+1.5rem)] h-[calc(100%+1.5rem)] sm:w-[calc(100%+2rem)] sm:h-[calc(100%+2rem)] pointer-events-none" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M0 125 V50 A50 50 0 0 1 100 50 V125" fill="none" stroke="#C9A24B" stroke-width="0.35" stroke-linecap="round" pathLength="1" stroke-dasharray="1" opacity=".8"/>
-            </svg>
-
-            <div data-arch-frame class="absolute inset-0 overflow-hidden rounded-t-[50%/40%] rounded-b-3xl bg-brand-ink-900 shadow-2xl shadow-brand-ink-900/25 ring-1 ring-brand-ink-900/10">
-              <img
-                data-arch-img
-                src="{% static 'images/static_images/lady-justice.png' %}"
-                alt="Bronze statue of Lady Justice holding the scales and sword"
-                class="h-full w-full object-cover object-[52%_40%] [filter:sepia(.3)_saturate(1.15)_contrast(1.04)]"
-                fetchpriority="high"
-              >
-              <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/55 via-transparent to-[#C9A24B]/15"></div>
-              <div data-shine class="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none">
-                <div class="h-full w-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/25 to-transparent"></div>
-              </div>
-            </div>
-
-            <!-- rotating seal -->
-            <div data-h data-seal class="absolute -right-5 top-8 sm:-right-7 grid h-[5.5rem] w-[5.5rem] sm:h-24 sm:w-24 place-items-center rounded-full bg-[#FAF7F2] ring-1 ring-[#C9A24B]/40 shadow-lg shadow-[#C9A24B]/20" aria-hidden="true">
-              <svg data-seal-text viewBox="0 0 100 100" class="absolute inset-0 h-full w-full">
-                <defs><path id="heroSealCircle" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0"/></defs>
-                <text font-size="7.6" font-weight="600" fill="#A9824C"><textPath href="#heroSealCircle" textLength="228" lengthAdjust="spacing">LSK REGISTERED ADVOCATES &#8226; NAIROBI KENYA &#8226;</textPath></text>
-              </svg>
-              <i class="fa-solid fa-scale-balanced text-[#A9824C] text-lg"></i>
-            </div>
-          </div>
+      <!-- ===== Lady Justice =====
+           NOTE: no transforms/opacity on ANY ancestor of the <img>, otherwise mix-blend-multiply stops working. -->
+      <div class="lg:col-span-5 relative flex justify-center">
+        <div class="absolute inset-0 grid place-items-center pointer-events-none" aria-hidden="true">
+          <div data-h data-ring data-sink="0.32" class="col-start-1 row-start-1 aspect-square w-[88%] max-w-[30rem] rounded-full border border-[#C9A24B]/30"></div>
+          <div data-h data-ring data-spin data-sink="0.26" class="col-start-1 row-start-1 aspect-square w-[68%] max-w-[23rem] rounded-full border border-dashed border-[#C9A24B]/40"></div>
+          <div data-h data-ring data-sink="0.2" class="col-start-1 row-start-1 aspect-square w-[60%] max-w-[20rem] rounded-full bg-gradient-to-b from-[#C9A24B]/20 to-transparent"></div>
         </div>
 
-        <!-- Practice area panel: icon tabs + one detail at a time. Auto-advances, hover/tap to pick -->
+        <img
+          data-h data-statue data-sink="0.22"
+          src="{% static 'images/static_images/lady-justice.png' %}"
+          alt="Bronze statue of Lady Justice holding the scales and sword"
+          class="hero-float relative mix-blend-multiply object-contain w-auto h-[380px] sm:h-[480px] lg:h-[560px] xl:h-[620px] [mask-image:linear-gradient(to_bottom,#000_82%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,#000_82%,transparent)]"
+          fetchpriority="high"
+        >
+
+        <!-- Practice area panel (desktop): auto-cycles, hover to pause and select -->
         {% if practice_areas %}
         <div data-h data-panel data-sink="0.3"
-             @mouseenter="hover = true" @mouseleave="hover = false"
-             class="relative z-10 -mt-12 mx-auto w-[min(94%,21rem)] lg:mt-0 lg:absolute lg:-right-4 xl:-right-8 lg:bottom-8 lg:w-64 xl:w-72 rounded-3xl bg-white/90 backdrop-blur-md ring-1 ring-brand-ink-900/10 shadow-2xl shadow-brand-ink-900/15 p-5">
-          <div class="flex items-center justify-between">
-            <p class="text-[0.68rem] font-semibold tracking-[0.2em] uppercase text-[#A9824C]">Practice Areas</p>
-            <p class="text-[0.68rem] font-semibold tabular-nums text-brand-ink-700/60"><span x-text="String(active + 1).padStart(2, '0')"></span> / <span x-text="String(n).padStart(2, '0')"></span></p>
-          </div>
-
-          <div class="mt-4 flex items-center gap-2" role="tablist" aria-label="Practice areas">
+             @mouseleave="paused = false"
+             class="hidden lg:block absolute -right-2 xl:-right-6 bottom-12 w-64 rounded-2xl bg-white/85 backdrop-blur-md ring-1 ring-brand-ink-900/10 shadow-xl shadow-brand-ink-900/10 p-5">
+          <p class="text-[0.7rem] font-semibold tracking-[0.18em] uppercase text-[#A9824C] mb-3">Practice Areas</p>
+          <ul>
             {% for area in practice_areas|slice:":4" %}
-            <button type="button" role="tab"
-                    @click="pick({{ forloop.counter0 }})"
-                    @mouseenter="active = {{ forloop.counter0 }}"
-                    :aria-selected="active === {{ forloop.counter0 }}"
-                    aria-label="{{ area.title }}"
-                    :class="active === {{ forloop.counter0 }} ? 'bg-[#C9A24B] text-brand-ink-900 shadow-md shadow-[#C9A24B]/30 scale-110' : 'bg-brand-mist-50 text-[#A9824C] hover:bg-[#C9A24B]/20'"
-                    class="flex h-10 w-10 items-center justify-center rounded-full text-sm transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/60">
-              <i class="{{ area.icon_class }}"></i>
-            </button>
+            <li data-panel-item class="relative">
+              <a href="#practice-areas"
+                 @mouseenter="active = {{ forloop.counter0 }}; paused = true"
+                 :class="active === {{ forloop.counter0 }} ? 'text-brand-ink-900 font-semibold' : 'text-brand-ink-700'"
+                 class="flex items-center gap-2.5 py-2 text-sm transition-colors">
+                <span :class="active === {{ forloop.counter0 }} ? 'bg-[#C9A24B] text-brand-ink-900' : 'bg-brand-mist-50 text-[#A9824C]'"
+                      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.7rem] transition-colors duration-300">
+                  <i class="{{ area.icon_class }}"></i>
+                </span>
+                <span class="truncate">{{ area.title }}</span>
+              </a>
+              <!-- description opens for the active area -->
+              <div :class="active === {{ forloop.counter0 }} ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
+                   class="grid transition-[grid-template-rows,opacity] duration-500 ease-out">
+                <div class="overflow-hidden">
+                  <p class="pl-[2.375rem] pb-2 text-xs leading-relaxed text-brand-ink-700/80">{{ area.description|truncatewords:14 }}</p>
+                </div>
+              </div>
+              <!-- progress hairline -->
+              <span x-show="active === {{ forloop.counter0 }}" x-cloak
+                    :style="paused ? 'animation-play-state: paused' : ''"
+                    class="absolute inset-x-0 bottom-0 h-px origin-left bg-[#C9A24B]"
+                    style="animation: hero-progress 4s linear forwards"></span>
+            </li>
             {% endfor %}
-          </div>
-
-          <div class="mt-4 h-px w-full overflow-hidden bg-brand-ink-900/10" x-show="n > 1">
-            <span x-ref="bar" x-effect="$el.style.animationPlayState = (hover || paused) ? 'paused' : 'running'" @animationend="next()" class="hero-bar block h-full w-full origin-left bg-[#C9A24B]"></span>
-          </div>
-
-          <!-- all details share one grid cell so the card never jumps in height -->
-          <div class="mt-4 grid">
-            {% for area in practice_areas|slice:":4" %}
-            <div role="tabpanel"
-                 :aria-hidden="active !== {{ forloop.counter0 }}"
-                 :class="active === {{ forloop.counter0 }} ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'"
-                 class="col-start-1 row-start-1 transition-all duration-500 ease-out">
-              <h3 class="font-serif text-lg font-semibold leading-snug text-brand-ink-900">{{ area.title }}</h3>
-              <p class="mt-1.5 text-[0.82rem] leading-relaxed text-brand-ink-700/85">{{ area.description|truncatewords:18 }}</p>
-            </div>
-            {% endfor %}
-          </div>
-
-          <a href="#practice-areas" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#A9824C] hover:text-brand-ink-900 transition-colors">
-            Explore all {{ practice_areas|length }} areas <i class="fa-solid fa-arrow-right text-[0.6rem]"></i>
+          </ul>
+          <a href="#practice-areas" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#A9824C] hover:text-brand-ink-900 transition-colors">
+            View all {{ practice_areas|length }} <i class="fa-solid fa-arrow-right text-[0.6rem]"></i>
           </a>
         </div>
         {% endif %}
       </div>
     </div>
 
+    <!-- Practice area chips (mobile / tablet) -->
+    {% if practice_areas %}
+    <div data-h data-chips class="lg:hidden mt-8 -mx-4 sm:-mx-6 px-4 sm:px-6 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {% for area in practice_areas|slice:":6" %}
+      <a href="#practice-areas" class="shrink-0 inline-flex items-center gap-2 rounded-full bg-white ring-1 ring-brand-ink-900/10 px-4 py-2 text-sm text-brand-ink-700 hover:ring-[#C9A24B] transition-colors">
+        <i class="{{ area.icon_class }} text-[#A9824C] text-xs"></i>{{ area.title }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 
   <!-- darkens slightly as the next section slides over the hero -->
@@ -222,15 +177,8 @@
 <!-- ============ WHY CHOOSE US (slides over the hero like a sheet) ============ -->
 <section
   id="why-us"
-  class="relative z-20 -mt-10 sm:-mt-14 lg:-mt-16 rounded-t-[2rem] sm:rounded-t-[3rem] bg-gradient-to-b from-white via-white to-[#FBF8F2] shadow-[0_-24px_60px_-24px_rgba(57,60,72,0.35)] pt-28 pb-20 sm:pt-32 sm:pb-24 lg:pt-36 lg:pb-28"
+  class="relative z-20 -mt-10 sm:-mt-14 lg:-mt-16 rounded-t-[2rem] sm:rounded-t-[3rem] bg-white shadow-[0_-24px_60px_-24px_rgba(57,60,72,0.35)] pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-36 lg:pb-24"
 >
-  <!-- warm glows + gold dust, clipped to the rounded sheet -->
-  <div class="absolute inset-0 overflow-hidden rounded-t-[2rem] sm:rounded-t-[3rem] pointer-events-none" aria-hidden="true">
-    <div class="absolute -left-24 top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.14),transparent_65%)]"></div>
-    <div class="absolute -right-24 bottom-10 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.12),transparent_65%)]"></div>
-    <div data-dust-why class="absolute inset-0"></div>
-  </div>
-
   <!-- The "pulled thread": starts in the hero, grows as you scroll, drops onto the heading -->
   <div data-thread class="pointer-events-none absolute inset-x-0 -top-12 h-28 justify-center z-30" aria-hidden="true">
     <span data-thread-line class="block h-full w-px bg-gradient-to-b from-transparent via-[#C9A24B] to-[#C9A24B]"></span>
@@ -240,14 +188,12 @@
     </span>
   </div>
 
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center max-w-2xl mx-auto">
-      <p data-why data-why-head class="inline-flex items-center gap-3 mb-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.18em] text-[#A9824C]">
-        <span class="h-px w-8 bg-[#C9A24B]/70"></span>Why choose us<span class="h-px w-8 bg-[#C9A24B]/70"></span>
-      </p>
-      <h2 data-why data-why-head class="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-brand-ink-900 leading-tight">
-        What Clients Can <span class="italic text-[#A9824C]">Expect</span> From Us
+      <p data-why data-why-head class="text-sm font-medium text-[#A9824C] mb-4">Why choose us</p>
+      <h2 data-why data-why-head class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
+        What Clients Can Expect From Us
       </h2>
       <p data-why data-why-head class="mt-4 text-brand-ink-700 leading-relaxed text-base sm:text-lg">
         Four commitments that shape how we work with every client, from the first call
@@ -256,73 +202,68 @@
     </div>
 
     <!-- Four commitments on one gold line that fills as you scroll -->
-    <div data-why-grid class="mt-12 sm:mt-16 mx-auto max-w-xl lg:max-w-none grid gap-8 lg:grid-cols-4 lg:gap-6">
+    <div data-why-grid class="mt-12 sm:mt-16 grid gap-8 lg:grid-cols-4 lg:gap-6">
 
       <!-- 01 -->
-      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-7">
-        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-[#C9A24B]/20" aria-hidden="true">
+      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-6">
+        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-brand-ink-900/10" aria-hidden="true">
           <span data-why-fill class="absolute inset-0 bg-[#C9A24B] origin-top lg:origin-left"></span>
         </span>
-        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#C9A24B]/40 text-[#A9824C] text-lg shadow-sm">
+        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-brand-teal-600/25 text-brand-teal-600 text-lg">
           <i class="fa-solid fa-briefcase"></i>
         </span>
-        <div class="why-body group relative flex-1 lg:w-full overflow-hidden rounded-3xl bg-[#FFFDF9] ring-1 ring-[#C9A24B]/15 shadow-sm p-6 sm:p-7 lg:text-center transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#C9A24B]/15">
-          <span class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(201,162,75,0.18), transparent 70%);" aria-hidden="true"></span>
-          <span class="pointer-events-none absolute -right-1 -top-5 select-none font-serif text-[5.5rem] font-bold leading-none text-[#C9A24B]/10" aria-hidden="true">01</span>
-          <span class="relative mb-3 block h-px w-8 bg-[#C9A24B] lg:mx-auto"></span>
-          <h3 class="relative font-serif text-lg sm:text-xl font-semibold leading-snug text-brand-ink-900">Full Service Practice</h3>
-          <p class="relative mt-2 text-sm sm:text-[0.95rem] leading-relaxed text-brand-ink-700"><span data-count="{{ practice_areas|length }}">{{ practice_areas|length }}</span> practice areas under one roof</p>
+        <div class="flex-1 lg:w-full rounded-2xl bg-brand-mist-50/50 ring-1 ring-brand-ink-900/5 p-5 sm:p-6 lg:text-center transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-brand-ink-900/10">
+          <p class="font-serif text-xs tracking-[0.2em] text-[#A9824C]">01</p>
+          <h3 class="mt-1.5 font-serif font-semibold text-lg text-brand-ink-900 leading-snug">Full Service Practice</h3>
+          <p class="mt-2 text-sm text-brand-ink-700 leading-relaxed"><span data-count="{{ practice_areas|length }}">{{ practice_areas|length }}</span> practice areas under one roof</p>
         </div>
       </div>
+
       <!-- 02 -->
-      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-7">
-        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-[#C9A24B]/20" aria-hidden="true">
+      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-6">
+        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-brand-ink-900/10" aria-hidden="true">
           <span data-why-fill class="absolute inset-0 bg-[#C9A24B] origin-top lg:origin-left"></span>
         </span>
-        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#C9A24B]/40 text-[#A9824C] text-lg shadow-sm">
+        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-brand-teal-600/25 text-brand-teal-600 text-lg">
           <i class="fa-solid fa-user-check"></i>
         </span>
-        <div class="why-body group relative flex-1 lg:w-full overflow-hidden rounded-3xl bg-[#FFFDF9] ring-1 ring-[#C9A24B]/15 shadow-sm p-6 sm:p-7 lg:text-center transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#C9A24B]/15">
-          <span class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(201,162,75,0.18), transparent 70%);" aria-hidden="true"></span>
-          <span class="pointer-events-none absolute -right-1 -top-5 select-none font-serif text-[5.5rem] font-bold leading-none text-[#C9A24B]/10" aria-hidden="true">02</span>
-          <span class="relative mb-3 block h-px w-8 bg-[#C9A24B] lg:mx-auto"></span>
-          <h3 class="relative font-serif text-lg sm:text-xl font-semibold leading-snug text-brand-ink-900">Personalized Approach</h3>
-          <p class="relative mt-2 text-sm sm:text-[0.95rem] leading-relaxed text-brand-ink-700">Every client's matter handled individually</p>
+        <div class="flex-1 lg:w-full rounded-2xl bg-brand-mist-50/50 ring-1 ring-brand-ink-900/5 p-5 sm:p-6 lg:text-center transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-brand-ink-900/10">
+          <p class="font-serif text-xs tracking-[0.2em] text-[#A9824C]">02</p>
+          <h3 class="mt-1.5 font-serif font-semibold text-lg text-brand-ink-900 leading-snug">Personalized Approach</h3>
+          <p class="mt-2 text-sm text-brand-ink-700 leading-relaxed">Every client's matter handled individually</p>
         </div>
       </div>
+
       <!-- 03 -->
-      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-7">
-        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-[#C9A24B]/20" aria-hidden="true">
+      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-6">
+        <span class="absolute z-0 left-7 top-7 h-[calc(100%+2rem)] w-px lg:left-1/2 lg:h-px lg:w-[calc(100%+1.5rem)] bg-brand-ink-900/10" aria-hidden="true">
           <span data-why-fill class="absolute inset-0 bg-[#C9A24B] origin-top lg:origin-left"></span>
         </span>
-        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#C9A24B]/40 text-[#A9824C] text-lg shadow-sm">
+        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-brand-teal-600/25 text-brand-teal-600 text-lg">
           <i class="fa-solid fa-scale-balanced"></i>
         </span>
-        <div class="why-body group relative flex-1 lg:w-full overflow-hidden rounded-3xl bg-[#FFFDF9] ring-1 ring-[#C9A24B]/15 shadow-sm p-6 sm:p-7 lg:text-center transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#C9A24B]/15">
-          <span class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(201,162,75,0.18), transparent 70%);" aria-hidden="true"></span>
-          <span class="pointer-events-none absolute -right-1 -top-5 select-none font-serif text-[5.5rem] font-bold leading-none text-[#C9A24B]/10" aria-hidden="true">03</span>
-          <span class="relative mb-3 block h-px w-8 bg-[#C9A24B] lg:mx-auto"></span>
-          <h3 class="relative font-serif text-lg sm:text-xl font-semibold leading-snug text-brand-ink-900">LSK Registered Advocates</h3>
-          <p class="relative mt-2 text-sm sm:text-[0.95rem] leading-relaxed text-brand-ink-700">Members of the Law Society of Kenya</p>
+        <div class="flex-1 lg:w-full rounded-2xl bg-brand-mist-50/50 ring-1 ring-brand-ink-900/5 p-5 sm:p-6 lg:text-center transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-brand-ink-900/10">
+          <p class="font-serif text-xs tracking-[0.2em] text-[#A9824C]">03</p>
+          <h3 class="mt-1.5 font-serif font-semibold text-lg text-brand-ink-900 leading-snug">LSK Registered Advocates</h3>
+          <p class="mt-2 text-sm text-brand-ink-700 leading-relaxed">Members of the Law Society of Kenya</p>
         </div>
       </div>
-      <!-- 04 -->
-      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-7">
-        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-[#C9A24B]/40 text-[#A9824C] text-lg shadow-sm">
+
+      <!-- 04 (last card: no outgoing line segment) -->
+      <div data-why data-why-card class="relative flex gap-5 lg:flex-col lg:items-center lg:gap-6">
+        <span data-why-node class="why-node is-on relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-brand-teal-600/25 text-brand-teal-600 text-lg">
           <i class="fa-solid fa-bolt"></i>
         </span>
-        <div class="why-body group relative flex-1 lg:w-full overflow-hidden rounded-3xl bg-[#FFFDF9] ring-1 ring-[#C9A24B]/15 shadow-sm p-6 sm:p-7 lg:text-center transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#C9A24B]/15">
-          <span class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 0%), rgba(201,162,75,0.18), transparent 70%);" aria-hidden="true"></span>
-          <span class="pointer-events-none absolute -right-1 -top-5 select-none font-serif text-[5.5rem] font-bold leading-none text-[#C9A24B]/10" aria-hidden="true">04</span>
-          <span class="relative mb-3 block h-px w-8 bg-[#C9A24B] lg:mx-auto"></span>
-          <h3 class="relative font-serif text-lg sm:text-xl font-semibold leading-snug text-brand-ink-900">Responsive Communication</h3>
-          <p class="relative mt-2 text-sm sm:text-[0.95rem] leading-relaxed text-brand-ink-700">Prompt attention to every inquiry</p>
+        <div class="flex-1 lg:w-full rounded-2xl bg-brand-mist-50/50 ring-1 ring-brand-ink-900/5 p-5 sm:p-6 lg:text-center transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-brand-ink-900/10">
+          <p class="font-serif text-xs tracking-[0.2em] text-[#A9824C]">04</p>
+          <h3 class="mt-1.5 font-serif font-semibold text-lg text-brand-ink-900 leading-snug">Responsive Communication</h3>
+          <p class="mt-2 text-sm text-brand-ink-700 leading-relaxed">Prompt attention to every inquiry</p>
         </div>
       </div>
     </div>
 
     <div data-why class="mt-12 sm:mt-14 text-center">
-      <a data-magnet href="{% url 'core:contact' %}"
+      <a href="{% url 'core:contact' %}"
          class="group inline-flex items-center gap-2.5 rounded-full border border-[#A9824C]/50 px-6 py-3 text-base font-semibold text-[#A9824C] hover:bg-[#C9A24B] hover:text-brand-ink-900 hover:border-[#C9A24B] transition-colors duration-300">
         Speak to an advocate
         <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition-transform duration-300"></i>
@@ -350,7 +291,7 @@
     var $$ = function (s, c) { return gsap.utils.toArray(s, c); };
 
     var hero = $('#hero'), why = $('#why-us');
-    var statue = $('[data-arch-img]');
+    var statue = $('[data-statue]');
     var introDone = false;
 
     /* ---------- helpers ---------- */
@@ -379,19 +320,17 @@
       gsap.to(o, { v: end, duration: 1.4, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v); } });
     }
 
-    /* ---------- gold dust (hero + why section) ---------- */
-    function dust(box, n) {
-      if (!box) return;
-      for (var i = 0; i < n; i++) {
-        var d = document.createElement('span'), sz = 2 + Math.random() * 3;
-        d.style.cssText = 'position:absolute;border-radius:9999px;background:#C9A24B;width:' + sz + 'px;height:' + sz + 'px;left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;opacity:0';
-        box.appendChild(d);
+    /* ---------- gold dust ---------- */
+    var dustBox = $('[data-dust]');
+    if (dustBox) {
+      for (var i = 0; i < 14; i++) {
+        var d = document.createElement('span'), s = 2 + Math.random() * 3;
+        d.style.cssText = 'position:absolute;border-radius:9999px;background:#C9A24B;width:' + s + 'px;height:' + s + 'px;left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;opacity:0';
+        dustBox.appendChild(d);
         gsap.to(d, { opacity: 0.25 + Math.random() * 0.45, duration: 1.5, delay: 1 + Math.random() * 1.5 });
         gsap.to(d, { y: (Math.random() - 0.5) * 60, x: (Math.random() - 0.5) * 30, duration: 4 + Math.random() * 4, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
     }
-    dust($('[data-dust]'), 14);
-    dust($('[data-dust-why]'), 10);
 
     /* ---------- hero intro (starts once the statue is decoded, max 1.5s wait) ---------- */
     var h1 = $('[data-split]');
@@ -417,26 +356,21 @@
         .fromTo('[data-copy] li[data-h]', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }, 1.0)
         .fromTo('[data-ring]', { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 1.4, stagger: 0.15, ease: 'back.out(1.4)' }, 0.2);
 
-      // arch: wipe up, image settles, gold outline draws, seal pops, headline underline draws
-      tl.fromTo('[data-arch]', { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0.2)
-        .fromTo('[data-arch-frame]', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.5, ease: 'power4.inOut', clearProps: 'clipPath' }, 0.2)
-        .fromTo('[data-arch-img]', { scale: 1.3 }, { scale: 1, duration: 2.2, ease: 'power3.out' }, 0.2)
-        .fromTo('[data-arch-outline] path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.8, ease: 'power2.inOut' }, 0.5)
-        .fromTo('[data-seal]', { opacity: 0, scale: 0.3, rotate: -90 }, { opacity: 1, scale: 1, rotate: 0, duration: 1, ease: 'back.out(1.7)' }, 1.3)
-        .fromTo('[data-underline]', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 1.0);
+      if (statue) {
+        tl.fromTo(statue,
+          { clipPath: 'inset(100% 0% 0% 0%)', opacity: 0, scale: 1.08 },
+          { clipPath: 'inset(0% 0% 0% 0%)', opacity: 1, scale: 1, duration: 1.7, ease: 'power4.out', clearProps: 'clipPath' }, 0.3);
+      }
 
       if ($('[data-panel]')) {
-        tl.fromTo('[data-panel]', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, ease: 'back.out(1.2)' }, 1.2);
+        tl.fromTo('[data-panel]', { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 1 }, 1.0)
+          .fromTo('[data-panel-item]', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }, 1.2);
       }
+      tl.fromTo('[data-chips]', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7 }, 1.2);
 
       // slow endless spin on the dashed ring
       var spin = $('[data-spin]');
       if (spin) gsap.to(spin, { rotation: 360, duration: 70, repeat: -1, ease: 'none' });
-
-      var sealText = $('[data-seal-text]');
-      if (sealText) gsap.to(sealText, { rotation: 360, duration: 26, repeat: -1, ease: 'none', transformOrigin: '50% 50%' });
-      var shine = $('[data-shine]');
-      if (shine) gsap.fromTo(shine, { xPercent: 0 }, { xPercent: 420, duration: 1.8, ease: 'power2.inOut', repeat: -1, repeatDelay: 6, delay: 2.5 });
     });
 
     /* ---------- desktop pointer effects ---------- */
@@ -445,9 +379,8 @@
       var spot = $('[data-spot]');
       if (spot) gsap.set(spot, { '--mx': hero.offsetWidth * 0.72 + 'px', '--my': hero.offsetHeight * 0.28 + 'px' });
 
-      var arch = $('[data-arch]');
-      var sx = arch && gsap.quickTo(arch, 'x', { duration: 0.9, ease: 'power3.out' });
-      var sy = arch && gsap.quickTo(arch, 'y', { duration: 0.9, ease: 'power3.out' });
+      var sx = statue && gsap.quickTo(statue, 'x', { duration: 0.9, ease: 'power3.out' });
+      var sy = statue && gsap.quickTo(statue, 'y', { duration: 0.9, ease: 'power3.out' });
       var rings = $$('[data-ring]').map(function (r, i) {
         return { f: (i + 1) * 14, x: gsap.quickTo(r, 'x', { duration: 1.1, ease: 'power3.out' }), y: gsap.quickTo(r, 'y', { duration: 1.1, ease: 'power3.out' }) };
       });
@@ -533,19 +466,6 @@
       fills.forEach(function (f, i) { var v = {}; v[prop] = 1; tl.to(f, Object.assign({ ease: 'none', duration: 1 }, v), i); });
       return function () { tl.scrollTrigger && tl.scrollTrigger.kill(); tl.kill(); };
     }
-
-    /* ---------- warm glow that follows the pointer inside each Why card ---------- */
-    mm.add('(hover: hover) and (pointer: fine)', function () {
-      if (!grid) return;
-      function glow(e) {
-        var b = e.target.closest && e.target.closest('.why-body'); if (!b) return;
-        var r = b.getBoundingClientRect();
-        b.style.setProperty('--gx', (e.clientX - r.left) + 'px');
-        b.style.setProperty('--gy', (e.clientY - r.top) + 'px');
-      }
-      grid.addEventListener('pointermove', glow);
-      return function () { grid.removeEventListener('pointermove', glow); };
-    });
 
     /* ---------- keep trigger positions right after fonts/images ---------- */
     window.addEventListener('load', function () { ScrollTrigger.refresh(); });
