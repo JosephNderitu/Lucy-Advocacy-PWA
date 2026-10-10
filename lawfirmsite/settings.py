@@ -34,8 +34,8 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Allow all hosts for development; r
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
     'jazzmin',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -203,3 +203,97 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1 week to start; raise once confirmed working
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    
+JAZZMIN_SETTINGS = {
+    "site_title": "NWC Admin",
+    "site_header": "Ngima Wangai & Co.",
+    "site_brand": "NWC Advocates",
+    "site_logo": "images/static_images/logo-icon.png",
+    "login_logo": "images/static_images/logo-icon.png",
+    "site_icon": "images/static_images/logo-icon.png",
+    "site_logo_classes": "",
+    "welcome_sign": "Welcome to the firm workspace",
+    "copyright": "Ngima Wangai & Company Advocates",
+    "search_model": ["core.case", "core.conversation"],
+    "user_avatar": None,
+
+    "topmenu_links": [
+        {"name": "View website", "url": "/", "icon": "fas fa-globe", "new_window": True},
+        {"model": "core.case"},
+        {"model": "core.conversation"},
+    ],
+    "usermenu_links": [{"name": "View website", "url": "/", "icon": "fas fa-globe", "new_window": True}],
+
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": [
+        "core.case", "core.conversation", "core.article", "core.practicearea",
+        "core.review", "core.newslettersubscriber", "core.newslettercampaign",
+        "core.activitylog", "auth",
+    ],
+    "custom_links": {
+        "core": [
+            {"name": "Documents awaiting review", "url": "/admin/core/case/?attention=review",
+             "icon": "fas fa-file-circle-exclamation", "permissions": ["core.view_case"]},
+            {"name": "Awaiting client documents", "url": "/admin/core/case/?attention=requests",
+             "icon": "fas fa-hourglass-half", "permissions": ["core.view_case"]},
+            {"name": "Unread conversations", "url": "/admin/core/conversation/?unread=1",
+             "icon": "fas fa-comment-dots", "permissions": ["core.view_conversation"]},
+        ],
+    },
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.group": "fas fa-users",
+        "core.case": "fas fa-briefcase",
+        "core.conversation": "fas fa-comments",
+        "core.article": "fas fa-newspaper",
+        "core.practicearea": "fas fa-balance-scale",
+        "core.review": "fas fa-star",
+        "core.newslettersubscriber": "fas fa-envelope-open-text",
+        "core.newslettercampaign": "fas fa-paper-plane",
+        "core.activitylog": "fas fa-history",
+        "core.clientprofile": "fas fa-user-tie",
+        "core.casedocument": "fas fa-file-contract",
+    },
+    "default_icon_parents": "fas fa-folder",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": True,
+    "custom_css": "core/admin/brand.css",
+    "use_google_fonts_cdn": False,
+    "show_ui_builder": False,
+    "changeform_format": "single",
+    "changeform_format_overrides": {
+        "core.case": "horizontal_tabs",
+        "core.article": "horizontal_tabs",
+        "auth.user": "collapsible",
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False, "footer_small_text": False,
+    "body_small_text": False, "brand_small_text": False,
+    "brand_colour": "navbar-teal",
+    "accent": "accent-teal",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-teal",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary", "secondary": "btn-outline-secondary",
+        "info": "btn-outline-info", "warning": "btn-warning",
+        "danger": "btn-danger", "success": "btn-success",
+    },
+    "actions_sticky_top": True,
+}

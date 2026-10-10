@@ -4,7 +4,8 @@ from lawfirmsite import settings
 import random
 from django.core.mail import send_mail
 from django.conf import settings
-from django.utils import cache, timezone
+from django.utils import timezone
+from django.core.cache import cache
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from datetime import timedelta

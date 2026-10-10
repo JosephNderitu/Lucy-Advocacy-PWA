@@ -1,17 +1,20 @@
 {% extends "admin/change_list.html" %}
 {% block content %}
-<div style="display:flex;gap:16px;margin:0 0 20px;">
-  <div style="flex:1;background:#EEF7F8;border-radius:12px;padding:18px 22px;">
-    <div style="font-size:30px;font-weight:700;color:#2F7178;">{{ open_cases }}</div>
-    <div style="font-size:13px;color:#454A58;font-weight:600;">Open cases</div>
+<div class="row">
+  <div class="col-12 col-md-4">
+    <div class="info-box"><span class="info-box-icon" style="background:#2F7178;color:#fff"><i class="fas fa-briefcase"></i></span>
+      <div class="info-box-content"><span class="info-box-text">Open cases</span>
+        <span class="info-box-number">{{ open_cases }}</span></div></div>
   </div>
-  <div style="flex:1;background:#fef3c7;border-radius:12px;padding:18px 22px;">
-    <div style="font-size:30px;font-weight:700;color:#92400e;">{{ pending_documents }}</div>
-    <div style="font-size:13px;color:#454A58;font-weight:600;">Documents awaiting confirmation</div>
+  <div class="col-6 col-md-4">
+    <div class="info-box"><span class="info-box-icon" style="background:#DD6812;color:#fff"><i class="fas fa-file-circle-exclamation"></i></span>
+      <div class="info-box-content"><span class="info-box-text">Documents to review</span>
+        <span class="info-box-number">{{ pending_documents }}</span></div></div>
   </div>
-  <div style="flex:1;background:#fff1e8;border-radius:12px;padding:18px 22px;">
-    <div style="font-size:30px;font-weight:700;color:#DD6812;">{{ pending_requests }}</div>
-    <div style="font-size:13px;color:#454A58;font-weight:600;">Open document requests</div>
+  <div class="col-6 col-md-4">
+    <div class="info-box"><span class="info-box-icon" style="background:#3F9199;color:#fff"><i class="fas fa-hourglass-half"></i></span>
+      <div class="info-box-content"><span class="info-box-text">Awaiting clients</span>
+        <span class="info-box-number">{{ pending_requests }}</span></div></div>
   </div>
 </div>
 {{ block.super }}
