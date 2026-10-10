@@ -828,102 +828,224 @@
     </div>
   </div>
 </section>
-
-<!-- ============ NEWSLETTER ============ -->
+{% load static %}
+<!-- ============================================================
+     NEWSLETTER
+     Behaviour lives in the newsletter() component at the bottom
+     of this file. This markup only describes how it looks.
+     ============================================================ -->
 <section
-  x-data="{
-    shown: false,
-    email: '',
-    state: 'idle',
-    message: '',
-    async subscribe() {
-      if (this.state === 'loading') return;
-      this.state = 'loading';
-      const form = new FormData();
-      form.append('email', this.email);
-      try {
-        const res = await fetch('{% url 'core:newsletter_subscribe' %}', {
-          method: 'POST',
-          headers: { 'X-CSRFToken': this.$refs.csrf.value },
-          body: form,
-        });
-        const data = await res.json();
-        this.message = data.message;
-        this.state = data.status;
-      } catch (e) {
-        this.state = 'error';
-        this.message = 'Something went wrong. Please try again in a moment.';
-      }
-    }
-  }"
+  x-data="newsletter('{% url 'core:newsletter_subscribe' %}')"
   x-intersect.once="shown = true"
-  class="py-20 bg-gradient-to-br from-brand-ink-900 to-brand-teal-800 relative overflow-hidden"
+  aria-labelledby="newsletter-heading"
+  class="relative isolate overflow-hidden
+         bg-gradient-to-br from-brand-ink-900 to-brand-teal-800
+         py-20 sm:py-24"
 >
-  <img
-    src="{% static 'images/static_images/logo-on-teal.png' %}"
-    alt=""
-    aria-hidden="true"
-    class="pointer-events-none select-none absolute -left-20 -bottom-20 w-96 opacity-[0.05] -rotate-6"
-  >
 
+  <!-- Decorative background -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute -top-24 right-0 h-72 w-72 rounded-full bg-brand-teal-500 opacity-20 blur-3xl"></div>
+    <div class="absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-brand-orange-500 opacity-10 blur-3xl"></div>
+    <img
+      src="{% static 'images/static_images/logo-on-teal.png' %}"
+      alt=""
+      class="absolute -bottom-20 -left-20 w-96 -rotate-6 select-none opacity-[0.05]"
+    >
+  </div>
   <div
-    :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-    class="transition-all duration-700 relative max-w-2xl mx-auto px-4 text-center"
+    aria-hidden="true"
+    class="absolute inset-x-0 top-0 h-px opacity-60
+           bg-gradient-to-r from-transparent via-brand-orange-500 to-transparent"
+  ></div>
+
+  <!-- Content (fades up when scrolled into view) -->
+  <div
+    :class="shown ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    class="mx-auto max-w-3xl px-4 sm:px-6
+           transition-all duration-700 ease-out motion-reduce:transition-none"
   >
-    <i class="fa-solid fa-envelope-open-text text-brand-teal-400 text-3xl mb-5"></i>
-    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white">Stay Informed</h2>
-    <p class="mt-4 text-gray-300">
-      Subscribe for occasional legal insights and updates from our team. No spam,
-      just what's relevant to you.
-    </p>
-
-    <form
-      @submit.prevent="subscribe()"
-      x-show="state !== 'subscribed' && state !== 'resubscribed'"
-      class="mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-    >
-      {% csrf_token %}
-      <input type="hidden" x-ref="csrf" value="{{ csrf_token }}">
-
-      <label for="newsletter-email" class="sr-only">Email address</label>
-      <input
-        id="newsletter-email"
-        type="email"
-        x-model="email"
-        required
-        placeholder="Your email address"
-        :disabled="state === 'loading'"
-        class="flex-1 px-5 py-3.5 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal-500 focus:bg-white/15 transition-colors disabled:opacity-60"
-      >
-      <button
-        type="submit"
-        :disabled="state === 'loading'"
-        class="inline-flex items-center justify-center gap-2 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-7 py-3.5 rounded-full transition-all hover:-translate-y-0.5 shrink-0 disabled:opacity-70 disabled:hover:translate-y-0"
-      >
-        <i x-show="state === 'loading'" class="fa-solid fa-circle-notch fa-spin"></i>
-        <span x-text="state === 'loading' ? 'Subscribing' : 'Subscribe'"></span>
-      </button>
-    </form>
-
-    <p
-      x-show="state === 'already_subscribed' || state === 'invalid' || state === 'error'"
-      x-transition
-      class="mt-4 text-sm text-brand-orange-300"
-      x-text="message"
-    ></p>
-
     <div
-      x-show="state === 'subscribed' || state === 'resubscribed'"
-      x-transition
-      class="mt-8 inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white px-6 py-4 rounded-full"
+      class="rounded-3xl border border-white/10 bg-white/5 p-8 text-center
+             shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-12"
     >
-      <i class="fa-solid fa-circle-check text-brand-teal-400"></i>
-      <span x-text="message"></span>
+
+      <!-- Header -->
+      <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center
+                  rounded-2xl bg-white/10 ring-1 ring-white/20">
+        <i class="fa-solid fa-envelope-open-text text-2xl text-brand-teal-400" aria-hidden="true"></i>
+      </div>
+
+      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-brand-orange-300">
+        Newsletter
+      </p>
+      <h2 id="newsletter-heading" class="mt-3 font-serif text-3xl font-bold text-white sm:text-4xl">
+        Stay Informed
+      </h2>
+      <p class="mx-auto mt-4 max-w-lg text-base leading-relaxed text-gray-300">
+        Subscribe for occasional legal insights and updates from our team.
+        No spam, just what's relevant to you.
+      </p>
+
+      <!-- Sign-up form -->
+      <form
+        x-ref="form"
+        x-show="!isDone"
+        x-transition.opacity
+        x-cloak
+        @submit.prevent="subscribe()"
+        class="mx-auto mt-8 max-w-lg"
+      >
+        {% csrf_token %}
+        <label for="newsletter-email" class="sr-only">Email address</label>
+
+        <!-- Stacked on mobile, one joined pill from sm upwards -->
+        <div
+          class="flex flex-col gap-3
+                 sm:flex-row sm:rounded-full sm:border sm:border-white/20 sm:bg-white/10 sm:p-1.5
+                 sm:focus-within:ring-2 sm:focus-within:ring-brand-teal-500"
+        >
+          <input
+            id="newsletter-email"
+            name="email"
+            type="email"
+            x-model.trim="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            placeholder="Your email address"
+            :disabled="isLoading"
+            :aria-invalid="state === 'invalid'"
+            class="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3.5
+                   text-white placeholder-gray-400 transition-colors
+                   focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-brand-teal-500
+                   disabled:opacity-60
+                   sm:flex-1 sm:border-0 sm:bg-transparent sm:focus:bg-transparent sm:focus:ring-0"
+          >
+          <button
+            type="submit"
+            :disabled="isLoading"
+            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-full
+                   bg-brand-orange-500 px-7 py-3.5 font-semibold text-white
+                   transition-all hover:-translate-y-0.5 hover:bg-brand-orange-600
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-white
+                   focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink-900
+                   disabled:opacity-70 disabled:hover:translate-y-0
+                   motion-reduce:transition-none"
+          >
+            <i x-show="isLoading" class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+            <span x-text="isLoading ? 'Subscribing' : 'Subscribe'"></span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Validation and server messages (announced by screen readers) -->
+      <div role="status" aria-live="polite">
+        <p
+          x-show="hasNotice"
+          x-transition
+          x-cloak
+          class="mt-4 inline-flex items-start gap-2 text-sm text-brand-orange-300"
+        >
+          <i class="fa-solid fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
+          <span x-text="message"></span>
+        </p>
+      </div>
+
+      <!-- Success state -->
+      <div
+        x-show="isDone"
+        x-transition
+        x-cloak
+        role="status"
+        class="mx-auto mt-8 max-w-md rounded-2xl border border-white/20 bg-white/10 px-6 py-5 text-left"
+      >
+        <div class="flex items-start gap-4">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal-500 text-white">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+          </span>
+          <div>
+            <p class="font-semibold text-white">You're on the list</p>
+            <p class="mt-1 text-sm text-gray-300" x-text="message"></p>
+            <button
+              type="button"
+              @click="reset()"
+              class="mt-3 text-sm font-medium text-brand-teal-400 underline-offset-4 hover:underline
+                     focus:outline-none focus-visible:underline"
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reassurance -->
+      <ul
+        x-show="!isDone"
+        x-cloak
+        class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-300"
+      >
+        <li class="inline-flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-brand-teal-400" aria-hidden="true"></i> No spam
+        </li>
+        <li class="inline-flex items-center gap-2">
+          <i class="fa-solid fa-scale-balanced text-brand-teal-400" aria-hidden="true"></i> Legal insights only
+        </li>
+        <li class="inline-flex items-center gap-2">
+          <i class="fa-solid fa-door-open text-brand-teal-400" aria-hidden="true"></i> Unsubscribe anytime
+        </li>
+      </ul>
+
     </div>
   </div>
 </section>
 
-{% endblock %}
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('newsletter', (subscribeUrl) => ({
+
+      // ---- State -----------------------------------------------------------
+      shown: false,
+      email: '',
+      message: '',
+      state: 'idle',  // idle | loading | subscribed | resubscribed | already_subscribed | invalid | error
+
+      // ---- Derived flags (keeps string comparisons out of the template) ----
+      get isLoading() { return this.state === 'loading'; },
+      get isDone()    { return ['subscribed', 'resubscribed'].includes(this.state); },
+      get hasNotice() { return ['already_subscribed', 'invalid', 'error'].includes(this.state); },
+
+      // ---- Actions ---------------------------------------------------------
+      async subscribe() {
+        if (this.isLoading) return;
+        this.state = 'loading';
+        this.message = '';
+
+        try {
+          const form = this.$refs.form;
+          const response = await fetch(subscribeUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': form.elements.csrfmiddlewaretoken.value },
+            body: new FormData(form),   // sends the email field and the CSRF token
+          });
+          const data = await response.json();
+          this.state = data.status;
+          this.message = data.message;
+        } catch (error) {
+          this.state = 'error';
+          this.message = 'Something went wrong. Please try again in a moment.';
+        }
+      },
+
+      reset() {
+        this.state = 'idle';
+        this.message = '';
+        this.email = '';
+        this.$nextTick(() => document.getElementById('newsletter-email').focus());
+      },
+    }));
+  });
+</script>
 
 {% block extra_js %}
 <script>
