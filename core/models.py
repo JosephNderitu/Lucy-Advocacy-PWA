@@ -382,6 +382,62 @@ class Article(models.Model):
         first = self.images.first()
         return first.image if first else None
 
+import re
+class TeamMember(models.Model):
+    FOCUS_CENTER = "center"
+    FOCUS_TOP = "top"
+    FOCUS_CHOICES = [
+        (FOCUS_CENTER, "Center"),
+        (FOCUS_TOP, "Top (keeps heads in frame on wide crops)"),
+    ]
+
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=160, unique=True)
+    role = models.CharField(max_length=150, help_text="e.g. Managing Partner, Senior Associate")
+    bio = models.TextField(blank=True, help_text="Separate paragraphs with a blank line.")
+    credentials = models.CharField(
+        max_length=400, blank=True,
+        help_text="Separate items with a pipe: LLB, University of Nairobi | Law Society of Kenya",
+    )
+    photo = models.ImageField(
+        upload_to="team/", blank=True,
+        help_text="Portrait, at least 1200px wide. Initials are shown if left empty.",
+    )
+    photo_focus = models.CharField(max_length=10, choices=FOCUS_CHOICES, default=FOCUS_CENTER)
+    email = models.EmailField(blank=True, help_text="Shows an email icon on the photo when filled.")
+    linkedin_url = models.URLField(blank=True, help_text="Shows a LinkedIn icon on the photo when filled.")
+    is_leadership = models.BooleanField(
+        default=False, help_text="Show in the Leadership section (homepage and team page)."
+    )
+    is_active = models.BooleanField(default=True, help_text="Untick to hide without deleting.")
+    order = models.PositiveSmallIntegerField(default=0, help_text="Lower numbers appear first.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "name"]
+        verbose_name = "Team Member"
+        verbose_name_plural = "Team Members"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def bio_paragraphs(self):
+        return [p.strip() for p in re.split(r"\n\s*\n", self.bio.strip()) if p.strip()]
+
+    @property
+    def credential_list(self):
+        return [c.strip() for c in self.credentials.split("|") if c.strip()]
+
+    @property
+    def initials(self):
+        parts = self.name.split()
+        if not parts:
+            return ""
+        if len(parts) == 1:
+            return parts[0][:2].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
 
 class ArticleImage(models.Model):
     article = models.ForeignKey(Article, related_name="images", on_delete=models.CASCADE)

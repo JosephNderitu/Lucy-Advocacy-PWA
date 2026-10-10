@@ -37,7 +37,7 @@ from . import forms as admin_forms  # CaseAdminForm lives in core/forms.py
 from .models import (
     ActivityLog, Article, ArticleImage, Case, CaseDocument, ChatMessage,
     ClientProfile, Conversation, DocumentRequest, NewsletterCampaign,
-    NewsletterSubscriber, PracticeArea, Review,
+    NewsletterSubscriber, PracticeArea, Review, TeamMember
 )
 from .newsletter_utils import get_newsletter_connection, make_unsubscribe_token
 
@@ -765,3 +765,35 @@ class ReviewAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+  
+@admin.register(TeamMember)
+class TeamMemberAdmin(admin.ModelAdmin):
+    list_display = ("thumb", "name", "role", "is_leadership", "is_active", "order")
+    list_display_links = ("thumb", "name")
+    list_editable = ("is_leadership", "is_active", "order")
+    list_filter = ("is_leadership", "is_active")
+    search_fields = ("name", "role", "bio")
+    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("thumb_large",)
+    fieldsets = (
+        ("Identity", {"fields": ("name", "slug", "role")}),
+        ("Photo", {"fields": ("photo", "thumb_large", "photo_focus")}),
+        ("Profile", {"fields": ("bio", "credentials")}),
+        ("Contact (optional)", {"fields": ("email", "linkedin_url")}),
+        ("Display", {"fields": ("is_leadership", "is_active", "order")}),
+    )
+
+    @admin.display(description="Photo")
+    def thumb(self, obj):
+        if obj.photo:
+            return format_html(
+                '<img src="{}" style="height:44px;width:44px;object-fit:cover;border-radius:50%;">',
+                obj.photo.url,
+            )
+        return "-"
+
+    @admin.display(description="Preview")
+    def thumb_large(self, obj):
+        if obj.photo:
+            return format_html('<img src="{}" style="max-height:200px;border-radius:4px;">', obj.photo.url)
+        return "No photo uploaded yet"

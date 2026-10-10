@@ -5,7 +5,7 @@ from django.shortcuts import render
 from .models import PracticeArea
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Conversation, ChatMessage, EmailVerification
+from .models import Conversation, ChatMessage, EmailVerification, TeamMember
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
@@ -74,9 +74,18 @@ def home(request):
         "review_avg": review_avg,
         "review_total": review_total,
         "latest_articles": latest_articles,
+        "leadership": TeamMember.objects.filter(is_active=True, is_leadership=True),
     })
 
 
+# new view
+def team(request):
+    members = list(TeamMember.objects.filter(is_active=True))  # one query
+    return render(request, "core/team.html", {
+        "leadership": [m for m in members if m.is_leadership],
+        "team_members": [m for m in members if not m.is_leadership],
+    })
+    
 @require_POST
 def submit_review(request):
     ip = get_client_ip(request)

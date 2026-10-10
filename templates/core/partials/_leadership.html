@@ -1,0 +1,127 @@
+{% comment %}
+  ============================================================
+  LEADERSHIP SECTION - DYNAMIC
+  Data:    TeamMember rows where is_leadership=True and is_active=True
+           (manage in /admin/ > Team Members).
+  Context: leadership  (queryset/list of TeamMember)  - required
+  Params:  show_cta  - pass True on the homepage to render the
+                       consultation / full-team / about links.
+           eyebrow   - optional small label above the heading
+                       (defaults to "Our Team").
+  Used by: core/home.html and core/team.html
+  Motion:  each card slides in from alternating sides when it enters
+           the viewport (Alpine x-intersect). Disabled automatically
+           for users with prefers-reduced-motion.
+  Hides itself entirely when there are no leaders.
+  ============================================================
+{% endcomment %}
+{% if leadership %}
+<section id="leadership" class="py-20 lg:py-28 bg-white overflow-x-clip">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Section heading -->
+    <div
+      x-data="{ shown: false }"
+      x-intersect.once.threshold.20="shown = true"
+      :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+      class="transition-all duration-700 motion-reduce:transition-none text-center max-w-xl mx-auto mb-16 lg:mb-20"
+    >
+      <p class="text-brand-teal-600 font-semibold text-xs tracking-[0.3em] uppercase mb-4">{{ eyebrow|default:"Our Team" }}</p>
+      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900">Meet Our Leadership</h2>
+      <div class="h-px w-16 bg-brand-orange-500 mx-auto mt-6"></div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-x-14 gap-y-16">
+      {% for member in leadership %}
+      <!-- ============ {{ member.name|upper }} ============ -->
+      <article
+        x-data="{ shown: false }"
+        x-intersect.once.threshold.15="shown = true"
+        :class="shown ? 'opacity-100 translate-x-0' : 'opacity-0 {% cycle '-translate-x-8' 'translate-x-8' %}'"
+        style="transition-delay: {% cycle '0ms' '120ms' %}"
+        class="transition-all duration-700 ease-out motion-reduce:transition-none group sm:odd:last:col-span-2 sm:odd:last:justify-self-center sm:odd:last:w-full sm:odd:last:max-w-[calc(50%-1.75rem)]"
+      >
+        <!-- Photo -->
+        <div class="relative aspect-[4/5] lg:aspect-[16/11] overflow-hidden bg-brand-ink-900">
+          {% if member.photo %}
+            <img src="{{ member.photo.url }}" alt="{{ member.name }}" loading="lazy"
+                 class="w-full h-full object-cover {% if member.photo_focus == 'top' %}object-top{% else %}object-center{% endif %} transition-all duration-700 ease-out">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center" aria-hidden="true">
+              <span class="font-serif text-6xl text-white/25 tracking-widest">{{ member.initials }}</span>
+            </div>
+          {% endif %}
+
+          {% if member.linkedin_url or member.email %}
+          <div class="absolute bottom-5 right-5 flex items-center gap-2.5">
+            {% if member.linkedin_url %}
+            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" aria-label="Connect with {{ member.name }} on LinkedIn"
+               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
+              <i class="fa-brands fa-linkedin-in text-sm"></i>
+            </a>
+            {% endif %}
+            {% if member.email %}
+            <a href="mailto:{{ member.email }}" aria-label="Email {{ member.name }}"
+               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
+              <i class="fa-solid fa-envelope text-sm"></i>
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Copy -->
+        <div class="pt-6">
+          <h3 class="font-serif text-2xl font-bold text-brand-ink-900">{{ member.name }}</h3>
+          <p class="text-brand-teal-600 text-xs font-semibold tracking-[0.2em] uppercase mt-1.5">{{ member.role }}</p>
+
+          <div class="h-px w-10 bg-brand-orange-500 my-4 transition-all duration-500 group-hover:w-20"></div>
+
+          {% if member.bio_paragraphs %}
+          <div class="space-y-3.5 text-[15px] text-brand-ink-700 leading-relaxed">
+            {% for para in member.bio_paragraphs %}
+              <p>{{ para }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if member.credential_list %}
+          <p class="text-xs text-brand-ink-700/70 mt-5 tracking-wide">
+            {% for item in member.credential_list %}{{ item }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+          </p>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    {% if show_cta %}
+    <!-- Firm-wide calls to action -->
+    <div
+      x-data="{ shown: false }"
+      x-intersect.once.threshold.20="shown = true"
+      :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
+      class="transition-all duration-700 motion-reduce:transition-none text-center mt-16"
+    >
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="{% url 'core:contact' %}"
+           class="inline-flex items-center justify-center gap-3 border border-brand-ink-900 text-brand-ink-900 hover:bg-brand-ink-900 hover:text-white text-xs font-semibold tracking-[0.2em] uppercase px-9 py-4 transition-colors duration-300">
+          Schedule a Consultation
+        </a>
+        <a href="{% url 'core:team' %}"
+           class="inline-flex items-center justify-center gap-3 border border-brand-ink-900 text-brand-ink-900 hover:bg-brand-ink-900 hover:text-white text-xs font-semibold tracking-[0.2em] uppercase px-9 py-4 transition-colors duration-300">
+          Meet the Full Team
+          <i class="fa-solid fa-arrow-right-long text-[11px]"></i>
+        </a>
+      </div>
+      <div class="mt-5">
+        <a href="{% url 'core:about' %}"
+           class="text-sm text-brand-ink-700 hover:text-brand-teal-600 transition-colors underline underline-offset-4 decoration-gray-300 hover:decoration-brand-teal-600">
+          Learn more about our firm
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}

@@ -416,153 +416,7 @@
 </section>
 
 <!-- ============ LEADERSHIP ============ -->
-<section
-  x-data="{ shown: false }"
-  x-intersect.once="shown = true"
-  class="py-20 lg:py-28 bg-white"
->
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <div
-      :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-      class="transition-all duration-700 text-center max-w-xl mx-auto mb-16 lg:mb-20"
-    >
-      <p class="text-brand-teal-600 font-semibold text-xs tracking-[0.3em] uppercase mb-4">Our Team</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900">Meet Our Leadership</h2>
-      <div class="h-px w-16 bg-brand-orange-500 mx-auto mt-6"></div>
-    </div>
-
-    <div class="grid sm:grid-cols-2 gap-x-14 gap-y-16">
-
-      <!-- ============ LUCY NGIMA WANGAI ============ -->
-      <div
-        :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-        class="transition-all duration-700 delay-100 group"
-      >
-        <!-- Photo: quiet grayscale by default, resolves to full colour on hover -->
-        <div class="relative aspect-[4/5] lg:aspect-[16/11] overflow-hidden bg-brand-ink-900">
-          <img src="{% static 'images/profiles/lucy-ngima-wangai.jpg' %}" alt="Lucy Ngima Wangai"
-               class="w-full h-full object-cover object-center transition-all duration-700 ease-out">
-
-          <div class="absolute bottom-5 right-5 flex items-center gap-2.5">
-            <a href="#" aria-label="Connect with Lucy Ngima Wangai on LinkedIn"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
-              <i class="fa-brands fa-linkedin-in text-sm"></i>
-            </a>
-            <a href="mailto:nwangailawadvocates@gmail.com" aria-label="Email Lucy Ngima Wangai"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
-              <i class="fa-solid fa-envelope text-sm"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Copy: quiet, editorial, no card chrome -->
-        <div class="pt-6">
-          <h3 class="font-serif text-2xl font-bold text-brand-ink-900">Lucy Ngima Wangai</h3>
-          <p class="text-brand-teal-600 text-xs font-semibold tracking-[0.2em] uppercase mt-1.5">Managing Partner</p>
-
-          <div class="h-px w-10 bg-brand-orange-500 my-4 transition-all duration-500 group-hover:w-20"></div>
-
-          <div class="space-y-3.5 text-[15px] text-brand-ink-700 leading-relaxed">
-            <p>
-              Ms. Wangai holds a Bachelor of Laws (LLB) degree from the University of Nairobi
-              and a Postgraduate Diploma in Law from the Kenya School of Law. She is a member
-              of the Law Society of Kenya and a certified professional mediator.
-            </p>
-            <p>
-              She leads the firm's litigation and dispute resolution practice, and is an
-              excellent litigator with remarkable legal advocacy skills. She has handled
-              several high-profile cases in the High Court, Court of Appeal, and the
-              Supreme Court.
-            </p>
-            <p>
-              She is also involved in the firm's commercial, property, and conveyancing law
-              practice, with focus areas spanning banking securities, financial services law,
-              property conveyance law, and corporate law, and has considerable experience
-              advising limited companies on risk management, legal audit, tax law, and
-              contract law.
-            </p>
-          </div>
-
-          <p class="text-xs text-brand-ink-700/70 mt-5 tracking-wide">
-            LLB, University of Nairobi &middot; PG Diploma, Kenya School of Law &middot; Law Society of Kenya &middot; Certified Mediator
-          </p>
-        </div>
-      </div>
-
-      <!-- ============ WILLIAM KATHUKU MUTUA ============ -->
-      <div
-        :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-        class="transition-all duration-700 delay-200 group"
-      >
-        <div class="relative aspect-[4/5] lg:aspect-[16/11] overflow-hidden bg-brand-ink-900">
-          <img src="{% static 'images/profiles/william-kathuku-mutua.jpg' %}" alt="William Kathuku Mutua"
-               class="w-full h-full object-cover object-center  transition-all duration-700 ease-out">
-
-          <div class="absolute bottom-5 right-5 flex items-center gap-2.5">
-            <a href="#" aria-label="Connect with William Kathuku Mutua on LinkedIn"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
-              <i class="fa-brands fa-linkedin-in text-sm"></i>
-            </a>
-            <a href="mailto:nwangailawadvocates@gmail.com" aria-label="Email William Kathuku Mutua"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
-              <i class="fa-solid fa-envelope text-sm"></i>
-            </a>
-          </div>
-        </div>
-
-        <div class="pt-6">
-          <h3 class="font-serif text-2xl font-bold text-brand-ink-900">William Kathuku Mutua</h3>
-          <p class="text-brand-teal-600 text-xs font-semibold tracking-[0.2em] uppercase mt-1.5">Partner</p>
-
-          <div class="h-px w-10 bg-brand-orange-500 my-4 transition-all duration-500 group-hover:w-20"></div>
-
-          <div class="space-y-3.5 text-[15px] text-brand-ink-700 leading-relaxed">
-            <p>
-              Mr. Mutua is a Partner in the firm. He holds a law degree from the University
-              of Nairobi and a Postgraduate Diploma from the Kenya School of Law, and is a
-              member of the Law Society of Kenya.
-            </p>
-            <p>
-              He has experience providing legal services to corporates, including banks and
-              co-operative societies, giving him deep insight into the dynamics of the
-              corporate world, and has guided companies on their investments and compliance
-              requirements.
-            </p>
-            <p>
-              His focus is on commercial and corporate law litigation practice. He also
-              supports the firm's corporate clients in navigating the increasingly
-              challenging environment of employment and labour relations, through advisory
-              support, advocacy, and legal representation.
-            </p>
-          </div>
-
-          <p class="text-xs text-brand-ink-700/70 mt-5 tracking-wide">
-            Law Degree, University of Nairobi &middot; PG Diploma, Kenya School of Law &middot; Law Society of Kenya
-          </p>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- One firm-wide call to action -->
-    <div
-      :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-      class="transition-all duration-700 delay-300 text-center mt-16"
-    >
-      <a href="{% url 'core:contact' %}"
-         class="inline-flex items-center justify-center gap-3 border border-brand-ink-900 text-brand-ink-900 hover:bg-brand-ink-900 hover:text-white text-xs font-semibold tracking-[0.2em] uppercase px-9 py-4 transition-colors duration-300">
-        Schedule a Consultation
-      </a>
-      <div class="mt-5">
-        <a href="{% url 'core:about' %}"
-           class="text-sm text-brand-ink-700 hover:text-brand-teal-600 transition-colors underline underline-offset-4 decoration-gray-300 hover:decoration-brand-teal-600">
-          Learn more about our firm
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+{% include 'core/partials/_leadership.html' with show_cta=True %}
 
 <!-- ============ LATEST ARTICLES ============ -->
 {% if latest_articles %}
@@ -604,7 +458,6 @@
 
 {{ reviews|json_script:"reviews-data" }}
 
-<!-- ============ REVIEWS ============ -->
 <!-- ============ REVIEWS ============ -->
 <section
   id="reviews"
@@ -828,6 +681,7 @@
     </div>
   </div>
 </section>
+
 <!-- ============================================================
      NEWSLETTER BANNER
      1. Styles   (scoped to .nl, no Tailwind dependency)
