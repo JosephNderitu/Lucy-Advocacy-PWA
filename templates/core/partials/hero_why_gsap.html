@@ -167,6 +167,9 @@
       </a>
       {% endfor %}
     </div>
+    <div data-chips-bar class="lg:hidden mt-3 h-px bg-brand-ink-900/10 invisible" aria-hidden="true">
+      <span data-chips-progress class="block h-full w-full origin-left bg-[#C9A24B]"></span>
+    </div>
     {% endif %}
   </div>
 
@@ -415,6 +418,20 @@
     });
     gsap.to('[data-copy]', { opacity: 0.2, ease: 'none', scrollTrigger: { trigger: hero, start: '35% top', end: 'bottom top', scrub: true } });
     gsap.to('[data-hero-shade]', { opacity: 0.16, ease: 'none', scrollTrigger: out });
+
+    /* ---------- mobile/tablet: practice-area chips are pulled right to left as you scroll ---------- */
+    mm.add('(max-width: 1023px)', function () {
+      var chips = $('[data-chips]'), bar = $('[data-chips-bar]'), fill = $('[data-chips-progress]');
+      if (!chips) return;
+      gsap.set(bar, { autoAlpha: 1 });
+      var max = function () { return Math.max(0, chips.scrollWidth - chips.clientWidth); };
+      var tl = gsap.timeline({
+        scrollTrigger: { trigger: chips, start: 'top 92%', end: 'top 42%', scrub: 0.6, invalidateOnRefresh: true }
+      });
+      tl.fromTo(chips, { scrollLeft: 0 }, { scrollLeft: function () { return max(); }, ease: 'none' }, 0);
+      if (fill) tl.fromTo(fill, { scaleX: 0 }, { scaleX: 1, ease: 'none' }, 0);
+      return function () { if (tl.scrollTrigger) tl.scrollTrigger.kill(); tl.kill(); chips.scrollLeft = 0; };
+    });
 
     /* ---------- the pulled thread + heading drop ---------- */
     var thread = $('[data-thread]');
