@@ -7,93 +7,149 @@
 <!-- ============ HERO (auto-rotating carousel) ============ -->
 <!-- To change the slides: edit the "images" array below. Any dimensions work -
      each one is cropped to fill the frame and darkened the same way. -->
+<!-- ============ HERO (ivory editorial, Lady Justice) ============ -->
+<!-- Replaces the old carousel hero. Paste this where the old HERO block was. -->
+<style>
+  @keyframes hero-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-float { animation: hero-float 9s ease-in-out infinite; }
+  }
+</style>
+
 <section
-  class="relative overflow-hidden isolate"
+  id="hero"
+  class="relative z-10 bg-[#FAF7F2]"
   x-data="{
-    images: [
-      '{% static "images/profiles/lucy-ngima-wangai.jpg" %}',
-      '{% static "images/hero/hero1.png" %}',
-      '{% static "images/static_images/lady-justice.webp" %}'
-    ],
     active: 0,
-    reduced: false,
+    count: {{ practice_areas|length|default:0 }},
     init() {
-      this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (this.reduced || this.images.length <= 1) return;
-      this.timer = setInterval(() => { this.active = (this.active + 1) % this.images.length }, 6000);
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || this.count <= 1) return;
+      this.timer = setInterval(() => { this.active = (this.active + 1) % Math.min(this.count, 4) }, 3500);
     }
   }"
 >
-  <!-- Background layer: stacked images, one fades/zooms in at a time -->
-  <div class="absolute inset-0 z-0 bg-brand-ink-900">
-    <template x-for="(img, i) in images" :key="i">
-      <img
-        :src="img"
-        alt=""
-        aria-hidden="true"
-        class="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[6000ms] ease-out"
-        :class="[i === active ? 'opacity-100' : 'opacity-0', (i === active && !reduced) ? 'scale-105' : 'scale-100']"
-      >
-    </template>
-
-    <!-- Brand-toned scrim: guarantees text stays legible no matter what image is loaded -->
-    <div class="absolute inset-0 bg-gradient-to-br from-brand-ink-900/90 via-brand-ink-900/75 to-brand-teal-900/70"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/70 via-transparent to-transparent"></div>
+  <!-- Decorative background (clipped on its own so the stats strip can overlap the next section) -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div class="absolute -right-40 top-0 h-[42rem] w-[42rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.22),transparent_65%)]"></div>
+    <div class="absolute -left-32 bottom-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgba(104,194,202,0.16),transparent_65%)]"></div>
+    <div class="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(#393C48_1px,transparent_1px)] [background-size:22px_22px]"></div>
+    <!-- Fade into the white "Why choose us" section below -->
+    <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-white"></div>
   </div>
 
-  <!-- Brand watermark, sits above the scrim so it stays visible on any slide -->
-  <img
-    src="{% static 'images/static_images/logo-on-teal.png' %}"
-    alt=""
-    aria-hidden="true"
-    class="pointer-events-none select-none absolute -right-24 -top-24 z-[5] w-[32rem] opacity-[0.06] rotate-6"
-  >
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-24">
+    <div class="grid lg:grid-cols-12 items-center gap-10 lg:gap-6">
 
-  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 sm:pt-28 sm:pb-32 lg:pt-32 lg:pb-40">
-    <div class="max-w-3xl">
-      <p class="animate-fade-up inline-flex items-center gap-2 text-brand-teal-500 font-semibold text-sm tracking-wide uppercase mb-5">
-        <span class="h-1.5 w-1.5 rounded-full bg-brand-orange-500"></span>
-        Full Service Law Firm, Serving Nairobi, Kenya
-      </p>
+      <!-- ===== Copy ===== -->
+      <div class="lg:col-span-7 xl:col-span-7 text-center lg:text-left">
+        <p class="animate-fade-up inline-flex items-center gap-3 text-[#A9824C] font-semibold text-xs sm:text-sm tracking-[0.18em] uppercase">
+          <span class="h-px w-8 bg-[#C9A24B]"></span>
+          Full Service Law Firm &middot; Nairobi, Kenya
+        </p>
 
-      <h1 class="animate-fade-up [animation-delay:100ms] font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1]">
-        Trusted Legal Counsel for Every Chapter of Your Journey
-      </h1>
+        <h1 class="animate-fade-up [animation-delay:100ms] mt-5 font-serif font-bold text-brand-ink-900 leading-[1.08] text-[clamp(2.25rem,5.4vw,4.25rem)]">
+          Trusted Legal Counsel for
+          <span class="italic text-[#A9824C]">Every Chapter</span>
+          of Your Journey
+        </h1>
 
-      <p class="animate-fade-up [animation-delay:200ms] mt-6 text-lg text-gray-300 max-w-xl leading-relaxed">
-        Ngima Wangai & Company Advocates brings a customized, personal approach to commercial,
-        corporate, and dispute resolution law, with the accessibility and responsiveness every
-        client deserves.
-      </p>
+        <p class="animate-fade-up [animation-delay:200ms] mt-6 mx-auto lg:mx-0 max-w-xl text-base sm:text-lg text-brand-ink-700 leading-relaxed">
+          Ngima Wangai &amp; Company Advocates brings a customized, personal approach to commercial,
+          corporate, and dispute resolution law, with the accessibility and responsiveness every
+          client deserves.
+        </p>
 
-      <div class="animate-fade-up [animation-delay:300ms] mt-10 flex flex-col sm:flex-row gap-4">
-        <a href="{% url 'core:contact' %}"
-           class="inline-flex items-center justify-center gap-2 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand-orange-500/20">
-          Book a Consultation
-          <i class="fa-solid fa-arrow-right text-sm"></i>
-        </a>
-        <a href="#practice-areas"
-           class="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white font-semibold px-8 py-4 rounded-full border border-white/20 transition-colors">
-          Explore Practice Areas
-        </a>
+        <div class="animate-fade-up [animation-delay:300ms] mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
+          <a href="{% url 'core:contact' %}"
+             class="inline-flex items-center justify-center gap-2 bg-[#C9A24B] hover:bg-[#B8913C] text-brand-ink-900 font-semibold px-8 py-4 rounded-full shadow-lg shadow-[#C9A24B]/25 transition-all hover:-translate-y-0.5">
+            Book a Consultation
+            <i class="fa-solid fa-arrow-right text-sm"></i>
+          </a>
+          <a href="#practice-areas"
+             class="group inline-flex items-center justify-center gap-2 text-brand-ink-900 font-semibold px-6 py-4 rounded-full ring-1 ring-brand-ink-900/15 hover:ring-[#C9A24B] hover:bg-white transition-all">
+            Explore Practice Areas
+            <i class="fa-solid fa-chevron-down text-xs text-[#A9824C] transition-transform group-hover:translate-y-0.5"></i>
+          </a>
+        </div>
+
+        <!-- Trust row -->
+        <ul class="animate-fade-up [animation-delay:400ms] mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-x-7 gap-y-3 text-sm text-brand-ink-700">
+          <li class="flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-[#A9824C]"></i> LSK Registered Advocates</li>
+          <li class="flex items-center gap-2"><i class="fa-solid fa-user-check text-[#A9824C]"></i> Personal attention</li>
+          <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-[#A9824C]"></i> Responsive communication</li>
+        </ul>
+      </div>
+
+      <!-- ===== Lady Justice ===== -->
+      <div class="lg:col-span-5 xl:col-span-5 relative flex justify-center animate-fade-up [animation-delay:200ms]">
+        <!-- Gold rings behind the statue -->
+        <div class="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 aspect-square w-[88%] max-w-[30rem] rounded-full border border-[#C9A24B]/30" aria-hidden="true"></div>
+        <div class="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 aspect-square w-[68%] max-w-[23rem] rounded-full border border-dashed border-[#C9A24B]/30" aria-hidden="true"></div>
+        <div class="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 aspect-square w-[60%] max-w-[20rem] rounded-full bg-gradient-to-b from-[#C9A24B]/20 to-transparent" aria-hidden="true"></div>
+
+        <img
+          src="{% static 'images/static_images/lady-justice.webp' %}"
+          alt="Bronze statue of Lady Justice holding the scales and sword"
+          class="hero-float relative mix-blend-multiply object-contain w-auto h-[380px] sm:h-[480px] lg:h-[560px] xl:h-[620px] [mask-image:linear-gradient(to_bottom,#000_82%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,#000_82%,transparent)]"
+          fetchpriority="high"
+        >
+
+        <!-- Practice area panel (desktop): cycles through the first 4 areas -->
+        {% if practice_areas %}
+        <div class="hidden lg:block absolute -right-2 xl:-right-6 bottom-16 w-60 rounded-2xl bg-white/80 backdrop-blur-md ring-1 ring-brand-ink-900/10 shadow-xl shadow-brand-ink-900/10 p-5">
+          <p class="text-[0.7rem] font-semibold tracking-[0.18em] uppercase text-[#A9824C] mb-3">Practice Areas</p>
+          <ul class="space-y-1">
+            {% for area in practice_areas|slice:":4" %}
+            <li>
+              <a href="#practice-areas"
+                 @mouseenter="active = {{ forloop.counter0 }}"
+                 :class="active === {{ forloop.counter0 }} ? 'text-brand-ink-900 font-semibold bg-[#C9A24B]/15' : 'text-brand-ink-700 hover:text-brand-ink-900'"
+                 class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors">
+                <i class="fa-solid fa-arrow-right text-[0.65rem] text-[#A9824C] transition-transform"
+                   :class="active === {{ forloop.counter0 }} ? 'translate-x-0.5' : 'opacity-50'"></i>
+                {{ area.name }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="#practice-areas" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#A9824C] hover:text-brand-ink-900 transition-colors">
+            View all {{ practice_areas|length }} <i class="fa-solid fa-arrow-right text-[0.6rem]"></i>
+          </a>
+        </div>
+        {% endif %}
       </div>
     </div>
+
+    <!-- Practice area chips (mobile / tablet) -->
+    {% if practice_areas %}
+    <div class="lg:hidden mt-8 -mx-4 sm:-mx-6 px-4 sm:px-6 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {% for area in practice_areas|slice:":6" %}
+      <a href="#practice-areas" class="shrink-0 rounded-full bg-white ring-1 ring-brand-ink-900/10 px-4 py-2 text-sm text-brand-ink-700 hover:ring-[#C9A24B] transition-colors">{{ area.name }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 
-  <!-- Slide indicators -->
-  <div
-    x-show="images.length > 1"
-    class="absolute bottom-7 sm:bottom-9 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2"
-  >
-    <template x-for="(img, i) in images" :key="i">
-      <button
-        type="button"
-        @click="active = i"
-        :aria-label="'Show slide ' + (i + 1)"
-        :class="i === active ? 'w-6 bg-brand-orange-500' : 'w-2.5 bg-white/40 hover:bg-white/70'"
-        class="h-2.5 rounded-full transition-all duration-300"
-      ></button>
-    </template>
+  <!-- ===== Floating facts strip, overlaps into the next section ===== -->
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 translate-y-1/2">
+    <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-brand-ink-900/10 rounded-3xl bg-white ring-1 ring-brand-ink-900/5 shadow-xl shadow-brand-ink-900/10 overflow-hidden">
+      <div class="p-5 sm:p-6 text-center">
+        <p class="font-serif text-2xl sm:text-3xl font-bold text-brand-ink-900">{{ practice_areas|length }}</p>
+        <p class="mt-1 text-xs sm:text-sm text-brand-ink-700">Practice areas</p>
+      </div>
+      <div class="p-5 sm:p-6 text-center">
+        <p class="font-serif text-2xl sm:text-3xl font-bold text-brand-ink-900">LSK</p>
+        <p class="mt-1 text-xs sm:text-sm text-brand-ink-700">Registered advocates</p>
+      </div>
+      <div class="p-5 sm:p-6 text-center">
+        <p class="font-serif text-2xl sm:text-3xl font-bold text-brand-ink-900">Nairobi</p>
+        <p class="mt-1 text-xs sm:text-sm text-brand-ink-700">Serving clients across Kenya</p>
+      </div>
+      <div class="p-5 sm:p-6 text-center">
+        <p class="font-serif text-2xl sm:text-3xl font-bold text-[#A9824C]">1 : 1</p>
+        <p class="mt-1 text-xs sm:text-sm text-brand-ink-700">Every matter handled personally</p>
+      </div>
+    </div>
   </div>
 </section>
 
