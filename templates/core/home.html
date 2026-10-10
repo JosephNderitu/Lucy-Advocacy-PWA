@@ -828,194 +828,296 @@
     </div>
   </div>
 </section>
-{% load static %}
 <!-- ============================================================
-     NEWSLETTER
-     Behaviour lives in the newsletter() component at the bottom
-     of this file. This markup only describes how it looks.
+     NEWSLETTER BANNER
+     1. Styles   (scoped to .nl, no Tailwind dependency)
+     2. Markup
+     3. Behaviour (Alpine component)
      ============================================================ -->
+
+<!-- 1. STYLES -->
+<style>
+  .nl {
+    --nl-deep:        #173F43;
+    --nl-teal:        #2F7178;
+    --nl-orange:      #F4791F;
+    --nl-orange-dark: #DD6812;
+    --nl-warn:        #FDBA74;
+
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 2.75rem 1.25rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--nl-deep) 0%, var(--nl-teal) 100%);
+  }
+  .nl [x-cloak] { display: none !important; }
+
+  /* Decoration: orange edge accent and a faint scales icon */
+  .nl::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--nl-orange) 0 22%, transparent 22%);
+  }
+  .nl__watermark {
+    position: absolute;
+    right: -1rem;
+    top: 50%;
+    z-index: -1;
+    font-size: 8rem;
+    line-height: 1;
+    color: #fff;
+    opacity: .06;
+    transform: translateY(-50%) rotate(-8deg);
+    pointer-events: none;
+  }
+
+  /* Layout: copy on the left, form on the right (stacked on mobile) */
+  .nl__inner {
+    max-width: 64rem;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .nl__inner.is-visible { animation: nl-rise .6s ease both; }
+
+  /* Copy */
+  .nl__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--nl-warn);
+  }
+  .nl__title {
+    margin: .4rem 0 0;
+    font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .nl__lead {
+    margin: .5rem 0 0;
+    max-width: 30rem;
+    font-size: .95rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, .85);
+  }
+
+  /* Form: one white pill, high contrast */
+  .nl__field {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .3rem .3rem .3rem 1.1rem;
+    background: #fff;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    transition: box-shadow .2s ease;
+  }
+  .nl__field:focus-within { box-shadow: 0 0 0 3px rgba(244, 121, 31, .6), 0 8px 24px rgba(0, 0, 0, .25); }
+  .nl__field-icon { color: #94A3B8; }
+  .nl__input {
+    flex: 1;
+    min-width: 0;
+    padding: .65rem .25rem;
+    font-size: 1rem;
+    color: #0F172A;
+    background: transparent;
+    border: 0;
+    outline: 0;
+  }
+  .nl__input::placeholder { color: #64748B; }
+  .nl__input:disabled { opacity: .6; }
+  .nl__button {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    flex-shrink: 0;
+    padding: .7rem 1.3rem;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--nl-orange);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .nl__button:hover { background: var(--nl-orange-dark); }
+  .nl__button:focus-visible { outline: 2px solid var(--nl-deep); outline-offset: 2px; }
+  .nl__button:disabled { opacity: .7; cursor: wait; transform: none; }
+
+  /* Small print and feedback */
+  .nl__fineprint {
+    margin: .6rem 0 0 .6rem;
+    font-size: .78rem;
+    color: rgba(255, 255, 255, .8);
+  }
+  .nl__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    margin: .6rem 0 0 .6rem;
+    font-size: .85rem;
+    color: var(--nl-warn);
+  }
+  .nl__success {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    padding: .9rem 1.1rem;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 1rem;
+  }
+  .nl__success-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: #fff;
+    background: var(--nl-orange);
+    border-radius: 50%;
+  }
+  .nl__success-text { margin: 0; font-size: .95rem; line-height: 1.4; }
+  .nl__link {
+    padding: 0;
+    margin-top: .25rem;
+    font-size: .8rem;
+    color: var(--nl-warn);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .nl__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 768px) {
+    .nl { padding: 3rem 1.5rem; }
+    .nl__inner { grid-template-columns: 1fr minmax(0, 26rem); gap: 3rem; }
+    .nl__watermark { right: 2rem; font-size: 12rem; }
+  }
+  @keyframes nl-rise {
+    from { opacity: 0; transform: translateY(1rem); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nl__inner.is-visible { animation: none; }
+    .nl__field, .nl__button { transition: none; }
+  }
+</style>
+
+
+<!-- 2. MARKUP -->
 <section
+  class="nl"
+  aria-labelledby="newsletter-heading"
   x-data="newsletter('{% url 'core:newsletter_subscribe' %}')"
   x-intersect.once="shown = true"
-  aria-labelledby="newsletter-heading"
-  class="relative isolate overflow-hidden
-         bg-gradient-to-br from-brand-ink-900 to-brand-teal-800
-         py-20 sm:py-24"
 >
+  <i class="fa-solid fa-scale-balanced nl__watermark" aria-hidden="true"></i>
 
-  <!-- Decorative background -->
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
-    <div class="absolute -top-24 right-0 h-72 w-72 rounded-full bg-brand-teal-500 opacity-20 blur-3xl"></div>
-    <div class="absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-brand-orange-500 opacity-10 blur-3xl"></div>
-    <img
-      src="{% static 'images/static_images/logo-on-teal.png' %}"
-      alt=""
-      class="absolute -bottom-20 -left-20 w-96 -rotate-6 select-none opacity-[0.05]"
-    >
-  </div>
-  <div
-    aria-hidden="true"
-    class="absolute inset-x-0 top-0 h-px opacity-60
-           bg-gradient-to-r from-transparent via-brand-orange-500 to-transparent"
-  ></div>
+  <div class="nl__inner" :class="{ 'is-visible': shown }">
 
-  <!-- Content (fades up when scrolled into view) -->
-  <div
-    :class="shown ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
-    class="mx-auto max-w-3xl px-4 sm:px-6
-           transition-all duration-700 ease-out motion-reduce:transition-none"
-  >
-    <div
-      class="rounded-3xl border border-white/10 bg-white/5 p-8 text-center
-             shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-12"
-    >
-
-      <!-- Header -->
-      <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center
-                  rounded-2xl bg-white/10 ring-1 ring-white/20">
-        <i class="fa-solid fa-envelope-open-text text-2xl text-brand-teal-400" aria-hidden="true"></i>
-      </div>
-
-      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-brand-orange-300">
-        Newsletter
+    <!-- Copy -->
+    <div>
+      <span class="nl__eyebrow">
+        <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
+        Legal insights
+      </span>
+      <h2 class="nl__title" id="newsletter-heading">Stay informed</h2>
+      <p class="nl__lead">
+        Occasional updates and practical legal guidance from our team,
+        delivered to your inbox. Never spam.
       </p>
-      <h2 id="newsletter-heading" class="mt-3 font-serif text-3xl font-bold text-white sm:text-4xl">
-        Stay Informed
-      </h2>
-      <p class="mx-auto mt-4 max-w-lg text-base leading-relaxed text-gray-300">
-        Subscribe for occasional legal insights and updates from our team.
-        No spam, just what's relevant to you.
-      </p>
+    </div>
 
-      <!-- Sign-up form -->
-      <form
-        x-ref="form"
-        x-show="!isDone"
-        x-transition.opacity
-        x-cloak
-        @submit.prevent="subscribe()"
-        class="mx-auto mt-8 max-w-lg"
-      >
+    <!-- Form, feedback, success -->
+    <div>
+      <form x-ref="form" x-show="!isDone" @submit.prevent="subscribe()" novalidate>
         {% csrf_token %}
-        <label for="newsletter-email" class="sr-only">Email address</label>
+        <label class="nl__sr" for="newsletter-email">Email address</label>
 
-        <!-- Stacked on mobile, one joined pill from sm upwards -->
-        <div
-          class="flex flex-col gap-3
-                 sm:flex-row sm:rounded-full sm:border sm:border-white/20 sm:bg-white/10 sm:p-1.5
-                 sm:focus-within:ring-2 sm:focus-within:ring-brand-teal-500"
-        >
+        <div class="nl__field">
+          <i class="fa-regular fa-envelope nl__field-icon" aria-hidden="true"></i>
           <input
             id="newsletter-email"
+            class="nl__input"
             name="email"
             type="email"
             x-model.trim="email"
-            required
+            placeholder="Your email address"
             autocomplete="email"
             inputmode="email"
-            placeholder="Your email address"
+            required
             :disabled="isLoading"
             :aria-invalid="state === 'invalid'"
-            class="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3.5
-                   text-white placeholder-gray-400 transition-colors
-                   focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-brand-teal-500
-                   disabled:opacity-60
-                   sm:flex-1 sm:border-0 sm:bg-transparent sm:focus:bg-transparent sm:focus:ring-0"
           >
-          <button
-            type="submit"
-            :disabled="isLoading"
-            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-full
-                   bg-brand-orange-500 px-7 py-3.5 font-semibold text-white
-                   transition-all hover:-translate-y-0.5 hover:bg-brand-orange-600
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-white
-                   focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink-900
-                   disabled:opacity-70 disabled:hover:translate-y-0
-                   motion-reduce:transition-none"
-          >
-            <i x-show="isLoading" class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+          <button class="nl__button" type="submit" :disabled="isLoading">
+            <i x-show="isLoading" x-cloak class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
             <span x-text="isLoading ? 'Subscribing' : 'Subscribe'"></span>
           </button>
         </div>
+
+        <p class="nl__fineprint">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          No spam. Unsubscribe anytime.
+        </p>
       </form>
 
-      <!-- Validation and server messages (announced by screen readers) -->
       <div role="status" aria-live="polite">
-        <p
-          x-show="hasNotice"
-          x-transition
-          x-cloak
-          class="mt-4 inline-flex items-start gap-2 text-sm text-brand-orange-300"
-        >
-          <i class="fa-solid fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
+        <p class="nl__notice" x-show="hasNotice" x-cloak x-transition>
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
           <span x-text="message"></span>
         </p>
-      </div>
 
-      <!-- Success state -->
-      <div
-        x-show="isDone"
-        x-transition
-        x-cloak
-        role="status"
-        class="mx-auto mt-8 max-w-md rounded-2xl border border-white/20 bg-white/10 px-6 py-5 text-left"
-      >
-        <div class="flex items-start gap-4">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal-500 text-white">
-            <i class="fa-solid fa-check" aria-hidden="true"></i>
-          </span>
+        <div class="nl__success" x-show="isDone" x-cloak x-transition>
+          <span class="nl__success-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
           <div>
-            <p class="font-semibold text-white">You're on the list</p>
-            <p class="mt-1 text-sm text-gray-300" x-text="message"></p>
-            <button
-              type="button"
-              @click="reset()"
-              class="mt-3 text-sm font-medium text-brand-teal-400 underline-offset-4 hover:underline
-                     focus:outline-none focus-visible:underline"
-            >
-              Use a different email
-            </button>
+            <p class="nl__success-text" x-text="message"></p>
+            <button type="button" class="nl__link" @click="reset()">Use a different email</button>
           </div>
         </div>
       </div>
-
-      <!-- Reassurance -->
-      <ul
-        x-show="!isDone"
-        x-cloak
-        class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-300"
-      >
-        <li class="inline-flex items-center gap-2">
-          <i class="fa-solid fa-shield-halved text-brand-teal-400" aria-hidden="true"></i> No spam
-        </li>
-        <li class="inline-flex items-center gap-2">
-          <i class="fa-solid fa-scale-balanced text-brand-teal-400" aria-hidden="true"></i> Legal insights only
-        </li>
-        <li class="inline-flex items-center gap-2">
-          <i class="fa-solid fa-door-open text-brand-teal-400" aria-hidden="true"></i> Unsubscribe anytime
-        </li>
-      </ul>
-
     </div>
+
   </div>
 </section>
 
+
+<!-- 3. BEHAVIOUR -->
 <script>
   document.addEventListener('alpine:init', () => {
     Alpine.data('newsletter', (subscribeUrl) => ({
 
-      // ---- State -----------------------------------------------------------
+      // State: idle | loading | subscribed | resubscribed | already_subscribed | invalid | error
       shown: false,
       email: '',
       message: '',
-      state: 'idle',  // idle | loading | subscribed | resubscribed | already_subscribed | invalid | error
+      state: 'idle',
 
-      // ---- Derived flags (keeps string comparisons out of the template) ----
+      // Derived flags keep string comparisons out of the template
       get isLoading() { return this.state === 'loading'; },
       get isDone()    { return ['subscribed', 'resubscribed'].includes(this.state); },
       get hasNotice() { return ['already_subscribed', 'invalid', 'error'].includes(this.state); },
 
-      // ---- Actions ---------------------------------------------------------
       async subscribe() {
         if (this.isLoading) return;
         this.state = 'loading';
@@ -1026,7 +1128,7 @@
           const response = await fetch(subscribeUrl, {
             method: 'POST',
             headers: { 'X-CSRFToken': form.elements.csrfmiddlewaretoken.value },
-            body: new FormData(form),   // sends the email field and the CSRF token
+            body: new FormData(form),   // carries the email and the CSRF token
           });
           const data = await response.json();
           this.state = data.status;
@@ -1046,7 +1148,6 @@
     }));
   });
 </script>
-
 {% endblock %}
 
 {% block extra_js %}
