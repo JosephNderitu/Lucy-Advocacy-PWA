@@ -1,0 +1,742 @@
+{% load static %}
+<!-- ============ ABOUT + PRACTICE AREAS (GSAP) ============ -->
+<!-- Include AFTER hero_why_gsap.html so GSAP/ScrollTrigger are already loaded.
+     Works without GSAP too (no animation, reader opens instantly). -->
+<script>
+  (function () {
+    var ok = window.gsap && window.ScrollTrigger && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (ok) document.documentElement.classList.add('pa-anim');
+  })();
+</script>
+
+<style>
+  /* Hidden start states exist ONLY while GSAP is active */
+  .pa-anim [data-pa-in], .pa-anim [data-ab-in] { opacity: 0; }
+
+  /* Thin gold scrollbars inside the reader */
+  .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(201,162,75,.45) transparent; }
+  .pa-scroll::-webkit-scrollbar { width: 8px; }
+  .pa-scroll::-webkit-scrollbar-thumb { background: rgba(201,162,75,.45); border-radius: 9999px; }
+  .pa-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* Word-reveal masks (section heading) */
+  .pa-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
+  .pa-word { display: inline-block; will-change: transform; }
+
+  /* Reader index */
+  .pa-jump.is-active { color: #fff; }
+  .pa-jump.is-active .pa-jump-bar { width: 1.75rem; background: #C9A24B; }
+</style>
+
+<!-- ============ ABOUT ============ -->
+<section
+  id="about"
+  data-ab-section
+  class="relative overflow-hidden bg-brand-mist-50 pt-20 pb-28 sm:pt-24 sm:pb-32 lg:pt-28 lg:pb-40"
+>
+  <!-- warm decor -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="absolute -right-32 top-10 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.16),transparent_65%)]"></div>
+    <div class="absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.10),transparent_65%)]"></div>
+    <div class="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(#393C48_1px,transparent_1px)] [background-size:22px_22px]"></div>
+  </div>
+
+  <div class="relative mx-auto grid max-w-7xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-12 lg:gap-16 lg:px-8">
+
+    <!-- Visual -->
+    <div class="relative mx-auto w-full max-w-xl pb-8 lg:col-span-6 lg:max-w-none">
+      <div data-ab-brass class="absolute -top-4 -left-4 right-8 bottom-8 hidden rounded-3xl border border-[#A9824C]/40 sm:block" aria-hidden="true"></div>
+
+      <div data-ab-frame class="relative aspect-[4/5] overflow-hidden rounded-3xl bg-brand-ink-900 shadow-2xl shadow-brand-ink-900/25 sm:aspect-[4/3]">
+        <img
+          data-ab-img
+          src="{% static 'images/static_images/lady-justice.webp' %}"
+          alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
+          class="absolute inset-0 h-full w-full object-cover object-[center_20%]"
+          loading="lazy"
+          decoding="async"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/70 via-brand-ink-900/10 to-transparent"></div>
+        <div class="absolute inset-0 bg-brand-teal-900/10 mix-blend-multiply"></div>
+
+        <div data-ab-in class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3.5 py-2 text-xs font-semibold text-brand-ink-900 shadow-lg backdrop-blur sm:left-5 sm:top-5">
+          <i class="fa-solid fa-scale-balanced text-[#A9824C]"></i>
+          Members of the Law Society of Kenya
+        </div>
+      </div>
+
+      <!-- Stat card -->
+      <div data-ab-in data-ab-card class="absolute -bottom-0 -right-2 flex items-center gap-5 rounded-2xl bg-white px-6 py-5 shadow-xl shadow-brand-ink-900/10 ring-1 ring-[#C9A24B]/20 sm:-right-6 sm:gap-6 sm:px-7">
+        <div class="text-center">
+          <p data-ab-years data-founded="2018" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-3xl">8+</p>
+          <p class="mb-0 mt-1.5 text-xs text-brand-ink-700">Years in Practice</p>
+        </div>
+        <span class="block h-10 w-px bg-brand-ink-900/10" aria-hidden="true"></span>
+        <div class="text-center">
+          <p data-ab-count="{{ practice_areas|length }}" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-3xl">{{ practice_areas|length }}</p>
+          <p class="mb-0 mt-1.5 text-xs text-brand-ink-700">Practice Areas</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy -->
+    <div class="lg:col-span-6">
+      <p data-ab-in class="mb-4 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#A9824C] sm:text-sm">
+        <span class="h-px w-8 bg-[#C9A24B]/70"></span>About us
+      </p>
+      <h2 data-ab-in data-ab-split class="font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 sm:text-4xl lg:text-[2.75rem]">
+        A Customized, <span class="italic text-[#A9824C]">Personal</span> Approach to Every Client's Concerns
+      </h2>
+
+      <p data-ab-in class="mb-0 mt-6 text-base leading-relaxed text-brand-ink-700 sm:text-lg">
+        Ngima Wangai &amp; Company Advocates is a full-service law firm specialized in commercial and
+        corporate law. Our priority is maintaining constant accessibility to our clients regarding
+        their matters. We address needs and inquiries promptly, and we keep turnaround time to a minimum.
+      </p>
+
+      <ul class="mb-0 mt-9 divide-y divide-brand-ink-900/10 border-y border-brand-ink-900/10">
+        <li data-ab-in data-ab-item class="group flex items-center gap-4 py-4 sm:py-5">
+          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">01</span>
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-gavel"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Extensive litigation experience across all court levels</span>
+        </li>
+        <li data-ab-in data-ab-item class="group flex items-center gap-4 py-4 sm:py-5">
+          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">02</span>
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-handshake"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Wide range of dispute resolution services</span>
+        </li>
+        <li data-ab-in data-ab-item class="group flex items-center gap-4 py-4 sm:py-5">
+          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">03</span>
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-list-check"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Comprehensive, efficient handling of every matter</span>
+        </li>
+      </ul>
+
+      <div data-ab-in class="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+        <a data-pa-magnet href="{% url 'core:about' %}"
+           class="group inline-flex items-center justify-center gap-2.5 rounded-full bg-brand-ink-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-300 hover:bg-[#C9A24B] hover:text-brand-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/70 focus-visible:ring-offset-2">
+          Learn more about us
+          <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+        </a>
+        <a href="{% url 'core:contact' %}"
+           class="inline-flex items-center justify-center gap-2 text-base font-semibold text-[#A9824C] transition-colors hover:text-brand-ink-900">
+          Book a consultation <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE AREAS ============ -->
+<section
+  id="practice-areas"
+  data-pa-section
+  class="relative z-10 -mt-10 scroll-mt-20 overflow-hidden rounded-t-[2rem] bg-brand-ink-900 pb-20 pt-20 text-white sm:-mt-14 sm:rounded-t-[3rem] sm:pb-28 sm:pt-28 lg:pb-32 lg:pt-32"
+>
+  <!-- decor: glows, dots, pointer spotlight, big scales mark -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="absolute -right-40 top-0 h-[40rem] w-[40rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.16),transparent_65%)]"></div>
+    <div class="absolute -left-40 bottom-0 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(104,194,202,0.10),transparent_65%)]"></div>
+    <div class="absolute inset-0 opacity-[0.05] [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]"></div>
+    <div data-pa-spot class="absolute inset-0" style="background: radial-gradient(520px circle at var(--mx, 70%) var(--my, 30%), rgba(201,162,75,0.10), transparent 60%);"></div>
+    <i data-pa-mark class="fa-solid fa-scale-balanced absolute -left-6 top-24 hidden text-[22rem] leading-none text-white/[0.025] lg:block"></i>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {% if practice_areas %}
+    <div class="grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-16">
+
+      <!-- Left: framing (sticky on desktop) -->
+      <div class="lg:sticky lg:top-28 lg:col-span-5">
+        <p data-pa-in data-pa-lead class="mb-5 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#C9A24B] sm:text-sm">
+          <span class="h-px w-8 bg-[#C9A24B]/70"></span>What we do
+        </p>
+        <h2 data-pa-in data-pa-split class="max-w-md font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+          Our <span class="italic text-[#C9A24B]">Practice</span> Areas
+        </h2>
+        <span data-pa-in data-pa-lead class="my-6 block h-px w-14 bg-[#C9A24B] sm:my-7"></span>
+        <p data-pa-in data-pa-lead class="max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
+          {{ practice_areas|length }} area{{ practice_areas|length|pluralize }} of counsel, each handled with the same commitment to
+          accessible, personal attention. We stay with you from the first
+          consultation through to resolution.
+        </p>
+        <p data-pa-in data-pa-lead class="mt-6 hidden items-center gap-3 font-serif text-base italic text-white/50 lg:flex">
+          <i class="fa-solid fa-arrow-right-long text-[#C9A24B]"></i> Select an area to open its full brief.
+        </p>
+        <div data-pa-in data-pa-lead class="mt-8">
+          <a data-pa-magnet href="{% url 'core:contact' %}"
+             class="group inline-flex items-center gap-2.5 rounded-full bg-[#C9A24B] px-7 py-3.5 text-base font-semibold text-brand-ink-900 shadow-lg shadow-[#C9A24B]/20 transition-colors duration-300 hover:bg-[#B8913C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink-900">
+            Discuss your case
+            <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: interactive index -->
+      <div class="lg:col-span-7">
+        <p class="mb-4 px-2 font-serif text-base italic text-white/50 sm:px-4 sm:text-lg lg:hidden">Tap an area to open its full brief.</p>
+        <ol data-pa-list class="border-t border-white/10">
+          {% for area in practice_areas %}
+          <li data-pa-in data-pa-row class="border-b border-white/10">
+            <button
+              type="button"
+              data-pa-open
+              data-index="{{ forloop.counter0 }}"
+              data-id="{{ area.id }}"
+              data-title="{{ area.title }}"
+              data-icon="{{ area.icon_class }}"
+              aria-haspopup="dialog"
+              class="group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-4 rounded-xl px-2 py-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink-900 sm:gap-x-6 sm:px-4 sm:py-8"
+            >
+              <span aria-hidden="true" class="pointer-events-none absolute inset-0 origin-left scale-x-0 rounded-xl bg-gradient-to-r from-[#C9A24B]/15 via-[#C9A24B]/5 to-transparent transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"></span>
+              <span aria-hidden="true" class="absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-full bg-[#C9A24B] transition-all duration-300 group-hover:h-10"></span>
+
+              <span class="relative flex h-12 w-12 items-center justify-center rounded-full text-lg text-[#C9A24B] ring-1 ring-white/15 transition-all duration-300 group-hover:scale-105 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900 group-hover:ring-[#C9A24B] sm:h-14 sm:w-14">
+                <i class="{{ area.icon_class }}"></i>
+              </span>
+
+              <span class="relative min-w-0">
+                <span class="block font-serif text-xs tracking-[0.2em] text-[#C9A24B] sm:text-sm">&sect; {{ forloop.counter|stringformat:"02d" }}</span>
+                <span class="mt-1 block font-serif text-xl font-semibold leading-snug text-white transition-transform duration-300 group-hover:translate-x-1 sm:text-2xl lg:text-[1.75rem]">{{ area.title }}</span>
+                <span class="mt-1.5 line-clamp-2 block text-sm leading-relaxed text-white/60 sm:text-base">{{ area.description|striptags|truncatewords:18 }}</span>
+              </span>
+
+              <span class="relative flex h-10 w-10 items-center justify-center rounded-full text-white/70 ring-1 ring-white/20 transition-all duration-300 group-hover:-rotate-45 group-hover:bg-white group-hover:text-brand-ink-900 sm:h-12 sm:w-12">
+                <i class="fa-solid fa-arrow-right text-sm"></i>
+              </span>
+            </button>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+    {% else %}
+    <div class="rounded-2xl border-2 border-dashed border-white/15 py-16 text-center">
+      <p class="text-white/60">No practice areas published yet, add some from the Django admin.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if practice_areas %}
+  <!-- ===== Full-screen "case file" reader (moved to <body> by JS so it can sit above the navbar) ===== -->
+  <div data-pa-reader class="invisible fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-labelledby="pa-title" aria-hidden="true">
+
+    <!-- reading progress -->
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-30 h-[3px] bg-black/5" aria-hidden="true">
+      <span data-pa-progress class="block h-full w-full origin-left scale-x-0 bg-[#C9A24B]"></span>
+    </div>
+
+    <!-- close -->
+    <button type="button" data-pa-close aria-label="Close practice area"
+            class="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-30 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-ink-900 shadow-lg ring-1 ring-brand-ink-900/10 transition-colors hover:bg-[#C9A24B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] sm:right-6 lg:right-8 lg:top-6">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div data-pa-sheet class="pa-scroll absolute inset-0 flex flex-col overflow-y-auto overscroll-contain bg-[#FAF7F2] lg:flex-row lg:overflow-hidden">
+
+      <!-- Rail -->
+      <aside data-pa-rail class="pa-scroll relative shrink-0 overflow-hidden bg-brand-ink-900 text-white lg:h-full lg:w-[40%] lg:overflow-y-auto xl:w-[36%]">
+        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div class="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.22),transparent_65%)]"></div>
+          <span data-pa-big class="absolute -bottom-10 -right-4 select-none font-serif text-[11rem] font-bold leading-none text-white/[0.04] lg:text-[16rem]">01</span>
+        </div>
+
+        <div class="relative flex min-h-full flex-col gap-6 px-6 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10 lg:gap-8 lg:px-12 lg:py-12 xl:px-16">
+          <p data-pa-rail-item class="flex items-center gap-3 pr-14 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[#C9A24B]">
+            <span class="h-px w-8 bg-[#C9A24B]/70"></span>Practice area
+            <span data-pa-count class="ml-auto tabular-nums text-white/50"></span>
+          </p>
+
+          <span data-pa-rail-item class="flex h-14 w-14 items-center justify-center rounded-full bg-[#C9A24B] text-xl text-brand-ink-900 shadow-lg shadow-[#C9A24B]/25 lg:h-16 lg:w-16">
+            <i data-pa-icon></i>
+          </span>
+
+          <div class="overflow-hidden pb-1">
+            <h2 id="pa-title" data-pa-title tabindex="-1" class="font-serif text-[1.9rem] font-bold leading-[1.12] focus:outline-none sm:text-4xl lg:text-[2.6rem] xl:text-5xl"></h2>
+          </div>
+
+          <p data-pa-rail-item data-pa-meta class="text-sm text-white/60"></p>
+          <span data-pa-rail-item class="block h-px w-14 bg-[#C9A24B]"></span>
+
+          <nav data-pa-rail-item class="mt-auto hidden lg:block" aria-label="All practice areas">
+            <p class="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">All areas</p>
+            <ul class="space-y-0.5">
+              {% for area in practice_areas %}
+              <li>
+                <button type="button" data-pa-jump data-index="{{ forloop.counter0 }}"
+                        class="pa-jump flex w-full items-center gap-3 rounded-lg py-1.5 text-left text-sm text-white/50 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/60">
+                  <span class="pa-jump-bar block h-px w-3 bg-white/30 transition-all duration-300"></span>
+                  <span class="truncate">{{ area.title }}</span>
+                </button>
+              </li>
+              {% endfor %}
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Reading pane -->
+      <div data-pa-pane class="pa-scroll relative min-w-0 flex-1 overscroll-contain lg:h-full lg:overflow-y-auto">
+        <div class="mx-auto max-w-[46rem] px-6 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-10 sm:px-10 sm:pt-14 lg:px-14 lg:pt-24 xl:px-20">
+
+          <div data-pa-body>
+            {% for area in practice_areas %}
+            <article data-pa-article hidden>
+              <div class="pa-prose">{{ area.description|linebreaks }}</div>
+            </article>
+            {% endfor %}
+          </div>
+
+          <!-- end of brief -->
+          <div data-pa-foot class="relative mt-14 overflow-hidden rounded-3xl bg-brand-ink-900 p-7 text-white sm:p-9">
+            <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.25),transparent_65%)]" aria-hidden="true"></div>
+            <p class="relative font-serif text-2xl font-semibold leading-snug sm:text-3xl">Need advice on <span data-pa-cta-title class="italic text-[#C9A24B]"></span>?</p>
+            <p class="relative mt-2 text-sm text-white/65 sm:text-base">Speak to one of our advocates about your matter.</p>
+            <div class="relative mt-6 flex flex-wrap gap-3">
+              <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 rounded-full bg-[#C9A24B] px-6 py-3 font-semibold text-brand-ink-900 transition-colors hover:bg-[#B8913C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+                Discuss your case <i class="fa-solid fa-arrow-right text-sm"></i>
+              </a>
+              <button type="button" data-pa-close class="inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-white ring-1 ring-white/25 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+                Back to all areas
+              </button>
+            </div>
+          </div>
+
+          <div data-pa-foot class="mt-6 grid gap-3 sm:grid-cols-2">
+            <button type="button" data-pa-nav="prev" class="group rounded-2xl bg-white p-5 text-left ring-1 ring-brand-ink-900/10 transition hover:ring-[#C9A24B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]">
+              <span class="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[#A9824C]"><i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i> Previous</span>
+              <span data-pa-prev-title class="mt-1.5 block truncate font-serif text-lg font-semibold text-brand-ink-900"></span>
+            </button>
+            <button type="button" data-pa-nav="next" class="group rounded-2xl bg-white p-5 text-left ring-1 ring-brand-ink-900/10 transition hover:ring-[#C9A24B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] sm:text-right">
+              <span class="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[#A9824C] sm:justify-end">Next <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i></span>
+              <span data-pa-next-title class="mt-1.5 block truncate font-serif text-lg font-semibold text-brand-ink-900"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var G = window.gsap || null, ST = window.ScrollTrigger || null;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var anim = !!(G && ST) && !reduce;
+  if (anim) { try { G.registerPlugin(ST); } catch (e) { anim = false; } }
+  if (!anim) root.classList.remove('pa-anim');
+
+  var $  = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+  var mqLg = window.matchMedia('(min-width: 1024px)');
+
+  /* ---------------- helpers ---------------- */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function splitWords(el) {
+    el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          child.textContent.split(/(\s+)/).forEach(function (part) {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            var m = document.createElement('span'); m.className = 'pa-mask'; m.setAttribute('aria-hidden', 'true');
+            var w = document.createElement('span'); w.className = 'pa-word'; w.textContent = part;
+            m.appendChild(w); frag.appendChild(m);
+          });
+          node.replaceChild(frag, child);
+        } else if (child.nodeType === 1) { walk(child); }
+      });
+    })(el);
+    return $$('.pa-word', el);
+  }
+
+  function countTo(el, end, suffix) {
+    suffix = suffix || '';
+    if (!anim) { el.textContent = end + suffix; return; }
+    var o = { v: 0 };
+    G.to(o, { v: end, duration: 1.6, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v) + suffix; } });
+  }
+
+  /* ---------------- About: years (works without GSAP) ---------------- */
+  var yrEl = $('[data-ab-years]');
+  var yrs = 0;
+  if (yrEl) {
+    yrs = Math.max(0, new Date().getFullYear() - parseInt(yrEl.getAttribute('data-founded'), 10));
+    yrEl.textContent = yrs + '+';
+  }
+
+  /* ---------------- Reader ---------------- */
+  var reader = $('[data-pa-reader]');
+  var rows = $$('[data-pa-open]');
+
+  if (reader && rows.length) {
+    document.body.appendChild(reader);     // escape the section's stacking context
+
+    var sheet = $('[data-pa-sheet]', reader), pane = $('[data-pa-pane]', reader);
+    var titleEl = $('[data-pa-title]', reader), iconEl = $('[data-pa-icon]', reader);
+    var metaEl = $('[data-pa-meta]', reader), countEl = $('[data-pa-count]', reader), bigEl = $('[data-pa-big]', reader);
+    var barEl = $('[data-pa-progress]', reader), closeBtn = $('[data-pa-close]', reader);
+    var ctaTitle = $('[data-pa-cta-title]', reader);
+    var prevT = $('[data-pa-prev-title]', reader), nextT = $('[data-pa-next-title]', reader);
+    var arts = $$('[data-pa-article]', reader), jumps = $$('[data-pa-jump]', reader);
+    var railItems = $$('[data-pa-rail-item]', reader), foots = $$('[data-pa-foot]', reader);
+
+    var areas = rows.map(function (r) { return { id: r.getAttribute('data-id'), title: r.getAttribute('data-title'), icon: r.getAttribute('data-icon') }; });
+    var N = areas.length;
+
+    var LEDE = 'font-serif text-[1.3rem] sm:text-2xl leading-relaxed text-brand-ink-900 mb-8';
+    var BODY = 'text-[1.0625rem] leading-[1.95] text-brand-ink-700 mb-5';
+    function wc(t) { return t.trim().split(/\s+/).length; }
+
+    /* Long single-block descriptions are split into readable paragraphs (~55 words each) */
+    function prepareArticle(art) {
+      var host = $('.pa-prose', art);
+      Array.prototype.slice.call(host.children).forEach(function (p) {
+        if (p.tagName !== 'P' || p.querySelector('br')) return;
+        var text = p.textContent.trim();
+        if (wc(text) <= 110) return;
+        var sentences = text.match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [text];
+        var chunks = [], cur = [], count = 0;
+        sentences.forEach(function (s) {
+          s = s.trim(); if (!s) return;
+          cur.push(s); count += wc(s);
+          if (count >= 55) { chunks.push(cur.join(' ')); cur = []; count = 0; }
+        });
+        if (cur.length) {
+          if (chunks.length && count < 25) chunks[chunks.length - 1] += ' ' + cur.join(' ');
+          else chunks.push(cur.join(' '));
+        }
+        if (chunks.length > 1) {
+          chunks.forEach(function (c) { var n = document.createElement('p'); n.textContent = c; host.insertBefore(n, p); });
+          host.removeChild(p);
+        }
+      });
+      Array.prototype.slice.call(host.children).forEach(function (b, i) {
+        b.className = (i === 0 && wc(b.textContent) <= 70) ? LEDE : BODY;
+      });
+      art.setAttribute('data-words', wc(art.textContent));
+    }
+    arts.forEach(prepareArticle);
+
+    /* state */
+    var cur = -1, isOpen = false, busy = false, lastFocus = null, origin = null;
+    var tlActive = null, reveals = [], hidden = [];
+
+    function scrollerEl() { return mqLg.matches ? pane : sheet; }
+    function originPoint(el) {
+      if (!el) return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      var r = el.getBoundingClientRect();
+      return { x: r.left + r.width * 0.92, y: r.top + r.height / 2 };
+    }
+    function maxR(c) {
+      var w = window.innerWidth, h = window.innerHeight;
+      return Math.ceil(Math.max(Math.hypot(c.x, c.y), Math.hypot(w - c.x, c.y), Math.hypot(c.x, h - c.y), Math.hypot(w - c.x, h - c.y))) + 4;
+    }
+    function lockScroll() {
+      var sw = window.innerWidth - root.clientWidth;
+      root.style.overflow = 'hidden';
+      if (sw > 0) document.body.style.paddingRight = sw + 'px';
+    }
+    function unlockScroll() { root.style.overflow = ''; document.body.style.paddingRight = ''; }
+
+    /* fill the rail + show the right article */
+    function fillRail(i) {
+      var a = areas[i];
+      titleEl.textContent = a.title;
+      iconEl.className = a.icon;
+      countEl.textContent = pad(i + 1) + ' / ' + pad(N);
+      bigEl.textContent = pad(i + 1);
+      ctaTitle.textContent = a.title;
+      var w = parseInt(arts[i].getAttribute('data-words'), 10) || 0;
+      metaEl.textContent = Math.max(1, Math.round(w / 200)) + ' min read \u00b7 ' + w + ' words';
+      arts.forEach(function (el, k) { if (k === i) el.removeAttribute('hidden'); else el.setAttribute('hidden', ''); });
+      jumps.forEach(function (j, k) { j.classList.toggle('is-active', k === i); j.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      var p = (i - 1 + N) % N, n = (i + 1) % N;
+      prevT.textContent = areas[p].title; nextT.textContent = areas[n].title;
+      $('[data-pa-nav="prev"]', reader).setAttribute('data-index', p);
+      $('[data-pa-nav="next"]', reader).setAttribute('data-index', n);
+      onScroll();
+    }
+
+    /* progress */
+    var setP = anim ? G.quickSetter(barEl, 'scaleX') : function (v) { barEl.style.transform = 'scaleX(' + v + ')'; };
+    function onScroll() {
+      var s = scrollerEl(), max = s.scrollHeight - s.clientHeight;
+      setP(max > 0 ? Math.min(1, s.scrollTop / max) : 0);
+    }
+    sheet.addEventListener('scroll', onScroll, { passive: true });
+    pane.addEventListener('scroll', onScroll, { passive: true });
+
+    /* scroll reveals for the long tail of an article */
+    function proseBlocks() { return $$('.pa-prose > *', arts[cur]); }
+    function hideTail(skip) {
+      if (!anim) return;
+      var blocks = proseBlocks().slice(skip).concat(foots);
+      hidden = blocks;
+      G.set(blocks, { opacity: 0, y: 26 });
+    }
+    function killTriggers() { reveals.forEach(function (t) { t.kill(); }); reveals = []; }
+    function armTail() {
+      if (!anim || !hidden.length) return;
+      killTriggers();
+      reveals = ST.batch(hidden, {
+        scroller: scrollerEl(), start: 'top 94%', once: true,
+        onEnter: function (b) { G.to(b, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out', overwrite: true }); }
+      }) || [];
+      ST.refresh();
+    }
+    function clearTail() {
+      killTriggers();
+      if (anim) { G.set($$('.pa-prose > *', reader).concat(foots), { clearProps: 'opacity,transform' }); }
+      hidden = [];
+    }
+
+    /* open */
+    function openReader(i, originEl, how) {
+      if (isOpen) return;
+      isOpen = true; cur = i;
+      lastFocus = originEl || document.activeElement;
+      origin = originEl ? originPoint(originEl) : null;
+      fillRail(i);
+      reader.classList.remove('invisible'); reader.setAttribute('aria-hidden', 'false');
+      lockScroll();
+      sheet.scrollTop = 0; pane.scrollTop = 0; setP(0);
+
+      if (how === 'deep') history.replaceState({ pa: i, deep: true }, '', '#area-' + areas[i].id);
+      else if (how !== 'history') history.pushState({ pa: i }, '', '#area-' + areas[i].id);
+
+      if (!anim) { closeBtn.focus({ preventScroll: true }); return; }
+
+      busy = true;
+      var lg = mqLg.matches, c = origin || originPoint(null);
+      hideTail(4);
+      var first = proseBlocks().slice(0, 4);
+      var tl = tlActive = G.timeline({ defaults: { ease: 'power3.out' }, onComplete: function () { busy = false; armTail(); } });
+
+      if (lg) {
+        var R = maxR(c);
+        tl.fromTo(sheet, { clipPath: 'circle(0px at ' + c.x + 'px ' + c.y + 'px)' },
+          { clipPath: 'circle(' + R + 'px at ' + c.x + 'px ' + c.y + 'px)', duration: 1.05, ease: 'power3.inOut', clearProps: 'clipPath' }, 0);
+      } else {
+        tl.fromTo(sheet, { yPercent: 100 }, { yPercent: 0, duration: 0.75, ease: 'power4.out', clearProps: 'transform' }, 0);
+      }
+      tl.fromTo(railItems, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.07 }, lg ? 0.45 : 0.35)
+        .fromTo(titleEl, { yPercent: 105 }, { yPercent: 0, duration: 0.9, ease: 'expo.out' }, lg ? 0.5 : 0.4)
+        .fromTo(bigEl, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out' }, 0.35)
+        .fromTo(first, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.09 }, lg ? 0.65 : 0.55)
+        .fromTo(closeBtn, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' }, 0.6);
+      closeBtn.focus({ preventScroll: true });
+    }
+
+    /* switch area while open */
+    function switchTo(j) {
+      if (!isOpen || busy || j === cur || j < 0 || j >= N) return;
+      var dir = j > cur ? 1 : -1;
+      var st = history.state;
+      history.replaceState({ pa: j, deep: !!(st && st.deep) }, '', '#area-' + areas[j].id);
+
+      function swap() {
+        cur = j; fillRail(j);
+        scrollerEl().scrollTop = 0; setP(0);
+        if (anim) { G.set($$('.pa-prose > *', reader), { clearProps: 'opacity,transform' }); hideTail(4); }
+      }
+      if (!anim) { swap(); return; }
+
+      busy = true; killTriggers();
+      var tl = tlActive = G.timeline({ defaults: { ease: 'power3.out' }, onComplete: function () { busy = false; armTail(); } });
+      tl.to(arts[cur], { opacity: 0, x: -36 * dir, duration: 0.3, ease: 'power2.in' }, 0)
+        .to(titleEl, { yPercent: -105, duration: 0.3, ease: 'power2.in' }, 0)
+        .to(bigEl, { opacity: 0, duration: 0.25 }, 0)
+        .call(function () {
+          swap();
+          G.set(arts, { clearProps: 'opacity,transform' });
+          G.set(titleEl, { yPercent: 105 });
+        })
+        .fromTo(titleEl, { yPercent: 105 }, { yPercent: 0, duration: 0.8, ease: 'expo.out', immediateRender: false })
+        .fromTo(bigEl, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 1, ease: 'power2.out', immediateRender: false }, '<')
+        .fromTo(arts[j], { opacity: 0, x: 36 * dir }, { opacity: 1, x: 0, duration: 0.5, immediateRender: false }, '<0.05');
+    }
+
+    /* close */
+    function closeReader() {
+      if (!isOpen) return;
+      isOpen = false;
+      if (tlActive) { tlActive.kill(); tlActive = null; }
+      killTriggers();
+
+      function done() {
+        reader.classList.add('invisible'); reader.setAttribute('aria-hidden', 'true');
+        if (anim) {
+          G.set([sheet, titleEl, bigEl, closeBtn].concat(railItems), { clearProps: 'all' });
+        }
+        clearTail();
+        unlockScroll(); busy = false;
+        if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+      }
+      if (!anim) { done(); return; }
+
+      busy = true;
+      G.to(closeBtn, { opacity: 0, scale: 0.6, duration: 0.2 });
+      if (mqLg.matches) {
+        var c = origin || originPoint(null), R = maxR(c);
+        G.fromTo(sheet, { clipPath: 'circle(' + R + 'px at ' + c.x + 'px ' + c.y + 'px)' },
+          { clipPath: 'circle(0px at ' + c.x + 'px ' + c.y + 'px)', duration: 0.8, ease: 'power3.inOut', onComplete: done });
+      } else {
+        G.to(sheet, { yPercent: 100, duration: 0.55, ease: 'power3.in', onComplete: done });
+      }
+    }
+
+    /* the browser/phone Back button closes the reader instead of leaving the page */
+    function requestClose() {
+      var st = history.state;
+      if (st && st.pa != null && !st.deep) { history.back(); }
+      else {
+        closeReader();
+        if (location.hash.indexOf('#area-') === 0) history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+    window.addEventListener('popstate', function (e) {
+      var st = e.state;
+      if (isOpen && !(st && st.pa != null)) closeReader();
+      else if (!isOpen && st && st.pa != null && areas[st.pa]) openReader(st.pa, null, 'history');
+    });
+
+    /* wiring */
+    rows.forEach(function (r, i) { r.addEventListener('click', function () { openReader(i, r); }); });
+    $$('[data-pa-close]', reader).forEach(function (b) { b.addEventListener('click', requestClose); });
+    jumps.forEach(function (j) { j.addEventListener('click', function () { switchTo(parseInt(j.getAttribute('data-index'), 10)); }); });
+    $$('[data-pa-nav]', reader).forEach(function (b) { b.addEventListener('click', function () { switchTo(parseInt(b.getAttribute('data-index'), 10)); }); });
+
+    function focusables() {
+      return $$('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])', reader).filter(function (el) { return el.offsetParent !== null; });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (!isOpen) return;
+      if (e.key === 'Escape') { e.preventDefault(); requestClose(); return; }
+      if (e.key === 'ArrowRight') { switchTo((cur + 1) % N); return; }
+      if (e.key === 'ArrowLeft') { switchTo((cur - 1 + N) % N); return; }
+      if (e.key === 'Tab') {
+        var f = focusables(); if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (!reader.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+
+    var rz;
+    window.addEventListener('resize', function () {
+      if (!isOpen) return;
+      clearTimeout(rz);
+      rz = setTimeout(function () { clearTail(); onScroll(); }, 200);   // breakpoint changed: show everything, no stale triggers
+    });
+
+    /* deep link: /#area-3 opens that area */
+    var m = location.hash.match(/^#area-(\d+)$/);
+    if (m) {
+      var idx = areas.map(function (a) { return a.id; }).indexOf(m[1]);
+      if (idx > -1) setTimeout(function () { openReader(idx, null, 'deep'); }, 450);
+    }
+  }
+
+  /* ---------------- Section animations ---------------- */
+  if (anim) {
+    try {
+      var mm = G.matchMedia();
+
+      /* About */
+      var ab = $('[data-ab-section]');
+      if (ab) {
+        var abH = $('[data-ab-split]'), abWords = abH ? splitWords(abH) : [];
+        G.set(abWords, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
+
+        G.fromTo('[data-ab-frame]', { clipPath: 'inset(0% 100% 0% 0%)' },
+          { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: 'power4.inOut', clearProps: 'clipPath',
+            scrollTrigger: { trigger: ab, start: 'top 68%', once: true } });
+        G.fromTo('[data-ab-brass]', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 1.2, delay: 0.3, ease: 'power3.out',
+          scrollTrigger: { trigger: ab, start: 'top 68%', once: true } });
+        G.fromTo('[data-ab-img]', { scale: 1.2, yPercent: -6 }, { scale: 1.2, yPercent: 6, ease: 'none',
+          scrollTrigger: { trigger: '[data-ab-frame]', start: 'top bottom', end: 'bottom top', scrub: true } });
+
+        ST.create({ trigger: ab, start: 'top 62%', once: true, onEnter: function () {
+          var tl = G.timeline({ defaults: { ease: 'power3.out' } });
+          if (abH) tl.set(abH, { opacity: 1 }, 0);
+          tl.fromTo('[data-ab-section] .lg\\:col-span-6 > p[data-ab-in]:first-child', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.7 }, 0)
+            .to(abWords, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.05, ease: 'expo.out' }, 0.1)
+            .fromTo('[data-ab-section] .lg\\:col-span-6 > p[data-ab-in]:not(:first-child)', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, 0.5)
+            .fromTo('[data-ab-item]', { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.8, stagger: 0.12 }, 0.7)
+            .fromTo('[data-ab-section] .lg\\:col-span-6 > div[data-ab-in]', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 }, 1.1);
+        } });
+
+        ST.create({ trigger: '[data-ab-card]', start: 'top 90%', once: true, onEnter: function () {
+          G.fromTo('[data-ab-card]', { opacity: 0, y: 40, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'back.out(1.6)' });
+          G.fromTo('[data-ab-section] [data-ab-frame] [data-ab-in]', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.5 });
+          if (yrEl) countTo(yrEl, yrs, '+');
+          var ac = $('[data-ab-count]'); if (ac) countTo(ac, parseInt(ac.getAttribute('data-ab-count'), 10) || 0, '');
+        } });
+      }
+
+      /* Practice areas */
+      var sec = $('[data-pa-section]');
+      if (sec) {
+        var h2 = $('[data-pa-split]', sec), pw = h2 ? splitWords(h2) : [];
+        if (h2) G.set(h2, { opacity: 1 });
+        G.set(pw, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
+
+        ST.create({ trigger: sec, start: 'top 68%', once: true, onEnter: function () {
+          var tl = G.timeline({ defaults: { ease: 'power3.out' } });
+          tl.to(pw, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.08, ease: 'expo.out' }, 0)
+            .fromTo($$('[data-pa-lead]', sec), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 }, 0.1);
+        } });
+
+        ST.batch('[data-pa-row]', {
+          start: 'top 92%', once: true,
+          onEnter: function (b) { G.fromTo(b, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: 'power3.out' }); }
+        });
+
+        var mark = $('[data-pa-mark]', sec);
+        if (mark) G.fromTo(mark, { yPercent: 10 }, { yPercent: -20, ease: 'none', scrollTrigger: { trigger: sec, start: 'top bottom', end: 'bottom top', scrub: true } });
+      }
+
+      /* Desktop pointer effects: spotlight + magnetic buttons */
+      mm.add('(hover: hover) and (pointer: fine)', function () {
+        var cleanups = [];
+        var secEl = $('[data-pa-section]'), spot = $('[data-pa-spot]');
+        if (secEl && spot) {
+          G.set(spot, { '--mx': secEl.offsetWidth * 0.7 + 'px', '--my': 300 + 'px' });
+          var mv = function (e) {
+            var b = secEl.getBoundingClientRect();
+            G.to(spot, { '--mx': (e.clientX - b.left) + 'px', '--my': (e.clientY - b.top) + 'px', duration: 0.7, ease: 'power3.out', overwrite: 'auto' });
+          };
+          secEl.addEventListener('pointermove', mv);
+          cleanups.push(function () { secEl.removeEventListener('pointermove', mv); });
+        }
+        $$('[data-pa-magnet]').forEach(function (el) {
+          var qx = G.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
+          var qy = G.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
+          var pm = function (e) { var r = el.getBoundingClientRect(); qx((e.clientX - (r.left + r.width / 2)) * 0.28); qy((e.clientY - (r.top + r.height / 2)) * 0.35); };
+          var pl = function () { qx(0); qy(0); };
+          el.addEventListener('pointermove', pm); el.addEventListener('pointerleave', pl);
+          cleanups.push(function () { el.removeEventListener('pointermove', pm); el.removeEventListener('pointerleave', pl); });
+        });
+        return function () { cleanups.forEach(function (c) { c(); }); };
+      });
+
+      window.addEventListener('load', function () { ST.refresh(); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ST.refresh(); });
+
+    } catch (err) {
+      console.error('About/Practice animation failed, showing static content:', err);
+      root.classList.remove('pa-anim');
+      if (G) G.set('[data-pa-in],[data-ab-in],[data-pa-split],[data-ab-split],.pa-word', { clearProps: 'all' });
+    }
+  }
+})();
+</script>
