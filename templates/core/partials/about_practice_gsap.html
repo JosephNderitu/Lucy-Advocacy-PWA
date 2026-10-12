@@ -1,5 +1,5 @@
 {% load static %}
-<!-- ============ ABOUT + PRACTICE AREAS v5 (editorial, brand colours, GSAP, scroll hand-off, touch affordances) ============ -->
+<!-- ============ ABOUT + PRACTICE AREAS v6 (editorial, brand colours, GSAP, scroll hand-off, touch affordances, mobile motion) ============ -->
 <!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. -->
 <style>
   .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent;
@@ -11,6 +11,22 @@
   .pa-scroll::-webkit-scrollbar-thumb { background: rgba(31,34,48,.22); border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
   .pa-scroll::-webkit-scrollbar-thumb:hover { background: rgba(31,34,48,.38); background-clip: content-box; }
   .pa-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* ---- About image: adaptive, pro-looking for any image ---- */
+  .ab-img { object-position: var(--ab-pos, 50% 25%); transition: opacity .8s ease; }
+  [data-ab-bg] { opacity: 0; transition: opacity .8s ease; }
+  [data-ab-frame][data-ab-bg-on] [data-ab-bg] { opacity: .75; }
+  [data-ab-frame][data-ab-state="loading"] [data-ab-img],
+  [data-ab-frame][data-ab-state="loading"] [data-ab-bg] { opacity: 0; }
+  [data-ab-fallback] { display: none; }
+  [data-ab-frame][data-ab-state="error"] [data-ab-fallback] { display: flex; }
+  [data-ab-frame][data-ab-state="error"] [data-ab-img],
+  [data-ab-frame][data-ab-state="error"] [data-ab-bg] { display: none; }
+  [data-ab-frame][data-ab-state="loading"]::before { content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.09) 50%, transparent 80%);
+    transform: translateX(-100%); animation: ab-shimmer 1.4s ease-in-out infinite; }
+  @keyframes ab-shimmer { to { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) { [data-ab-frame][data-ab-state="loading"]::before { animation: none; } .ab-img, [data-ab-bg] { transition: none; } }
 
   .pa-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
   .pa-word { display: inline-block; will-change: transform; }
@@ -95,12 +111,20 @@
     <!-- Image -->
     <div class="order-2 lg:order-1 lg:col-span-6">
       <div data-ab-frame class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-brand-ink-900 sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[26rem]">
+        <!-- Optional: set a focal point on the frame, e.g. data-focus="50% 20%" (x y), so the crop keeps faces/subject in view -->
+        <div data-ab-fallback aria-hidden="true" class="absolute inset-0 items-center justify-center bg-gradient-to-br from-brand-teal-900 to-brand-ink-900">
+          <i class="fa-solid fa-scale-balanced text-6xl text-white/25"></i>
+        </div>
+        <!-- blurred copy of the same image: fills the bars when the photo is contained instead of cropped (src is set by JS only when needed) -->
+        <img data-ab-bg aria-hidden="true" alt="" data-src="{% static 'images/hero/hero2.png' %}"
+             class="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl" decoding="async">
         <img
           data-ab-img
           src="{% static 'images/hero/hero2.png' %}"
           alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
-          class="absolute inset-0 h-full w-full object-cover object-[center_25%]"
-          loading="lazy" decoding="async"
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          class="ab-img absolute inset-0 h-full w-full object-cover"
+          loading="lazy" decoding="async" draggable="false"
         >
         <div class="absolute inset-0 bg-brand-teal-900/35 mix-blend-multiply"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/80 via-transparent to-transparent"></div>
@@ -327,6 +351,61 @@
       yrEl.textContent = yrs + '+';
     }
 
+    /* ---------- About: adaptive image (works without GSAP) ----------
+       cover      when the photo's shape is close to the frame's
+       contain    when it is very different (tall portrait / panorama): nothing important is cropped, the bars get a blurred copy
+       scale-down when it is too small to enlarge without going soft
+       Also: automatic focal point, transparent-PNG backdrop, skeleton while loading, branded fallback if it fails. */
+    var imgFrame = $('[data-ab-frame]'), imgEl = $('[data-ab-img]'), imgBg = $('[data-ab-bg]');
+    var imgFit = { parallax: true };
+
+    function imgHasAlpha(img) {
+      try {
+        var c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+        c.width = c.height = 24; x.drawImage(img, 0, 0, 24, 24);
+        var d = x.getImageData(0, 0, 24, 24).data;
+        for (var i = 3; i < d.length; i += 4) if (d[i] < 250) return true;
+      } catch (e) {}
+      return false;
+    }
+    function fitImage() {
+      if (!imgEl || !imgFrame) return;
+      var nw = imgEl.naturalWidth, nh = imgEl.naturalHeight, fw = imgFrame.clientWidth, fh = imgFrame.clientHeight;
+      if (!nw || !nh || !fw || !fh) return;
+      var ir = nw / nh, fr = fw / fh, gap = Math.max(ir / fr, fr / ir);
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var tiny = nw < fw * 0.5 || nh < fh * 0.5;
+      var mode = tiny ? 'scale-down' : (gap > 1.75 ? 'contain' : 'cover');
+      imgEl.style.objectFit = mode;
+      imgFrame.style.setProperty('--ab-pos', imgFrame.getAttribute('data-focus') || (ir < 0.9 ? '50% 20%' : ir > 1.6 ? '50% 40%' : '50% 25%'));
+
+      var needBg = mode !== 'cover' || imgFrame.hasAttribute('data-ab-alpha');
+      if (needBg && imgBg && !imgBg.getAttribute('src')) imgBg.setAttribute('src', imgBg.getAttribute('data-src'));
+      if (needBg) imgFrame.setAttribute('data-ab-bg-on', ''); else imgFrame.removeAttribute('data-ab-bg-on');
+
+      /* the parallax zoom only runs on a cropped photo with enough pixels to spare */
+      var par = mode === 'cover' && nw >= fw * dpr * 1.15;
+      if (par !== imgFit.parallax) { imgFit.parallax = par; if (anim) ST.refresh(); }
+    }
+    function imgReady(ok) {
+      if (!ok) { imgFrame.setAttribute('data-ab-state', 'error'); return; }
+      if (imgHasAlpha(imgEl)) imgFrame.setAttribute('data-ab-alpha', '');
+      fitImage();
+      imgFrame.setAttribute('data-ab-state', 'ready');
+    }
+    if (imgEl && imgFrame) {
+      if (imgEl.complete && imgEl.naturalWidth) imgReady(true);
+      else {
+        imgFrame.setAttribute('data-ab-state', 'loading');
+        imgEl.addEventListener('load', function () { imgReady(true); }, { once: true });
+        imgEl.addEventListener('error', function () { imgReady(false); }, { once: true });
+      }
+      if (window.ResizeObserver) {
+        var imgRaf = 0;
+        new ResizeObserver(function () { cancelAnimationFrame(imgRaf); imgRaf = requestAnimationFrame(fitImage); }).observe(imgFrame);
+      }
+    }
+
     /* =====================================================================
        PRACTICE AREAS
        ===================================================================== */
@@ -385,7 +464,7 @@
       function minutes(i) { return Math.max(1, Math.round((parseInt(arts[i].getAttribute('data-words'), 10) || 0) / 200)); }
       $$('[data-pa-rt]', stage).forEach(function (el, i) { el.textContent = minutes(i) + ' min read'; });
 
-      var cur = -1, swapTl = null, locked = false, touched = false;
+      var cur = -1, swapTl = null, locked = false, touched = false, focusIdx = -1;
 
       /* soft edge fades: tell the user whether there is more above / below */
       function edges(el) {
@@ -448,7 +527,7 @@
       function paintTabs(i) {
         var show = mqLg.matches || touched;      // phones: no row looks "selected" until the person has opened one
         tabs.forEach(function (t, k) {
-          var on = k === i, vis = on && show, ico = $('.pa-ico', t);
+          var on = k === i, vis = (on && show) || (k === focusIdx && !mqLg.matches), ico = $('.pa-ico', t);
           t.classList.toggle('is-active', vis);
           t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
           ico.classList.toggle('bg-brand-teal-600', vis); ico.classList.toggle('text-white', vis);
@@ -481,7 +560,7 @@
       }
 
       function swapDetail(prev, i, dir) {
-        if (!anim || prev === -1) { fillDetail(i); body.scrollTop = 0; onBodyScroll(); return; }
+        if (!anim || prev === -1 || (!mqLg.matches && !stage.classList.contains('is-detail'))) { fillDetail(i); body.scrollTop = 0; onBodyScroll(); return; }
         if (swapTl) swapTl.kill();
         var blocks = $$('.pa-prose > *', arts[i]);
         var headBits = [$('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
@@ -500,6 +579,25 @@
           .to(titleEl, { yPercent: 0, duration: 0.75, ease: 'expo.out' }, 0.32)
           .to(headBits, { opacity: 1, duration: 0.5 }, 0.4)
           .to(blocks, { opacity: 1, y: 0, duration: 0.55, stagger: { amount: Math.min(0.5, blocks.length * 0.06) } }, 0.4);
+      }
+
+      /* phones: when the brief slides in, its pieces fly in after it, one by one */
+      function playBriefIn() {
+        if (!anim) return;
+        if (swapTl) swapTl.kill();
+        var blocks = $$('.pa-prose > *', arts[cur]);
+        var bits = [$('[data-pa-head] > p', stage), $('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
+        var cards = $$('aside > div', stage);
+        G.set(titleEl, { yPercent: 110 });
+        G.set(bits, { opacity: 0, x: 44 });
+        G.set(blocks, { opacity: 0, y: 36 });
+        G.set(cards, { opacity: 0, y: 32, scale: 0.97 });
+        swapTl = G.timeline({ delay: 0.2, defaults: { ease: 'power3.out' } });
+        swapTl.to(bits, { opacity: 1, x: 0, duration: 0.6, stagger: 0.08, clearProps: 'opacity,transform' }, 0)
+          .to(titleEl, { yPercent: 0, duration: 0.85, ease: 'expo.out' }, 0.05)
+          .fromTo(iconWrap, { scale: 0.4, rotate: -20, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, rotate: 0, opacity: 1, duration: 0.7, ease: 'back.out(2.2)', clearProps: 'transform,opacity' }, 0.1)
+          .to(blocks, { opacity: 1, y: 0, duration: 0.65, stagger: { amount: Math.min(0.6, blocks.length * 0.08) }, clearProps: 'opacity,transform' }, 0.3)
+          .to(cards, { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.1, clearProps: 'opacity,transform' }, 0.55);
       }
 
       /* select an area (desktop: swap article; phones: caller also slides the page in) */
@@ -530,6 +628,7 @@
         if (mqLg.matches || stage.classList.contains('is-detail')) return;
         touched = true; paintTabs(cur);
         stage.classList.add('is-detail'); lockScroll();
+        playBriefIn();
         history.pushState({ pa: cur }, '', '#area-' + areas[cur].id);
         setTimeout(function () { if (backBtn) backBtn.focus({ preventScroll: true }); }, 350);
       }
@@ -544,6 +643,7 @@
       function hideDetail() {
         stage.classList.remove('is-detail'); unlockScroll();
         if (!mqLg.matches && items[cur]) returnCue(items[cur]);
+        spy();
         setTimeout(function () { if (tabs[cur] && !mqLg.matches) tabs[cur].focus({ preventScroll: true }); }, 350);
       }
       function closeDetail() {
@@ -559,7 +659,12 @@
       });
 
       /* wiring */
-      tabs.forEach(function (t, i) { t.addEventListener('click', function () { select(i); openDetail(); }); });
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () {
+          if (anim && !mqLg.matches) G.fromTo($('.pa-ico', t), { scale: 0.8 }, { scale: 1, duration: 0.55, ease: 'back.out(3)', clearProps: 'transform' });
+          select(i); openDetail();
+        });
+      });
       navBtns.forEach(function (b) { b.addEventListener('click', function () { step(b.getAttribute('data-pa-nav') === 'next' ? 1 : -1); }); });
       if (N < 2) navBtns.forEach(function (b) { b.style.display = 'none'; });
       if (backBtn) backBtn.addEventListener('click', closeDetail);
@@ -603,7 +708,7 @@
           G.fromTo(vis, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out', overwrite: true, clearProps: 'opacity,transform',
             stagger: { amount: Math.min(0.4, vis.length * 0.025) } });
         }
-        requestAnimationFrame(function () { moveHl(false); updateHint(); });
+        requestAnimationFrame(function () { moveHl(false); updateHint(); if (anim) ST.refresh(); spy(); });
       }
       search.addEventListener('input', function () { clearTimeout(ft); ft = setTimeout(applyFilter, 120); });
       clearBtn.addEventListener('click', function () { search.value = ''; applyFilter(); search.focus(); });
@@ -615,7 +720,7 @@
         clearTimeout(rz);
         rz = setTimeout(function () {
           if (mqLg.matches && stage.classList.contains('is-detail')) hideDetail();   // rotated/resized to desktop: back to the split view
-          paintTabs(cur); moveHl(false); updateHint(); onBodyScroll();
+          paintTabs(cur); moveHl(false); updateHint(); onBodyScroll(); spy();
         }, 150);
       });
 
@@ -624,6 +729,27 @@
       scroller.addEventListener('scroll', function () {
         if (tick) return; tick = requestAnimationFrame(function () { tick = 0; updateHint(); });
       }, { passive: true });
+
+      /* phones: as you scroll the list, the row crossing the middle of the screen lights up and its chevron nudges */
+      var spyTick = 0;
+      function spy() {
+        spyTick = 0;
+        var best = -1;
+        if (!mqLg.matches && !stage.classList.contains('is-detail')) {
+          var sr = stage.getBoundingClientRect(), line = window.innerHeight * 0.5;
+          if (sr.bottom > 0 && sr.top < window.innerHeight) {
+            for (var k = 0; k < N; k++) {
+              if (items[k].hidden) continue;
+              var r = items[k].getBoundingClientRect();
+              if (r.top <= line && r.bottom > line) { best = k; break; }
+            }
+          }
+        }
+        if (best === focusIdx) return;
+        focusIdx = best; paintTabs(cur);
+        if (anim && best > -1) G.fromTo($('.pa-chev', tabs[best]), { x: 0 }, { x: 7, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out', overwrite: 'auto' });
+      }
+      window.addEventListener('scroll', function () { if (!spyTick) spyTick = requestAnimationFrame(spy); }, { passive: true });
 
       /* Desktop wheel: each gesture is owned by ONE scroller. A gesture that starts mid-list scrolls the list and
          stops at the end (no overshoot); the next gesture at the edge goes straight to the page. */
@@ -654,7 +780,7 @@
       if (m0) { var f = areas.map(function (a) { return a.id; }).indexOf(m0[1]); if (f > -1) { startIdx = f; deep = true; } }
       touched = deep;
       select(startIdx, { instant: true, noHash: true });
-      updateHint(); onBodyScroll();
+      updateHint(); onBodyScroll(); spy();
       if (deep) {
         if (!mqLg.matches) { stage.classList.add('is-detail'); lockScroll(); history.replaceState({ pa: startIdx, deep: true }, '', '#area-' + areas[startIdx].id); }
         else setTimeout(function () { sec.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 350);
@@ -672,7 +798,8 @@
         G.set(introP, { opacity: 0, x: 40 });
         G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
         G.set(stage, { opacity: 0 });
-        G.set(items, { opacity: 0, x: -36 });
+        var mobileList = !mqLg.matches;
+        if (!mobileList) G.set(items, { opacity: 0, x: -36 });
         G.set(hl, { opacity: 0 });
         G.set(headParts, { opacity: 0, x: 36 });
         G.set(blocks0, { opacity: 0, y: 22 });
@@ -685,7 +812,7 @@
             .to(words, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.07, ease: 'expo.out' }, 0.05)
             .to(introP, { opacity: 1, x: 0, duration: 0.8 }, 0.25)
             .to(stage, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.3)
-            .to(items, { opacity: 1, x: 0, duration: 0.65, stagger: { amount: 0.8 }, clearProps: 'opacity,transform' }, 0.45)
+            .to(mobileList ? [] : items, { opacity: 1, x: 0, duration: 0.65, stagger: { amount: 0.8 }, clearProps: 'opacity,transform' }, 0.45)
             .to(hl, { opacity: 1, duration: 0.5 }, 0.9)
             .to(headParts, { opacity: 1, x: 0, duration: 0.8, stagger: 0.08 }, 0.7)
             .to(blocks0, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, 0.95)
@@ -701,6 +828,17 @@
             .to(chevs, { x: 8, duration: 0.3, ease: 'power2.out', stagger: 0.09 })
             .to(chevs, { x: 0, duration: 0.9, ease: 'elastic.out(1,0.45)', stagger: 0.09 }, '>-0.15');
         } });
+
+        /* phones: rows fly in from alternating sides as they scroll into view (rows already above the fold stay put) */
+        if (mobileList) {
+          var vh = window.innerHeight;
+          var fly = items.filter(function (it) { return it.getBoundingClientRect().top > vh * 0.9; });
+          G.set(fly, { opacity: 0, y: 44, x: function (i) { return i % 2 ? 36 : -36; }, scale: 0.96 });
+          ST.batch(fly, { start: 'top 90%', once: true, onEnter: function (batch) {
+            G.to(batch, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.85, ease: 'expo.out', stagger: 0.09, overwrite: true, clearProps: 'opacity,transform' });
+            G.from(batch.map(function (b) { return $('.pa-ico', b); }), { scale: 0.4, rotate: -18, duration: 0.7, ease: 'back.out(2.2)', stagger: 0.09, delay: 0.1, clearProps: 'transform' });
+          } });
+        }
       }
     }
 
@@ -735,8 +873,10 @@
             var ac = $('[data-ab-count]'); if (ac) countTo(ac, parseInt(ac.getAttribute('data-ab-count'), 10) || 0, '');
           } });
 
-          G.fromTo('[data-ab-img]', { scale: 1.15, yPercent: -5 }, { scale: 1.15, yPercent: 5, ease: 'none',
-            scrollTrigger: { trigger: abFrame, start: 'top bottom', end: 'bottom top', scrub: true } });
+          G.fromTo('[data-ab-img]',
+            { scale: function () { return imgFit.parallax ? 1.15 : 1; }, yPercent: function () { return imgFit.parallax ? -5 : 0; } },
+            { scale: function () { return imgFit.parallax ? 1.15 : 1; }, yPercent: function () { return imgFit.parallax ? 5 : 0; }, ease: 'none',
+              scrollTrigger: { trigger: abFrame, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true } });
         }
 
         G.matchMedia().add('(hover: hover) and (pointer: fine)', function () {
