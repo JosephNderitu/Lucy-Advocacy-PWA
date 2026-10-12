@@ -1,5 +1,5 @@
 {% load static %}
-<!-- ============ ABOUT + PRACTICE AREAS v4 (editorial, brand colours, GSAP, scroll hand-off) ============ -->
+<!-- ============ ABOUT + PRACTICE AREAS v5 (editorial, brand colours, GSAP, scroll hand-off, touch affordances) ============ -->
 <!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. -->
 <style>
   .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent;
@@ -25,7 +25,11 @@
     [data-pa-stage].is-detail [data-pa-detail] { transform: none; visibility: visible; transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s; }
     /* the full-screen brief is a modal page, so it keeps its own scroll */
     [data-pa-detail] .pa-scroll { overscroll-behavior-y: contain; }
+    /* phones/tablets: the list is NOT a nested scroller. It flows with the page, so nothing can trap a swipe */
+    [data-pa-stage] [data-pa-scroll] { -webkit-mask-image: none; mask-image: none; }
+    [data-pa-hl] { display: none; }
   }
+  .pa-tab { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   @media (prefers-reduced-motion: reduce) { [data-pa-detail], [data-pa-stage].is-detail [data-pa-detail] { transition: none !important; } }
 </style>
 
@@ -125,25 +129,26 @@
     </div>
 
     {% if practice_areas %}
-    <div data-pa-stage class="relative h-[clamp(26rem,calc(100svh-9rem),36rem)] overflow-hidden rounded-2xl border border-brand-ink-900/10 bg-white shadow-sm lg:grid lg:h-[clamp(32rem,calc(100svh-7rem),46rem)] lg:grid-cols-[20rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]">
+    <div data-pa-stage class="relative h-auto overflow-hidden rounded-2xl border border-brand-ink-900/10 bg-white shadow-sm lg:grid lg:h-[clamp(32rem,calc(100svh-7rem),46rem)] lg:grid-cols-[20rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]">
 
       <!-- ===== Feed (index) ===== -->
-      <div data-pa-list-pane class="flex h-full min-h-0 flex-col lg:border-r lg:border-brand-ink-900/10">
+      <div data-pa-list-pane class="flex min-h-0 flex-col lg:h-full lg:border-r lg:border-brand-ink-900/10">
         <div class="shrink-0 border-b border-brand-ink-900/10 p-3 sm:p-4">
           <label class="relative block">
             <span class="sr-only">Search practice areas</span>
             <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-brand-ink-700/60"></i>
             <input data-pa-search type="search" autocomplete="off" placeholder="Search practice areas"
-                   class="w-full rounded-lg border border-transparent bg-brand-mist-50 py-2.5 pl-10 pr-10 text-sm text-brand-ink-900 placeholder:text-brand-ink-700/60 focus:border-brand-teal-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal-600/20 [&::-webkit-search-cancel-button]:hidden">
+                   class="w-full rounded-lg border border-transparent bg-brand-mist-50 py-2.5 pl-10 pr-10 text-base text-brand-ink-900 sm:text-sm placeholder:text-brand-ink-700/60 focus:border-brand-teal-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal-600/20 [&::-webkit-search-cancel-button]:hidden">
             <button type="button" data-pa-clear style="display:none" aria-label="Clear search" class="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-brand-ink-700 hover:bg-brand-ink-900/5"><i class="fa-solid fa-xmark text-xs"></i></button>
           </label>
           <p class="mt-2.5 flex items-center justify-between text-xs text-brand-ink-700">
             <span data-pa-countlist class="font-semibold text-brand-ink-900">{{ practice_areas|length }} practice areas</span>
             <span data-pa-hint class="hidden items-center gap-1.5 text-brand-ink-700/70"><i class="fa-solid fa-arrow-down text-[0.6rem]"></i> <span data-pa-hint-text>Scroll for more</span></span>
+            <span data-pa-tap class="inline-flex items-center gap-1.5 font-medium text-brand-teal-600 lg:hidden"><i class="fa-solid fa-hand-pointer text-[0.7rem]"></i> Tap an area to read</span>
           </p>
         </div>
 
-        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 overflow-y-auto">
+        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 lg:overflow-y-auto">
           <div data-pa-listwrap class="relative">
             <span data-pa-hl aria-hidden="true" class="pointer-events-none absolute left-0 right-0 top-0 z-0 bg-brand-teal-600/[0.08] opacity-0">
               <span class="absolute inset-y-0 left-0 w-[3px] bg-brand-teal-600"></span>
@@ -153,13 +158,14 @@
               <li data-pa-item role="presentation" class="relative z-10 border-b border-brand-ink-900/[0.07]">
                 <button type="button" role="tab" id="pa-tab-{{ area.id }}" aria-controls="pa-panel" aria-selected="false" tabindex="-1"
                         data-pa-tab data-index="{{ forloop.counter0 }}" data-id="{{ area.id }}" data-title="{{ area.title }}" data-icon="{{ area.icon_class }}"
-                        class="pa-tab group flex w-full gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-brand-mist-50 focus-visible:bg-brand-mist-50 focus-visible:outline-none sm:px-5">
+                        class="pa-tab group flex w-full gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-brand-mist-50 focus-visible:bg-brand-mist-50 focus-visible:outline-none active:bg-brand-teal-600/[0.08] sm:px-5">
                   <span class="pa-ico mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-teal-600/10 text-[0.95rem] text-brand-teal-600 transition-colors duration-300"><i class="{{ area.icon_class }}"></i></span>
                   <span class="min-w-0 flex-1">
                     <span class="pa-ttl line-clamp-2 block text-[0.95rem] font-semibold leading-snug text-brand-ink-900">{{ area.title }}</span>
                     <span class="mt-1 line-clamp-2 block text-[0.8125rem] leading-relaxed text-brand-ink-700">{{ area.description|striptags|truncatewords:22 }}</span>
                     <span data-pa-rt class="mt-1.5 block text-xs text-brand-ink-700/70"></span>
                   </span>
+                  <span class="pa-chev flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full bg-brand-teal-600/10 text-brand-teal-600 lg:hidden" aria-hidden="true"><i class="fa-solid fa-chevron-right text-[0.7rem]"></i></span>
                 </button>
               </li>
               {% endfor %}
@@ -245,7 +251,7 @@
     </div>
 
     <p data-pa-foot class="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm text-brand-ink-700">
-      <span>Scroll the list or search to find your matter. <button type="button" data-pa-skip class="ml-1 font-semibold text-brand-teal-600 hover:text-brand-teal-900">Skip to next section <i class="fa-solid fa-arrow-down text-xs"></i></button></span>
+      <span>Scroll the list or search to find your matter. <button type="button" data-pa-skip class="ml-1 hidden font-semibold text-brand-teal-600 hover:text-brand-teal-900 lg:inline">Skip to next section <i class="fa-solid fa-arrow-down text-xs"></i></button></span>
       <a href="{% url 'core:contact' %}" class="font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">Don't see your matter? Contact us <i class="fa-solid fa-arrow-right text-xs"></i></a>
     </p>
     {% else %}
@@ -379,7 +385,7 @@
       function minutes(i) { return Math.max(1, Math.round((parseInt(arts[i].getAttribute('data-words'), 10) || 0) / 200)); }
       $$('[data-pa-rt]', stage).forEach(function (el, i) { el.textContent = minutes(i) + ' min read'; });
 
-      var cur = -1, swapTl = null, locked = false;
+      var cur = -1, swapTl = null, locked = false, touched = false;
 
       /* soft edge fades: tell the user whether there is more above / below */
       function edges(el) {
@@ -419,7 +425,7 @@
       function updateHint() {
         edges(scroller);
         if (!hint) return;
-        var max = scroller.scrollHeight - scroller.clientHeight, more = max > 4, end = scroller.scrollTop >= max - 4;
+        var max = scroller.scrollHeight - scroller.clientHeight, more = mqLg.matches && max > 4, end = scroller.scrollTop >= max - 4;
         hint.classList.toggle('hidden', !more); hint.classList.toggle('flex', more);
         if (hintText) hintText.textContent = end ? 'End of list \u00b7 keep scrolling' : 'Scroll for more';
       }
@@ -440,12 +446,13 @@
       }
 
       function paintTabs(i) {
+        var show = mqLg.matches || touched;      // phones: no row looks "selected" until the person has opened one
         tabs.forEach(function (t, k) {
-          var on = k === i, ico = $('.pa-ico', t);
-          t.classList.toggle('is-active', on);
+          var on = k === i, vis = on && show, ico = $('.pa-ico', t);
+          t.classList.toggle('is-active', vis);
           t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
-          ico.classList.toggle('bg-brand-teal-600', on); ico.classList.toggle('text-white', on);
-          ico.classList.toggle('bg-brand-teal-600/10', !on); ico.classList.toggle('text-brand-teal-600', !on);
+          ico.classList.toggle('bg-brand-teal-600', vis); ico.classList.toggle('text-white', vis);
+          ico.classList.toggle('bg-brand-teal-600/10', !vis); ico.classList.toggle('text-brand-teal-600', !vis);
         });
       }
 
@@ -521,12 +528,22 @@
       function unlockScroll() { if (!locked) return; locked = false; root.style.overflow = ''; }
       function openDetail() {
         if (mqLg.matches || stage.classList.contains('is-detail')) return;
+        touched = true; paintTabs(cur);
         stage.classList.add('is-detail'); lockScroll();
         history.pushState({ pa: cur }, '', '#area-' + areas[cur].id);
         setTimeout(function () { if (backBtn) backBtn.focus({ preventScroll: true }); }, 350);
       }
+      /* coming back to the list on a phone: bring the row you were reading into view and pulse it */
+      function returnCue(it) {
+        var r = it.getBoundingClientRect();
+        if (r.top < 90 || r.bottom > window.innerHeight - 40) it.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+        it.classList.add('transition-colors', 'duration-700', 'bg-brand-teal-600/10');
+        setTimeout(function () { it.classList.remove('bg-brand-teal-600/10'); }, 900);
+        setTimeout(function () { it.classList.remove('transition-colors', 'duration-700'); }, 1900);
+      }
       function hideDetail() {
         stage.classList.remove('is-detail'); unlockScroll();
+        if (!mqLg.matches && items[cur]) returnCue(items[cur]);
         setTimeout(function () { if (tabs[cur] && !mqLg.matches) tabs[cur].focus({ preventScroll: true }); }, 350);
       }
       function closeDetail() {
@@ -537,7 +554,7 @@
       }
       window.addEventListener('popstate', function (e) {
         var st = e.state;
-        if (!stage.classList.contains('is-detail') && st && st.pa != null && areas[st.pa] && !mqLg.matches) { select(st.pa, { noHash: true }); stage.classList.add('is-detail'); lockScroll(); }
+        if (!stage.classList.contains('is-detail') && st && st.pa != null && areas[st.pa] && !mqLg.matches) { touched = true; select(st.pa, { noHash: true }); stage.classList.add('is-detail'); lockScroll(); }
         else if (!(st && st.pa != null)) hideDetail();
       });
 
@@ -598,7 +615,7 @@
         clearTimeout(rz);
         rz = setTimeout(function () {
           if (mqLg.matches && stage.classList.contains('is-detail')) hideDetail();   // rotated/resized to desktop: back to the split view
-          moveHl(false); updateHint(); onBodyScroll();
+          paintTabs(cur); moveHl(false); updateHint(); onBodyScroll();
         }, 150);
       });
 
@@ -608,18 +625,20 @@
         if (tick) return; tick = requestAnimationFrame(function () { tick = 0; updateHint(); });
       }, { passive: true });
 
+      /* Desktop wheel: each gesture is owned by ONE scroller. A gesture that starts mid-list scrolls the list and
+         stops at the end (no overshoot); the next gesture at the edge goes straight to the page. */
       function chain(el) {
-        var lastMove = 0;
+        var lastWheel = 0, mode = 'inner';
         el.addEventListener('wheel', function (e) {
+          if (!mqLg.matches) return;                                                  // phones/tablets: native chaining
           if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-          if (stage.classList.contains('is-detail') && !mqLg.matches) return;       // phone brief is modal
           var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
           var max = el.scrollHeight - el.clientHeight, now = performance.now();
-          var blocked = max <= 1 || (dy > 0 && el.scrollTop >= max - 1) || (dy < 0 && el.scrollTop <= 0);
-          if (!blocked) { lastMove = now; return; }                                  // inner still has room: let it scroll
-          e.preventDefault();
-          if (now - lastMove < 140) return;                                          // absorb momentum so it doesn't overshoot
-          window.scrollBy({ top: dy, left: 0, behavior: 'instant' });                // hand over to the page
+          var atEdge = max <= 1 || (dy > 0 && el.scrollTop >= max - 1) || (dy < 0 && el.scrollTop <= 0);
+          if (now - lastWheel > 120) mode = atEdge ? 'page' : 'inner';                // a new gesture decides who owns it
+          lastWheel = now;
+          if (mode === 'page') { e.preventDefault(); window.scrollBy({ top: dy, left: 0, behavior: 'instant' }); }
+          else if (atEdge) e.preventDefault();                                        // inner gesture hit the end: absorb its momentum
         }, { passive: false });
       }
       chain(scroller); chain(body);
@@ -633,6 +652,7 @@
       /* initial state (+ deep link /#area-3) */
       var m0 = location.hash.match(/^#area-(\d+)$/), startIdx = 0, deep = false;
       if (m0) { var f = areas.map(function (a) { return a.id; }).indexOf(m0[1]); if (f > -1) { startIdx = f; deep = true; } }
+      touched = deep;
       select(startIdx, { instant: true, noHash: true });
       updateHint(); onBodyScroll();
       if (deep) {
@@ -671,6 +691,15 @@
             .to(blocks0, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, 0.95)
             .to(aside, { opacity: 1, x: 0, duration: 0.8 }, 1.0)
             .to(foot, { opacity: 1, y: 0, duration: 0.6 }, 1.2);
+        } });
+
+        /* phones: a one-time wave across the first chevrons says "these open", without any copy */
+        var chevs = $$('.pa-chev', stage).slice(0, 4);
+        ST.create({ trigger: $('[data-pa-list-pane]', stage), start: 'top 55%', once: true, onEnter: function () {
+          if (mqLg.matches || !chevs.length) return;
+          G.timeline({ delay: 1.1 })
+            .to(chevs, { x: 8, duration: 0.3, ease: 'power2.out', stagger: 0.09 })
+            .to(chevs, { x: 0, duration: 0.9, ease: 'elastic.out(1,0.45)', stagger: 0.09 }, '>-0.15');
         } });
       }
     }
