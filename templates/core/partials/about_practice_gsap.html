@@ -1,8 +1,12 @@
 {% load static %}
-<!-- ============ ABOUT + PRACTICE AREAS v3 (editorial, brand colours, GSAP) ============ -->
+<!-- ============ ABOUT + PRACTICE AREAS v4 (editorial, brand colours, GSAP, scroll hand-off) ============ -->
 <!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. -->
 <style>
-  .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent; }
+  .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent;
+    overscroll-behavior-y: auto;               /* let scroll chain to the page */
+    --pa-ft: 0px; --pa-fb: 0px;                /* edge-fade sizes, set by JS */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--pa-ft), #000 calc(100% - var(--pa-fb)), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 var(--pa-ft), #000 calc(100% - var(--pa-fb)), transparent 100%); }
   .pa-scroll::-webkit-scrollbar { width: 8px; }
   .pa-scroll::-webkit-scrollbar-thumb { background: rgba(31,34,48,.22); border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
   .pa-scroll::-webkit-scrollbar-thumb:hover { background: rgba(31,34,48,.38); background-clip: content-box; }
@@ -19,6 +23,8 @@
     [data-pa-detail] { position: fixed; inset: 0; z-index: 100; transform: translateX(100%); visibility: hidden;
       transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s; }
     [data-pa-stage].is-detail [data-pa-detail] { transform: none; visibility: visible; transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s; }
+    /* the full-screen brief is a modal page, so it keeps its own scroll */
+    [data-pa-detail] .pa-scroll { overscroll-behavior-y: contain; }
   }
   @media (prefers-reduced-motion: reduce) { [data-pa-detail], [data-pa-stage].is-detail [data-pa-detail] { transition: none !important; } }
 </style>
@@ -133,11 +139,11 @@
           </label>
           <p class="mt-2.5 flex items-center justify-between text-xs text-brand-ink-700">
             <span data-pa-countlist class="font-semibold text-brand-ink-900">{{ practice_areas|length }} practice areas</span>
-            <span data-pa-hint class="hidden items-center gap-1.5 text-brand-ink-700/70"><i class="fa-solid fa-arrow-down text-[0.6rem]"></i> Scroll for more</span>
+            <span data-pa-hint class="hidden items-center gap-1.5 text-brand-ink-700/70"><i class="fa-solid fa-arrow-down text-[0.6rem]"></i> <span data-pa-hint-text>Scroll for more</span></span>
           </p>
         </div>
 
-        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 overflow-y-auto">
           <div data-pa-listwrap class="relative">
             <span data-pa-hl aria-hidden="true" class="pointer-events-none absolute left-0 right-0 top-0 z-0 bg-brand-teal-600/[0.08] opacity-0">
               <span class="absolute inset-y-0 left-0 w-[3px] bg-brand-teal-600"></span>
@@ -182,7 +188,7 @@
         </div>
         <div class="h-[2px] shrink-0 bg-brand-ink-900/[0.06]"><span data-pa-progress class="block h-full w-full origin-left scale-x-0 bg-brand-teal-600"></span></div>
 
-        <div data-pa-body class="pa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div data-pa-body class="pa-scroll min-h-0 flex-1 overflow-y-auto">
           <div class="px-5 pb-12 pt-7 sm:px-8 lg:px-10 xl:grid xl:grid-cols-[minmax(0,1fr)_15rem] xl:gap-10">
 
             <div class="min-w-0">
@@ -239,7 +245,7 @@
     </div>
 
     <p data-pa-foot class="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm text-brand-ink-700">
-      <span>Scroll the list or search to find your matter.</span>
+      <span>Scroll the list or search to find your matter. <button type="button" data-pa-skip class="ml-1 font-semibold text-brand-teal-600 hover:text-brand-teal-900">Skip to next section <i class="fa-solid fa-arrow-down text-xs"></i></button></span>
       <a href="{% url 'core:contact' %}" class="font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">Don't see your matter? Contact us <i class="fa-solid fa-arrow-right text-xs"></i></a>
     </p>
     {% else %}
@@ -330,6 +336,7 @@
       var ctaTitle = $('[data-pa-cta-title]', stage), relatedEl = $('[data-pa-related]', stage);
       var search = $('[data-pa-search]', stage), clearBtn = $('[data-pa-clear]', stage), countList = $('[data-pa-countlist]', stage);
       var emptyEl = $('[data-pa-empty]', stage), hint = $('[data-pa-hint]', stage);
+      var hintText = $('[data-pa-hint-text]', stage), skipBtn = $('[data-pa-skip]', sec);
       var backBtn = $('[data-pa-back]', stage), navBtns = $$('[data-pa-nav]', stage);
       var copyBtn = $('[data-pa-copy]', stage), copyLabel = $('[data-pa-copy-label]', stage), shareBtn = $('[data-pa-share]', stage);
       var head = $('[data-pa-head]', stage);
@@ -374,9 +381,17 @@
 
       var cur = -1, swapTl = null, locked = false;
 
+      /* soft edge fades: tell the user whether there is more above / below */
+      function edges(el) {
+        var max = el.scrollHeight - el.clientHeight;
+        el.style.setProperty('--pa-ft', Math.max(0, Math.min(28, el.scrollTop)) + 'px');
+        el.style.setProperty('--pa-fb', Math.max(0, Math.min(28, max - el.scrollTop)) + 'px');
+      }
+
       /* reading progress + compact title in the top bar once the headline scrolls away */
       var setP = anim ? G.quickSetter(prog, 'scaleX') : function (v) { prog.style.transform = 'scaleX(' + v + ')'; };
       function onBodyScroll() {
+        edges(body);
         var m = body.scrollHeight - body.clientHeight;
         setP(m > 0 ? Math.min(1, body.scrollTop / m) : 0);
         var gone = titleEl.getBoundingClientRect().bottom < body.getBoundingClientRect().top + 8;
@@ -401,7 +416,13 @@
         if (top < scroller.scrollTop + 4) scroller.scrollTop = Math.max(0, top - 4);
         else if (bottom > scroller.scrollTop + scroller.clientHeight - 4) scroller.scrollTop = bottom - scroller.clientHeight + 4;
       }
-      function updateHint() { if (hint) { var more = scroller.scrollHeight > scroller.clientHeight + 4; hint.classList.toggle('hidden', !more); hint.classList.toggle('flex', more); } }
+      function updateHint() {
+        edges(scroller);
+        if (!hint) return;
+        var max = scroller.scrollHeight - scroller.clientHeight, more = max > 4, end = scroller.scrollTop >= max - 4;
+        hint.classList.toggle('hidden', !more); hint.classList.toggle('flex', more);
+        if (hintText) hintText.textContent = end ? 'End of list \u00b7 keep scrolling' : 'Scroll for more';
+      }
 
       function renderRelated(i) {
         relatedEl.textContent = '';
@@ -570,7 +591,7 @@
       search.addEventListener('input', function () { clearTimeout(ft); ft = setTimeout(applyFilter, 120); });
       clearBtn.addEventListener('click', function () { search.value = ''; applyFilter(); search.focus(); });
 
-      if (window.ResizeObserver) { var ro = new ResizeObserver(function () { moveHl(false); updateHint(); }); ro.observe(ul); }
+      if (window.ResizeObserver) { var ro = new ResizeObserver(function () { moveHl(false); updateHint(); onBodyScroll(); }); ro.observe(ul); ro.observe(body); }
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { moveHl(false); updateHint(); });
       var rz;
       window.addEventListener('resize', function () {
@@ -579,6 +600,34 @@
           if (mqLg.matches && stage.classList.contains('is-detail')) hideDetail();   // rotated/resized to desktop: back to the split view
           moveHl(false); updateHint(); onBodyScroll();
         }, 150);
+      });
+
+      /* ---- scroll hand-off: inner scrollers never trap the page ---- */
+      var tick = 0;
+      scroller.addEventListener('scroll', function () {
+        if (tick) return; tick = requestAnimationFrame(function () { tick = 0; updateHint(); });
+      }, { passive: true });
+
+      function chain(el) {
+        var lastMove = 0;
+        el.addEventListener('wheel', function (e) {
+          if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+          if (stage.classList.contains('is-detail') && !mqLg.matches) return;       // phone brief is modal
+          var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+          var max = el.scrollHeight - el.clientHeight, now = performance.now();
+          var blocked = max <= 1 || (dy > 0 && el.scrollTop >= max - 1) || (dy < 0 && el.scrollTop <= 0);
+          if (!blocked) { lastMove = now; return; }                                  // inner still has room: let it scroll
+          e.preventDefault();
+          if (now - lastMove < 140) return;                                          // absorb momentum so it doesn't overshoot
+          window.scrollBy({ top: dy, left: 0, behavior: 'instant' });                // hand over to the page
+        }, { passive: false });
+      }
+      chain(scroller); chain(body);
+
+      if (skipBtn) skipBtn.addEventListener('click', function () {
+        var next = sec.nextElementSibling, b = reduce ? 'auto' : 'smooth';
+        if (next) next.scrollIntoView({ behavior: b, block: 'start' });
+        else window.scrollBy({ top: sec.getBoundingClientRect().bottom, behavior: b });
       });
 
       /* initial state (+ deep link /#area-3) */
