@@ -1,267 +1,249 @@
 {% load static %}
-<!-- ============ ABOUT + PRACTICE AREAS v2 (white, official, GSAP) ============ -->
-<!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page doesn't have them yet. -->
+<!-- ============ ABOUT + PRACTICE AREAS v3 (editorial, brand colours, GSAP) ============ -->
+<!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. -->
 <style>
-  .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(201,162,75,.5) transparent; }
-  .pa-scroll::-webkit-scrollbar { width: 7px; }
-  .pa-scroll::-webkit-scrollbar-thumb { background: rgba(201,162,75,.5); border-radius: 9999px; }
+  .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent; }
+  .pa-scroll::-webkit-scrollbar { width: 8px; }
+  .pa-scroll::-webkit-scrollbar-thumb { background: rgba(31,34,48,.22); border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
+  .pa-scroll::-webkit-scrollbar-thumb:hover { background: rgba(31,34,48,.38); background-clip: content-box; }
   .pa-scroll::-webkit-scrollbar-track { background: transparent; }
 
   .pa-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
   .pa-word { display: inline-block; will-change: transform; }
 
-  /* list rows: active state is set by JS (is-active) */
-  .pa-tab.is-active .pa-ico { background: #C9A24B; color: #393C48; border-color: #C9A24B; }
-  .pa-tab.is-active .pa-ttl { color: #1F2230; font-weight: 600; }
-  .pa-tab.is-active .pa-chev { color: #A9824C; transform: translateX(2px); }
+  /* article body uses a reading serif, like long-form article sites */
+  .pa-read { font-family: Charter, 'Iowan Old Style', 'Source Serif Pro', Georgia, Cambria, 'Times New Roman', serif; }
 
-  /* phones + tablets: list and detail are two "pages" that slide */
+  /* phones + tablets: the brief is a full-screen page that slides in from the right */
   @media (max-width: 1023px) {
-    [data-pa-detail] { transform: translateX(100%); visibility: hidden; transition: transform .55s cubic-bezier(.22,1,.36,1), visibility 0s linear .55s; }
-    [data-pa-list-pane] { transition: transform .55s cubic-bezier(.22,1,.36,1), opacity .45s ease, visibility 0s; }
-    [data-pa-stage].is-detail [data-pa-detail] { transform: none; visibility: visible; transition: transform .55s cubic-bezier(.22,1,.36,1), visibility 0s; }
-    [data-pa-stage].is-detail [data-pa-list-pane] { transform: translateX(-14%); opacity: 0; visibility: hidden; transition: transform .55s cubic-bezier(.22,1,.36,1), opacity .45s ease, visibility 0s linear .55s; }
+    [data-pa-detail] { position: fixed; inset: 0; z-index: 100; transform: translateX(100%); visibility: hidden;
+      transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s; }
+    [data-pa-stage].is-detail [data-pa-detail] { transform: none; visibility: visible; transition: transform .5s cubic-bezier(.22,1,.36,1), visibility 0s; }
   }
-  @media (prefers-reduced-motion: reduce) {
-    [data-pa-detail], [data-pa-list-pane], [data-pa-stage].is-detail [data-pa-detail], [data-pa-stage].is-detail [data-pa-list-pane] { transition: none !important; }
-  }
+  @media (prefers-reduced-motion: reduce) { [data-pa-detail], [data-pa-stage].is-detail [data-pa-detail] { transition: none !important; } }
 </style>
 
 <!-- ============ ABOUT ============ -->
-<section id="about" data-ab-section class="relative overflow-hidden bg-brand-mist-50 py-14 sm:py-16 lg:py-20">
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-    <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white to-transparent"></div>
-    <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
-    <div class="absolute -right-32 top-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.15),transparent_65%)]"></div>
-    <div class="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(#393C48_1px,transparent_1px)] [background-size:22px_22px]"></div>
-  </div>
-
-  <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-14 lg:px-8">
-
-    <!-- Visual -->
-    <div class="relative mx-auto w-full max-w-xl pb-7 lg:col-span-6 lg:max-w-none">
-      <div data-ab-brass class="absolute -left-4 -top-4 bottom-7 right-8 hidden rounded-3xl border border-[#A9824C]/40 sm:block" aria-hidden="true"></div>
-
-      <div data-ab-frame class="relative aspect-[4/5] overflow-hidden rounded-3xl bg-brand-ink-900 shadow-2xl shadow-brand-ink-900/20 sm:aspect-[4/3]">
-        <img
-          data-ab-img
-          src="{% static 'images/static_images/lady-justice.webp' %}"
-          alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
-          class="absolute inset-0 h-full w-full object-cover object-[center_20%]"
-          loading="lazy" decoding="async"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/70 via-brand-ink-900/10 to-transparent"></div>
-        <div class="absolute inset-0 bg-brand-teal-900/10 mix-blend-multiply"></div>
-        <div data-ab-badge class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3.5 py-2 text-xs font-semibold text-brand-ink-900 shadow-lg backdrop-blur sm:left-5 sm:top-5">
-          <i class="fa-solid fa-scale-balanced text-[#A9824C]"></i>
-          Members of the Law Society of Kenya
-        </div>
-      </div>
-
-      <div data-ab-card class="absolute -bottom-0 -right-2 flex items-center gap-5 rounded-2xl bg-white px-6 py-4 shadow-xl shadow-brand-ink-900/10 ring-1 ring-[#C9A24B]/20 sm:-right-5 sm:gap-6 sm:px-7">
-        <div class="text-center">
-          <p data-ab-years data-founded="2018" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-3xl">8+</p>
-          <p class="mb-0 mt-1.5 text-xs text-brand-ink-700">Years in Practice</p>
-        </div>
-        <span class="block h-10 w-px bg-brand-ink-900/10" aria-hidden="true"></span>
-        <div class="text-center">
-          <p data-ab-count="{{ practice_areas|length }}" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-3xl">{{ practice_areas|length }}</p>
-          <p class="mb-0 mt-1.5 text-xs text-brand-ink-700">Practice Areas</p>
-        </div>
-      </div>
-    </div>
+<section id="about" data-ab-section class="relative overflow-x-clip bg-white py-12 sm:py-14 lg:py-20">
+  <div class="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-stretch lg:gap-14 lg:px-8">
 
     <!-- Copy -->
-    <div class="lg:col-span-6">
-      <p data-ab-eyebrow class="mb-4 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#A9824C] sm:text-sm">
-        <span class="h-px w-8 bg-[#C9A24B]/70"></span>About us
-      </p>
+    <div class="order-1 flex flex-col justify-center lg:order-2 lg:col-span-6">
+      <p data-ab-eyebrow class="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">About us</p>
       <h2 data-ab-split class="font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 sm:text-4xl lg:text-[2.6rem]">
-        A Customized, <span class="italic text-[#A9824C]">Personal</span> Approach to Every Client's Concerns
+        A Customized, Personal Approach to Every Client's Concerns
       </h2>
 
-      <p data-ab-para class="mb-0 mt-5 text-base leading-relaxed text-brand-ink-700 sm:text-lg">
+      <p data-ab-para class="mb-0 mt-5 text-base leading-relaxed text-brand-ink-700 sm:text-[1.0625rem]">
         Ngima Wangai &amp; Company Advocates is a full-service law firm specialized in commercial and
         corporate law. Our priority is maintaining constant accessibility to our clients regarding
         their matters. We address needs and inquiries promptly, and we keep turnaround time to a minimum.
       </p>
 
-      <ul class="mb-0 mt-7 divide-y divide-brand-ink-900/10 border-y border-brand-ink-900/10">
-        <li data-ab-item class="group flex items-center gap-4 py-3.5 sm:py-4">
-          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">01</span>
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-gavel"></i></span>
-          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Extensive litigation experience across all court levels</span>
+      <ul class="mb-0 mt-6 space-y-3.5">
+        <li data-ab-item class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-teal-600/10 text-brand-teal-600"><i class="fa-solid fa-check text-[0.7rem]"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800">Extensive litigation experience across all court levels</span>
         </li>
-        <li data-ab-item class="group flex items-center gap-4 py-3.5 sm:py-4">
-          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">02</span>
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-handshake"></i></span>
-          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Wide range of dispute resolution services</span>
+        <li data-ab-item class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-teal-600/10 text-brand-teal-600"><i class="fa-solid fa-check text-[0.7rem]"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800">Wide range of dispute resolution services</span>
         </li>
-        <li data-ab-item class="group flex items-center gap-4 py-3.5 sm:py-4">
-          <span class="w-7 font-serif text-sm tabular-nums text-[#A9824C]">03</span>
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#A9824C] ring-1 ring-[#C9A24B]/40 transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900"><i class="fa-solid fa-list-check"></i></span>
-          <span class="text-base font-medium leading-snug text-brand-ink-800 transition-transform duration-300 group-hover:translate-x-1 sm:text-[1.05rem]">Comprehensive, efficient handling of every matter</span>
+        <li data-ab-item class="flex items-start gap-3">
+          <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-teal-600/10 text-brand-teal-600"><i class="fa-solid fa-check text-[0.7rem]"></i></span>
+          <span class="text-base font-medium leading-snug text-brand-ink-800">Comprehensive, efficient handling of every matter</span>
         </li>
       </ul>
 
-      <div data-ab-cta class="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+      <dl data-ab-stats class="mt-7 grid grid-cols-3 divide-x divide-brand-ink-900/10 border-y border-brand-ink-900/10">
+        <div class="flex flex-col-reverse justify-end gap-1.5 py-4 pr-3 sm:pr-5">
+          <dt class="text-xs text-brand-ink-700 sm:text-[0.8125rem]">Years in practice</dt>
+          <dd data-ab-years data-founded="2018" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-[1.75rem]">8+</dd>
+        </div>
+        <div class="flex flex-col-reverse justify-end gap-1.5 px-3 py-4 sm:px-5">
+          <dt class="text-xs text-brand-ink-700 sm:text-[0.8125rem]">Practice areas</dt>
+          <dd data-ab-count="{{ practice_areas|length }}" class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-[1.75rem]">{{ practice_areas|length }}</dd>
+        </div>
+        <div class="flex flex-col-reverse justify-end gap-1.5 py-4 pl-3 sm:pl-5">
+          <dt class="text-xs text-brand-ink-700 sm:text-[0.8125rem]">Registered advocates</dt>
+          <dd class="font-serif text-2xl font-bold leading-none text-brand-ink-900 sm:text-[1.75rem]">LSK</dd>
+        </div>
+      </dl>
+
+      <div data-ab-cta class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <a data-pa-magnet href="{% url 'core:about' %}"
-           class="group inline-flex items-center justify-center gap-2.5 rounded-full bg-brand-ink-900 px-7 py-3.5 text-base font-semibold text-white transition-colors duration-300 hover:bg-[#C9A24B] hover:text-brand-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/70 focus-visible:ring-offset-2">
+           class="group inline-flex items-center justify-center gap-2.5 rounded-lg bg-brand-orange-500 px-6 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
           Learn more about us
           <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         </a>
-        <a href="{% url 'core:contact' %}" class="inline-flex items-center justify-center gap-2 text-base font-semibold text-[#A9824C] transition-colors hover:text-brand-ink-900">
+        <a href="{% url 'core:contact' %}" class="inline-flex items-center justify-center gap-2 text-base font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">
           Book a consultation <i class="fa-solid fa-arrow-right text-xs"></i>
         </a>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="order-2 lg:order-1 lg:col-span-6">
+      <div data-ab-frame class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-brand-ink-900 sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[26rem]">
+        <img
+          data-ab-img
+          src="{% static 'images/static_images/lady-justice.webp' %}"
+          alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
+          class="absolute inset-0 h-full w-full object-cover object-[center_25%]"
+          loading="lazy" decoding="async"
+        >
+        <div class="absolute inset-0 bg-brand-teal-900/35 mix-blend-multiply"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/80 via-transparent to-transparent"></div>
+        <div data-ab-caption class="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+          <p class="mb-0 font-serif text-lg font-bold leading-snug text-white sm:text-xl">Ngima Wangai &amp; Company Advocates</p>
+          <p class="mb-0 mt-1 flex items-center gap-2 text-sm text-white/80"><i class="fa-solid fa-location-dot text-xs"></i> Nairobi, Kenya &middot; Members of the Law Society of Kenya</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============ PRACTICE AREAS ============ -->
-<section id="practice-areas" data-pa-section class="relative scroll-mt-20 overflow-hidden bg-white py-14 sm:py-16 lg:py-20">
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-    <div class="absolute -right-40 top-0 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.12),transparent_65%)]"></div>
-    <div class="absolute -left-32 bottom-0 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(circle,rgba(201,162,75,0.08),transparent_65%)]"></div>
-    <div class="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(#393C48_1px,transparent_1px)] [background-size:22px_22px]"></div>
-  </div>
+<section id="practice-areas" data-pa-section class="relative scroll-mt-20 overflow-x-clip border-t border-brand-ink-900/[0.06] bg-brand-mist-50 py-12 sm:py-14 lg:py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
-    <!-- heading row (compact) -->
-    <div class="mb-7 flex flex-col gap-4 lg:mb-9 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
-      <div class="max-w-xl">
-        <p data-pa-eyebrow class="mb-3 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#A9824C] sm:text-sm">
-          <span class="h-px w-8 bg-[#C9A24B]/70"></span>What we do
-        </p>
-        <h2 data-pa-split class="font-serif text-3xl font-bold leading-[1.1] tracking-tight text-brand-ink-900 sm:text-4xl lg:text-[2.75rem]">
-          Our <span class="italic text-[#A9824C]">Practice</span> Areas
-        </h2>
+    <div class="mb-6 flex flex-col gap-3 lg:mb-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+      <div>
+        <p data-pa-eyebrow class="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">What we do</p>
+        <h2 data-pa-split class="font-serif text-3xl font-bold leading-tight tracking-tight text-brand-ink-900 sm:text-4xl lg:text-[2.6rem]">Our Practice Areas</h2>
       </div>
-      <p data-pa-intro class="max-w-md text-base leading-relaxed text-brand-ink-700">
+      <p data-pa-intro class="max-w-md text-[0.95rem] leading-relaxed text-brand-ink-700">
         {{ practice_areas|length }} area{{ practice_areas|length|pluralize }} of counsel, each handled with the same commitment to
         accessible, personal attention, from the first consultation through to resolution.
       </p>
     </div>
 
     {% if practice_areas %}
-    <!-- ===== Workspace: index (left) + brief (right). Phones/tablets: two sliding pages ===== -->
-    <div data-pa-stage class="relative h-[min(36rem,calc(100svh-7rem))] min-h-[26rem] overflow-hidden rounded-3xl bg-[#FBF8F2] shadow-xl shadow-brand-ink-900/5 ring-1 ring-brand-ink-900/10 lg:grid lg:h-[min(40rem,calc(100svh-8rem))] lg:grid-cols-[minmax(18rem,23rem)_1fr]">
+    <div data-pa-stage class="relative h-[clamp(26rem,calc(100svh-9rem),36rem)] overflow-hidden rounded-2xl border border-brand-ink-900/10 bg-white shadow-sm lg:grid lg:h-[clamp(32rem,calc(100svh-7rem),46rem)] lg:grid-cols-[20rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]">
 
-      <!-- Index -->
-      <div data-pa-list-pane class="absolute inset-0 flex flex-col bg-[#FBF8F2] lg:static lg:border-r lg:border-brand-ink-900/10">
-        <div class="shrink-0 border-b border-brand-ink-900/10 px-4 pb-3 pt-4 sm:px-5">
+      <!-- ===== Feed (index) ===== -->
+      <div data-pa-list-pane class="flex h-full min-h-0 flex-col lg:border-r lg:border-brand-ink-900/10">
+        <div class="shrink-0 border-b border-brand-ink-900/10 p-3 sm:p-4">
           <label class="relative block">
             <span class="sr-only">Search practice areas</span>
-            <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[#A9824C]"></i>
-            <input data-pa-search type="search" autocomplete="off" placeholder="Search {{ practice_areas|length }} practice areas"
-                   class="w-full rounded-full border border-brand-ink-900/10 bg-white py-2.5 pl-10 pr-10 text-sm text-brand-ink-900 placeholder:text-brand-ink-700/60 focus:border-[#C9A24B] focus:outline-none focus:ring-2 focus:ring-[#C9A24B]/30 [&::-webkit-search-cancel-button]:hidden">
-            <button type="button" data-pa-clear hidden aria-label="Clear search" class="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-brand-ink-700 hover:bg-brand-ink-900/5"><i class="fa-solid fa-xmark text-xs"></i></button>
+            <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-brand-ink-700/60"></i>
+            <input data-pa-search type="search" autocomplete="off" placeholder="Search practice areas"
+                   class="w-full rounded-lg border border-transparent bg-brand-mist-50 py-2.5 pl-10 pr-10 text-sm text-brand-ink-900 placeholder:text-brand-ink-700/60 focus:border-brand-teal-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal-600/20 [&::-webkit-search-cancel-button]:hidden">
+            <button type="button" data-pa-clear style="display:none" aria-label="Clear search" class="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-brand-ink-700 hover:bg-brand-ink-900/5"><i class="fa-solid fa-xmark text-xs"></i></button>
           </label>
-          <p class="mt-2.5 flex items-center justify-between text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#A9824C]">
-            <span data-pa-countlist>{{ practice_areas|length }} areas</span>
-            <span data-pa-hint class="hidden font-medium normal-case tracking-normal text-brand-ink-700/50">Scroll for more</span>
+          <p class="mt-2.5 flex items-center justify-between text-xs text-brand-ink-700">
+            <span data-pa-countlist class="font-semibold text-brand-ink-900">{{ practice_areas|length }} practice areas</span>
+            <span data-pa-hint class="hidden items-center gap-1.5 text-brand-ink-700/70"><i class="fa-solid fa-arrow-down text-[0.6rem]"></i> Scroll for more</span>
           </p>
         </div>
 
-        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 sm:px-3 [mask-image:linear-gradient(to_bottom,transparent,#000_10px,#000_calc(100%-22px),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,#000_10px,#000_calc(100%-22px),transparent)]">
+        <div data-pa-scroll class="pa-scroll relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div data-pa-listwrap class="relative">
-            <span data-pa-hl aria-hidden="true" class="pointer-events-none absolute left-0 right-0 top-0 z-0 rounded-xl bg-white opacity-0 shadow-md shadow-[#C9A24B]/10 ring-1 ring-[#C9A24B]/50">
-              <span class="absolute bottom-2.5 left-0 top-2.5 w-[3px] rounded-full bg-[#C9A24B]"></span>
+            <span data-pa-hl aria-hidden="true" class="pointer-events-none absolute left-0 right-0 top-0 z-0 bg-brand-teal-600/[0.08] opacity-0">
+              <span class="absolute inset-y-0 left-0 w-[3px] bg-brand-teal-600"></span>
             </span>
-            <ul data-pa-ul role="tablist" aria-orientation="vertical" aria-label="Practice areas" class="relative space-y-0.5">
+            <ul data-pa-ul role="tablist" aria-orientation="vertical" aria-label="Practice areas" class="relative">
               {% for area in practice_areas %}
-              <li data-pa-item role="presentation" class="relative z-10">
+              <li data-pa-item role="presentation" class="relative z-10 border-b border-brand-ink-900/[0.07]">
                 <button type="button" role="tab" id="pa-tab-{{ area.id }}" aria-controls="pa-panel" aria-selected="false" tabindex="-1"
                         data-pa-tab data-index="{{ forloop.counter0 }}" data-id="{{ area.id }}" data-title="{{ area.title }}" data-icon="{{ area.icon_class }}"
-                        class="pa-tab group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]/60 sm:py-3">
-                  <span class="w-6 shrink-0 font-serif text-xs tabular-nums text-[#A9824C]">{{ forloop.counter|stringformat:"02d" }}</span>
-                  <span class="pa-ico flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#C9A24B]/30 bg-white text-sm text-[#A9824C] transition-colors duration-300 group-hover:bg-[#C9A24B] group-hover:text-brand-ink-900">
-                    <i class="{{ area.icon_class }}"></i>
+                        class="pa-tab group flex w-full gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-brand-mist-50 focus-visible:bg-brand-mist-50 focus-visible:outline-none sm:px-5">
+                  <span class="pa-ico mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-teal-600/10 text-[0.95rem] text-brand-teal-600 transition-colors duration-300"><i class="{{ area.icon_class }}"></i></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="pa-ttl line-clamp-2 block text-[0.95rem] font-semibold leading-snug text-brand-ink-900">{{ area.title }}</span>
+                    <span class="mt-1 line-clamp-2 block text-[0.8125rem] leading-relaxed text-brand-ink-700">{{ area.description|striptags|truncatewords:22 }}</span>
+                    <span data-pa-rt class="mt-1.5 block text-xs text-brand-ink-700/70"></span>
                   </span>
-                  <span class="pa-ttl line-clamp-2 min-w-0 flex-1 text-[0.95rem] font-medium leading-snug text-brand-ink-800 transition-colors group-hover:text-brand-ink-900">{{ area.title }}</span>
-                  <i class="pa-chev fa-solid fa-chevron-right text-[0.7rem] text-brand-ink-900/30 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#A9824C]"></i>
                 </button>
               </li>
               {% endfor %}
             </ul>
-            <p data-pa-empty hidden class="px-4 py-10 text-center text-sm leading-relaxed text-brand-ink-700">
+            <p data-pa-empty hidden class="px-5 py-10 text-center text-sm leading-relaxed text-brand-ink-700">
               No practice area matches your search.<br>
-              <a href="{% url 'core:contact' %}" class="font-semibold text-[#A9824C] hover:text-brand-ink-900">Ask an advocate &rarr;</a>
+              <a href="{% url 'core:contact' %}" class="font-semibold text-brand-teal-600 hover:text-brand-teal-900">Ask an advocate &rarr;</a>
             </p>
           </div>
         </div>
       </div>
 
-      <!-- Brief -->
-      <div data-pa-detail class="absolute inset-0 z-10 flex min-w-0 flex-col bg-white lg:static lg:translate-x-0">
+      <!-- ===== Brief (article). Desktop: right pane. Phones/tablets: full-screen page ===== -->
+      <div data-pa-detail class="flex h-full min-h-0 min-w-0 flex-col bg-white">
 
-        <!-- top bar -->
-        <div class="flex shrink-0 items-center gap-3 border-b border-brand-ink-900/10 px-4 py-2.5 sm:px-6 lg:px-8 lg:py-3">
-          <button type="button" data-pa-back class="inline-flex items-center gap-2 rounded-full py-1.5 pr-3 text-sm font-semibold text-[#A9824C] hover:text-brand-ink-900 lg:hidden">
+        <div class="flex shrink-0 items-center gap-2 border-b border-brand-ink-900/10 px-3 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] sm:px-5 lg:px-8 lg:pt-2.5">
+          <button type="button" data-pa-back class="flex h-9 items-center gap-2 rounded-lg pl-2 pr-3 text-sm font-semibold text-brand-teal-600 hover:bg-brand-teal-600/10 lg:hidden">
             <i class="fa-solid fa-arrow-left text-xs"></i> All areas
           </button>
-          <p class="hidden items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[#A9824C] lg:flex">
-            <span class="h-px w-6 bg-[#C9A24B]/70"></span>Practice area
-            <span data-pa-count class="tabular-nums text-brand-ink-700/50"></span>
-          </p>
-          <div class="ml-auto flex items-center gap-2">
-            <span data-pa-count-m class="mr-1 text-xs tabular-nums text-brand-ink-700/50 lg:hidden"></span>
-            <button type="button" data-pa-nav="prev" aria-label="Previous practice area" class="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink-800 ring-1 ring-brand-ink-900/10 transition-colors hover:bg-[#C9A24B] hover:ring-[#C9A24B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]"><i class="fa-solid fa-arrow-left text-xs"></i></button>
-            <button type="button" data-pa-nav="next" aria-label="Next practice area" class="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink-800 ring-1 ring-brand-ink-900/10 transition-colors hover:bg-[#C9A24B] hover:ring-[#C9A24B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B]"><i class="fa-solid fa-arrow-right text-xs"></i></button>
+          <span data-pa-count class="hidden shrink-0 pl-1 text-xs font-medium tabular-nums text-brand-ink-700/70 lg:inline"></span>
+          <p data-pa-mini class="min-w-0 flex-1 truncate px-1 text-sm font-semibold text-brand-ink-900 opacity-0 transition-opacity duration-200"></p>
+          <div class="ml-auto flex shrink-0 items-center gap-1.5">
+            <button type="button" data-pa-nav="prev" aria-label="Previous practice area" class="flex h-9 w-9 items-center justify-center rounded-lg text-brand-ink-800 transition-colors hover:bg-brand-ink-900/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+            <button type="button" data-pa-nav="next" aria-label="Next practice area" class="flex h-9 w-9 items-center justify-center rounded-lg text-brand-ink-800 transition-colors hover:bg-brand-ink-900/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
           </div>
         </div>
-        <div class="h-[2px] shrink-0 bg-brand-ink-900/5"><span data-pa-progress class="block h-full w-full origin-left scale-x-0 bg-[#C9A24B]"></span></div>
+        <div class="h-[2px] shrink-0 bg-brand-ink-900/[0.06]"><span data-pa-progress class="block h-full w-full origin-left scale-x-0 bg-brand-teal-600"></span></div>
 
-        <!-- header (stays visible while the text scrolls) -->
-        <div class="relative shrink-0 px-5 pb-4 pt-5 sm:px-8 sm:pt-6 lg:px-10">
-          <span data-pa-big aria-hidden="true" class="pointer-events-none absolute right-5 top-1 select-none font-serif text-[5.5rem] font-bold leading-none text-[#C9A24B]/10 sm:text-[7rem] lg:right-10"></span>
-          <div class="relative flex items-center gap-4 sm:gap-5">
-            <div class="relative h-14 w-14 shrink-0 sm:h-16 sm:w-16">
-              <div data-pa-blobwrap class="absolute -inset-3">
-                <svg data-pa-blobsvg viewBox="0 0 200 200" class="h-full w-full" aria-hidden="true">
-                  <path data-pa-blob d="M100,20 C140,18 182,52 180,100 C178,148 142,184 100,182 C58,180 20,146 22,100 C24,54 60,22 100,20 Z" fill="rgba(201,162,75,0.22)"/>
-                </svg>
+        <div data-pa-body class="pa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div class="px-5 pb-12 pt-7 sm:px-8 lg:px-10 xl:grid xl:grid-cols-[minmax(0,1fr)_15rem] xl:gap-10">
+
+            <div class="min-w-0">
+              <header data-pa-head>
+                <p class="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">
+                  <span data-pa-iconwrap class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-teal-600 text-[0.95rem] text-white"><i data-pa-icon></i></span>
+                  <span>Practice area <span class="mx-1 text-brand-ink-900/25">&middot;</span> <span data-pa-pos class="text-brand-ink-700"></span></span>
+                </p>
+                <div class="mt-4 overflow-hidden pb-1">
+                  <h3 data-pa-title class="font-serif text-[1.9rem] font-bold leading-[1.15] tracking-tight text-brand-ink-900 sm:text-4xl lg:text-[2.6rem]"></h3>
+                </div>
+
+                <div data-pa-byline class="mt-5 flex items-center gap-3">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal-900 text-xs font-bold tracking-wide text-white">NW</span>
+                  <div class="min-w-0 text-sm leading-tight">
+                    <p class="mb-0 truncate font-semibold text-brand-ink-900">Ngima Wangai &amp; Company Advocates</p>
+                    <p class="mb-0 mt-1 text-brand-ink-700">Nairobi, Kenya <span class="mx-1 text-brand-ink-900/25">&middot;</span> <span data-pa-meta></span></p>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex items-center justify-between border-y border-brand-ink-900/10 py-2">
+                  <div class="flex items-center gap-1">
+                    <button type="button" data-pa-copy class="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-brand-ink-700 transition-colors hover:bg-brand-ink-900/5 hover:text-brand-ink-900"><i class="fa-solid fa-link text-xs"></i> <span data-pa-copy-label>Copy link</span></button>
+                    <button type="button" data-pa-share style="display:none" class="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-brand-ink-700 transition-colors hover:bg-brand-ink-900/5 hover:text-brand-ink-900"><i class="fa-solid fa-share-nodes text-xs"></i> Share</button>
+                  </div>
+                </div>
+              </header>
+
+              <div id="pa-panel" role="tabpanel" data-pa-panel class="mt-7">
+                {% for area in practice_areas %}
+                <article data-pa-article hidden>
+                  <div class="pa-prose">{{ area.description|linebreaks }}</div>
+                </article>
+                {% endfor %}
               </div>
-              <span data-pa-iconwrap class="relative flex h-full w-full items-center justify-center rounded-full bg-[#C9A24B] text-xl text-brand-ink-900 shadow-lg shadow-[#C9A24B]/30 sm:text-2xl"><i data-pa-icon></i></span>
             </div>
-            <div class="min-w-0 flex-1 pr-10 sm:pr-16">
-              <p class="text-xs font-semibold tracking-[0.18em] text-[#A9824C]">&sect; <span data-pa-num>01</span> <span class="mx-1.5 text-brand-ink-900/20">/</span> <span data-pa-meta class="font-medium tracking-normal text-brand-ink-700"></span></p>
-              <div class="overflow-hidden pb-1">
-                <h3 data-pa-title class="font-serif text-2xl font-bold leading-tight text-brand-ink-900 sm:text-3xl lg:text-[2.1rem]"></h3>
+
+            <aside class="mt-10 xl:sticky xl:top-5 xl:mt-0 xl:self-start">
+              <div class="rounded-xl border border-brand-ink-900/10 bg-brand-mist-50 p-5">
+                <p class="mb-0 font-serif text-lg font-bold leading-snug text-brand-ink-900">Need advice on <span data-pa-cta-title class="text-brand-teal-600"></span>?</p>
+                <p class="mb-0 mt-1.5 text-sm leading-relaxed text-brand-ink-700">Speak to one of our advocates about your matter.</p>
+                <a data-pa-magnet href="{% url 'core:contact' %}" class="group mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
+                  Discuss your case <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+                </a>
               </div>
-            </div>
+              <div class="mt-7">
+                <p class="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-ink-700">More practice areas</p>
+                <ul data-pa-related class="divide-y divide-brand-ink-900/10"></ul>
+              </div>
+            </aside>
           </div>
-          <span class="mt-4 block h-px w-full bg-gradient-to-r from-[#C9A24B]/60 via-brand-ink-900/10 to-transparent"></span>
-        </div>
-
-        <!-- scrolling text (handles 300 to 500+ words) -->
-        <div data-pa-body class="pa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-8 lg:px-10">
-          <div id="pa-panel" role="tabpanel" data-pa-panel>
-            {% for area in practice_areas %}
-            <article data-pa-article hidden>
-              <div class="pa-prose">{{ area.description|linebreaks }}</div>
-            </article>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- action bar -->
-        <div class="flex shrink-0 flex-col gap-2.5 border-t border-brand-ink-900/10 bg-[#FBF8F2] px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <p class="hidden text-sm text-brand-ink-700 sm:block">Speak to an advocate about <span data-pa-cta-title class="font-semibold text-brand-ink-900"></span>.</p>
-          <a data-pa-magnet href="{% url 'core:contact' %}" class="group inline-flex items-center justify-center gap-2 rounded-full bg-[#C9A24B] px-6 py-2.5 text-sm font-semibold text-brand-ink-900 shadow-md shadow-[#C9A24B]/25 transition-colors hover:bg-[#B8913C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ink-900/40 sm:text-base">
-            Discuss your case <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
-          </a>
         </div>
       </div>
     </div>
 
     <p data-pa-foot class="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm text-brand-ink-700">
       <span>Scroll the list or search to find your matter.</span>
-      <a href="{% url 'core:contact' %}" class="font-semibold text-[#A9824C] transition-colors hover:text-brand-ink-900">Don't see your matter? Contact us <i class="fa-solid fa-arrow-right text-xs"></i></a>
+      <a href="{% url 'core:contact' %}" class="font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">Don't see your matter? Contact us <i class="fa-solid fa-arrow-right text-xs"></i></a>
     </p>
     {% else %}
-    <div class="rounded-2xl border-2 border-dashed border-brand-ink-900/10 py-16 text-center">
+    <div class="rounded-2xl border-2 border-dashed border-brand-ink-900/10 bg-white py-16 text-center">
       <p class="text-brand-ink-700">No practice areas published yet, add some from the Django admin.</p>
     </div>
     {% endif %}
@@ -272,7 +254,6 @@
 (function () {
   'use strict';
 
-  var root = document.documentElement;
   var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
 
   /* GSAP might not be on the page yet (include order, CDN timing): load it ourselves, then boot */
@@ -287,6 +268,7 @@
   ensureGsap(boot);
 
   function boot() {
+    var root = document.documentElement;
     var G = window.gsap || null, ST = window.ScrollTrigger || null;
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var anim = !!(G && ST) && !reduce;
@@ -323,7 +305,7 @@
       suffix = suffix || '';
       if (!anim) { el.textContent = end + suffix; return; }
       var o = { v: 0 };
-      G.to(o, { v: end, duration: 1.6, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v) + suffix; } });
+      G.to(o, { v: end, duration: 1.4, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v) + suffix; } });
     }
 
     /* ---------- About: years (works without GSAP) ---------- */
@@ -334,28 +316,28 @@
     }
 
     /* =====================================================================
-       PRACTICE AREAS WORKSPACE
+       PRACTICE AREAS
        ===================================================================== */
     var sec = $('[data-pa-section]'), stage = $('[data-pa-stage]');
-    var intro = { play: null };
 
     if (stage) {
       var tabs = $$('[data-pa-tab]', stage), items = $$('[data-pa-item]', stage), arts = $$('[data-pa-article]', stage);
       var N = tabs.length;
       var scroller = $('[data-pa-scroll]', stage), ul = $('[data-pa-ul]', stage), hl = $('[data-pa-hl]', stage);
-      var body = $('[data-pa-body]', stage), prog = $('[data-pa-progress]', stage), panel = $('[data-pa-panel]', stage);
+      var detail = $('[data-pa-detail]', stage), body = $('[data-pa-body]', stage), prog = $('[data-pa-progress]', stage), panel = $('[data-pa-panel]', stage);
       var titleEl = $('[data-pa-title]', stage), iconEl = $('[data-pa-icon]', stage), iconWrap = $('[data-pa-iconwrap]', stage);
-      var numEl = $('[data-pa-num]', stage), metaEl = $('[data-pa-meta]', stage), bigEl = $('[data-pa-big]', stage);
-      var countEl = $('[data-pa-count]', stage), countM = $('[data-pa-count-m]', stage), ctaTitle = $('[data-pa-cta-title]', stage);
-      var blob = $('[data-pa-blob]', stage), blobWrap = $('[data-pa-blobwrap]', stage), blobSvg = $('[data-pa-blobsvg]', stage);
+      var posEl = $('[data-pa-pos]', stage), metaEl = $('[data-pa-meta]', stage), countEl = $('[data-pa-count]', stage), miniEl = $('[data-pa-mini]', stage);
+      var ctaTitle = $('[data-pa-cta-title]', stage), relatedEl = $('[data-pa-related]', stage);
       var search = $('[data-pa-search]', stage), clearBtn = $('[data-pa-clear]', stage), countList = $('[data-pa-countlist]', stage);
       var emptyEl = $('[data-pa-empty]', stage), hint = $('[data-pa-hint]', stage);
       var backBtn = $('[data-pa-back]', stage), navBtns = $$('[data-pa-nav]', stage);
+      var copyBtn = $('[data-pa-copy]', stage), copyLabel = $('[data-pa-copy-label]', stage), shareBtn = $('[data-pa-share]', stage);
+      var head = $('[data-pa-head]', stage);
 
       var areas = tabs.map(function (t) { return { id: t.getAttribute('data-id'), title: t.getAttribute('data-title'), icon: t.getAttribute('data-icon') }; });
 
-      var LEDE = 'font-serif text-[1.2rem] sm:text-[1.35rem] leading-relaxed text-brand-ink-900 mb-6';
-      var BODY = 'text-base sm:text-[1.0625rem] leading-[1.9] text-brand-ink-700 mb-4';
+      var LEDE = 'font-sans text-[1.125rem] sm:text-[1.1875rem] leading-[1.6] text-brand-ink-700 mb-6';
+      var BODY = 'pa-read text-[1.0625rem] leading-[1.85] text-brand-ink-800 mb-5';
 
       /* Long single-block descriptions are split into readable paragraphs (~55 words each) */
       function prepareArticle(art) {
@@ -381,102 +363,124 @@
           }
         });
         Array.prototype.slice.call(host.children).forEach(function (b, i) {
-          b.className = (i === 0 && wc(b.textContent) <= 70) ? LEDE : BODY;
+          b.className = (i === 0 && wc(b.textContent) <= 40) ? LEDE : BODY;
         });
         art.setAttribute('data-words', wc(art.textContent));
       }
       arts.forEach(prepareArticle);
       var texts = arts.map(function (a, i) { return (areas[i].title + ' ' + a.textContent).toLowerCase(); });
+      function minutes(i) { return Math.max(1, Math.round((parseInt(arts[i].getAttribute('data-words'), 10) || 0) / 200)); }
+      $$('[data-pa-rt]', stage).forEach(function (el, i) { el.textContent = minutes(i) + ' min read'; });
 
-      var cur = -1, swapTl = null;
-      var BLOBS = [
-        'M100,20 C140,18 182,52 180,100 C178,148 142,184 100,182 C58,180 20,146 22,100 C24,54 60,22 100,20 Z',
-        'M100,26 C150,30 176,62 172,104 C168,146 134,176 96,176 C52,176 28,140 30,98 C32,56 52,22 100,26 Z',
-        'M96,22 C138,22 186,60 176,104 C166,150 146,180 102,178 C60,176 22,150 26,102 C30,54 66,24 96,22 Z'
-      ];
-      var bi = 0;
+      var cur = -1, swapTl = null, locked = false;
 
-      /* progress of the reading text */
+      /* reading progress + compact title in the top bar once the headline scrolls away */
       var setP = anim ? G.quickSetter(prog, 'scaleX') : function (v) { prog.style.transform = 'scaleX(' + v + ')'; };
-      function onBodyScroll() { var m = body.scrollHeight - body.clientHeight; setP(m > 0 ? Math.min(1, body.scrollTop / m) : 0); }
+      function onBodyScroll() {
+        var m = body.scrollHeight - body.clientHeight;
+        setP(m > 0 ? Math.min(1, body.scrollTop / m) : 0);
+        var gone = titleEl.getBoundingClientRect().bottom < body.getBoundingClientRect().top + 8;
+        miniEl.style.opacity = gone ? 1 : 0;
+      }
       body.addEventListener('scroll', onBodyScroll, { passive: true });
 
       function visibleIdx() { var r = []; items.forEach(function (it, k) { if (!it.hidden) r.push(k); }); return r; }
 
-      /* gold highlight that morphs between rows */
+      /* active-row highlight that glides between rows */
       function moveHl(animate) {
         var it = items[cur];
         if (!it || it.hidden) { hl.style.opacity = 0; return; }
         var y = it.offsetTop + ul.offsetTop, h = it.offsetHeight;
         if (anim) {
-          if (animate) G.to(hl, { y: y, height: h, opacity: 1, duration: 0.55, ease: 'power3.inOut', overwrite: 'auto' });
+          if (animate) G.to(hl, { y: y, height: h, opacity: 1, duration: 0.5, ease: 'power3.inOut', overwrite: 'auto' });
           else G.set(hl, { y: y, height: h, opacity: 1 });
         } else { hl.style.transform = 'translateY(' + y + 'px)'; hl.style.height = h + 'px'; hl.style.opacity = 1; }
       }
       function keepVisible(i) {
         var it = items[i], top = it.offsetTop + ul.offsetTop, bottom = top + it.offsetHeight;
-        if (top < scroller.scrollTop + 10) scroller.scrollTop = Math.max(0, top - 10);
-        else if (bottom > scroller.scrollTop + scroller.clientHeight - 24) scroller.scrollTop = bottom - scroller.clientHeight + 24;
+        if (top < scroller.scrollTop + 4) scroller.scrollTop = Math.max(0, top - 4);
+        else if (bottom > scroller.scrollTop + scroller.clientHeight - 4) scroller.scrollTop = bottom - scroller.clientHeight + 4;
       }
-      function updateHint() { if (hint) hint.classList.toggle('hidden', !(scroller.scrollHeight > scroller.clientHeight + 4)); }
+      function updateHint() { if (hint) { var more = scroller.scrollHeight > scroller.clientHeight + 4; hint.classList.toggle('hidden', !more); hint.classList.toggle('flex', more); } }
+
+      function renderRelated(i) {
+        relatedEl.textContent = '';
+        for (var k = 1; k <= Math.min(4, N - 1); k++) {
+          (function (j) {
+            var li = document.createElement('li'), b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'group flex w-full items-start gap-2.5 py-2.5 text-left';
+            b.innerHTML = '<i class="fa-solid fa-arrow-right mt-1 text-[0.65rem] text-brand-teal-600"></i><span class="text-sm font-medium leading-snug text-brand-ink-800 transition-colors group-hover:text-brand-teal-600"></span>';
+            b.lastChild.textContent = areas[j].title;
+            b.addEventListener('click', function () { select(j); });
+            li.appendChild(b); relatedEl.appendChild(li);
+          })((i + k) % N);
+        }
+      }
+
+      function paintTabs(i) {
+        tabs.forEach(function (t, k) {
+          var on = k === i, ico = $('.pa-ico', t);
+          t.classList.toggle('is-active', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+          ico.classList.toggle('bg-brand-teal-600', on); ico.classList.toggle('text-white', on);
+          ico.classList.toggle('bg-brand-teal-600/10', !on); ico.classList.toggle('text-brand-teal-600', !on);
+        });
+      }
 
       function fillDetail(i) {
-        var a = areas[i], w = parseInt(arts[i].getAttribute('data-words'), 10) || 0;
-        titleEl.textContent = a.title; iconEl.className = a.icon;
-        numEl.textContent = pad(i + 1); bigEl.textContent = pad(i + 1);
-        countEl.textContent = pad(i + 1) + ' / ' + pad(N); countM.textContent = pad(i + 1) + ' / ' + pad(N);
+        var a = areas[i];
+        titleEl.textContent = a.title; miniEl.textContent = a.title; iconEl.className = a.icon;
+        posEl.textContent = pad(i + 1) + ' of ' + pad(N);
+        countEl.textContent = pad(i + 1) + ' / ' + pad(N);
+        metaEl.textContent = minutes(i) + ' min read';
         ctaTitle.textContent = a.title;
-        metaEl.textContent = Math.max(1, Math.round(w / 200)) + ' min read';
         arts.forEach(function (el, k) { if (k === i) el.removeAttribute('hidden'); else el.setAttribute('hidden', ''); });
         panel.setAttribute('aria-labelledby', tabs[i].id);
+        renderRelated(i);
       }
 
-      /* icon flies from the clicked row into the header (FLIP), blob morphs */
+      /* the row's icon flies into the article header (desktop shared-element transition) */
       function flipIcon(fromEl) {
         G.set(iconWrap, { clearProps: 'transform' });
         var to = iconWrap.getBoundingClientRect(), from = fromEl ? fromEl.getBoundingClientRect() : null;
-        if (mqLg.matches && from && from.width > 0 && to.width > 0) {
+        if (mqLg.matches && from && from.width > 0 && to.width > 0 && from.top > -50 && from.top < window.innerHeight) {
           G.fromTo(iconWrap, { x: from.left - to.left, y: from.top - to.top, scale: from.width / to.width, transformOrigin: '0% 0%' },
-            { x: 0, y: 0, scale: 1, duration: 0.85, ease: 'power3.inOut', overwrite: true });
+            { x: 0, y: 0, scale: 1, duration: 0.8, ease: 'power3.inOut', overwrite: true });
         } else {
-          G.fromTo(iconWrap, { scale: 0.4, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, opacity: 1, duration: 0.7, ease: 'back.out(1.8)', overwrite: true });
+          G.fromTo(iconWrap, { scale: 0.5, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.8)', overwrite: true });
         }
-      }
-      function morphBlob() {
-        bi = (bi + 1) % BLOBS.length;
-        G.to(blob, { attr: { d: BLOBS[bi] }, duration: 1.2, ease: 'elastic.out(1, 0.6)', overwrite: 'auto' });
-        G.fromTo(blobWrap, { scale: 0.7, rotation: -30 }, { scale: 1, rotation: 0, duration: 1, ease: 'back.out(1.6)', overwrite: 'auto' });
       }
 
       function swapDetail(prev, i, dir) {
         if (!anim || prev === -1) { fillDetail(i); body.scrollTop = 0; onBodyScroll(); return; }
         if (swapTl) swapTl.kill();
         var blocks = $$('.pa-prose > *', arts[i]);
+        var headBits = [$('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
         var fromEl = $('.pa-ico', tabs[i]);
         swapTl = G.timeline({ defaults: { ease: 'power3.out' } });
-        swapTl.to(arts[prev], { opacity: 0, x: -32 * dir, duration: 0.28, ease: 'power2.in' }, 0)
-          .to(titleEl, { yPercent: -110, duration: 0.28, ease: 'power2.in' }, 0)
-          .to(bigEl, { opacity: 0, x: -24 * dir, duration: 0.25 }, 0)
+        swapTl.to(arts[prev], { opacity: 0, x: -28 * dir, duration: 0.25, ease: 'power2.in' }, 0)
+          .to(titleEl, { yPercent: -110, duration: 0.25, ease: 'power2.in' }, 0)
+          .to(headBits, { opacity: 0, duration: 0.2 }, 0)
           .call(function () {
             fillDetail(i); body.scrollTop = 0; onBodyScroll();
             G.set(arts, { clearProps: 'opacity,transform' });
             G.set(titleEl, { yPercent: 110 });
-            G.set(bigEl, { opacity: 0, x: 24 * dir });
-            G.set(blocks, { opacity: 0, y: 22 });
-            flipIcon(fromEl); morphBlob();
-          }, null, 0.28)
-          .to(titleEl, { yPercent: 0, duration: 0.8, ease: 'expo.out' }, 0.36)
-          .to(bigEl, { opacity: 1, x: 0, duration: 0.7 }, 0.36)
-          .to(blocks, { opacity: 1, y: 0, duration: 0.6, stagger: { amount: Math.min(0.55, blocks.length * 0.07) } }, 0.42);
+            G.set(blocks, { opacity: 0, y: 20 });
+            flipIcon(fromEl);
+          }, null, 0.25)
+          .to(titleEl, { yPercent: 0, duration: 0.75, ease: 'expo.out' }, 0.32)
+          .to(headBits, { opacity: 1, duration: 0.5 }, 0.4)
+          .to(blocks, { opacity: 1, y: 0, duration: 0.55, stagger: { amount: Math.min(0.5, blocks.length * 0.06) } }, 0.4);
       }
 
-      /* select an area (desktop: swap detail; phones: also slide the page in via openDetail) */
+      /* select an area (desktop: swap article; phones: caller also slides the page in) */
       function select(i, o) {
         o = o || {};
         if (i < 0 || i >= N) return;
         var prev = cur, first = prev === -1, same = i === prev;
         cur = i;
-        tabs.forEach(function (t, k) { var on = k === i; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1; });
+        paintTabs(i);
         keepVisible(i);
         moveHl(!first && !o.instant);
         if (o.focus) tabs[i].focus({ preventScroll: true });
@@ -491,30 +495,35 @@
         select(nxt);
       }
 
-      /* phones/tablets: page slide + Back button support */
+      /* phones/tablets: full-screen page + Back button support */
+      function lockScroll() { if (locked) return; locked = true; root.style.overflow = 'hidden'; }
+      function unlockScroll() { if (!locked) return; locked = false; root.style.overflow = ''; }
       function openDetail() {
         if (mqLg.matches || stage.classList.contains('is-detail')) return;
-        stage.classList.add('is-detail');
+        stage.classList.add('is-detail'); lockScroll();
         history.pushState({ pa: cur }, '', '#area-' + areas[cur].id);
-        if (backBtn) setTimeout(function () { backBtn.focus({ preventScroll: true }); }, 350);
+        setTimeout(function () { if (backBtn) backBtn.focus({ preventScroll: true }); }, 350);
+      }
+      function hideDetail() {
+        stage.classList.remove('is-detail'); unlockScroll();
+        setTimeout(function () { if (tabs[cur] && !mqLg.matches) tabs[cur].focus({ preventScroll: true }); }, 350);
       }
       function closeDetail() {
         if (!stage.classList.contains('is-detail')) return;
         var st = history.state;
         if (st && st.pa != null && !st.deep) history.back();
-        else { stage.classList.remove('is-detail'); history.replaceState(null, '', location.pathname + location.search); }
-        setTimeout(function () { if (tabs[cur]) tabs[cur].focus({ preventScroll: true }); }, 350);
+        else { hideDetail(); history.replaceState(null, '', location.pathname + location.search); }
       }
       window.addEventListener('popstate', function (e) {
         var st = e.state;
-        if (!stage.classList.contains('is-detail') && st && st.pa != null && areas[st.pa] && !mqLg.matches) { select(st.pa, { noHash: true }); stage.classList.add('is-detail'); }
-        else if (!(st && st.pa != null)) stage.classList.remove('is-detail');
+        if (!stage.classList.contains('is-detail') && st && st.pa != null && areas[st.pa] && !mqLg.matches) { select(st.pa, { noHash: true }); stage.classList.add('is-detail'); lockScroll(); }
+        else if (!(st && st.pa != null)) hideDetail();
       });
 
       /* wiring */
       tabs.forEach(function (t, i) { t.addEventListener('click', function () { select(i); openDetail(); }); });
       navBtns.forEach(function (b) { b.addEventListener('click', function () { step(b.getAttribute('data-pa-nav') === 'next' ? 1 : -1); }); });
-      if (N < 2) navBtns.forEach(function (b) { b.hidden = true; });
+      if (N < 2) navBtns.forEach(function (b) { b.style.display = 'none'; });
       if (backBtn) backBtn.addEventListener('click', closeDetail);
 
       ul.addEventListener('keydown', function (e) {
@@ -530,119 +539,133 @@
         if (e.key === 'Escape' && stage.classList.contains('is-detail') && !mqLg.matches) closeDetail();
       });
 
+      /* copy link / share */
+      function articleUrl() { return location.origin + location.pathname + location.search + '#area-' + areas[cur].id; }
+      copyBtn.addEventListener('click', function () {
+        var url = articleUrl();
+        function done() { copyLabel.textContent = 'Link copied'; setTimeout(function () { copyLabel.textContent = 'Copy link'; }, 1800); }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+        else { var ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); }
+      });
+      if (navigator.share) {
+        shareBtn.style.display = '';
+        shareBtn.addEventListener('click', function () { navigator.share({ title: areas[cur].title, url: articleUrl() }).catch(function () {}); });
+      }
+
       /* search / filter: built for 20+ areas */
       var ft;
       function applyFilter() {
         var q = search.value.trim().toLowerCase(), shown = 0;
         items.forEach(function (it, k) { var m = !q || texts[k].indexOf(q) > -1; it.hidden = !m; if (m) shown++; });
-        countList.textContent = q ? (shown + ' of ' + N + ' areas') : (N + ' areas');
-        emptyEl.hidden = shown > 0; clearBtn.hidden = !q;
+        countList.textContent = q ? (shown + ' of ' + N + ' practice areas') : (N + ' practice areas');
+        emptyEl.hidden = shown > 0; clearBtn.style.display = q ? '' : 'none';
         scroller.scrollTop = 0;
         var vis = items.filter(function (it) { return !it.hidden; });
         if (anim && vis.length) {
-          G.fromTo(vis, { opacity: 0, x: -18 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out', overwrite: true, clearProps: 'opacity,transform',
-            stagger: { amount: Math.min(0.5, vis.length * 0.03) } });
+          G.fromTo(vis, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out', overwrite: true, clearProps: 'opacity,transform',
+            stagger: { amount: Math.min(0.4, vis.length * 0.025) } });
         }
         requestAnimationFrame(function () { moveHl(false); updateHint(); });
       }
       search.addEventListener('input', function () { clearTimeout(ft); ft = setTimeout(applyFilter, 120); });
       clearBtn.addEventListener('click', function () { search.value = ''; applyFilter(); search.focus(); });
 
+      if (window.ResizeObserver) { var ro = new ResizeObserver(function () { moveHl(false); updateHint(); }); ro.observe(ul); }
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { moveHl(false); updateHint(); });
       var rz;
-      window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { moveHl(false); updateHint(); }, 150); });
+      window.addEventListener('resize', function () {
+        clearTimeout(rz);
+        rz = setTimeout(function () {
+          if (mqLg.matches && stage.classList.contains('is-detail')) hideDetail();   // rotated/resized to desktop: back to the split view
+          moveHl(false); updateHint(); onBodyScroll();
+        }, 150);
+      });
 
       /* initial state (+ deep link /#area-3) */
       var m0 = location.hash.match(/^#area-(\d+)$/), startIdx = 0, deep = false;
       if (m0) { var f = areas.map(function (a) { return a.id; }).indexOf(m0[1]); if (f > -1) { startIdx = f; deep = true; } }
       select(startIdx, { instant: true, noHash: true });
-      updateHint();
+      updateHint(); onBodyScroll();
       if (deep) {
-        if (!mqLg.matches) { stage.classList.add('is-detail'); history.replaceState({ pa: startIdx, deep: true }, '', '#area-' + areas[startIdx].id); }
-        setTimeout(function () { sec.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 350);
+        if (!mqLg.matches) { stage.classList.add('is-detail'); lockScroll(); history.replaceState({ pa: startIdx, deep: true }, '', '#area-' + areas[startIdx].id); }
+        else setTimeout(function () { sec.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 350);
       }
 
-      /* ---------- entrance: slide-ins + morphs ---------- */
+      /* ---------- entrance: slide-ins ---------- */
       if (anim) {
-        var hdr = [$('[data-pa-eyebrow]', sec), $('[data-pa-intro]', sec)];
+        var eyebrow = $('[data-pa-eyebrow]', sec), introP = $('[data-pa-intro]', sec);
         var h2 = $('[data-pa-split]', sec), words = splitWords(h2);
-        var detailHead = $$('[data-pa-title], [data-pa-big]', stage).concat([$('[data-pa-count]', stage)]);
-        var blocks0 = $$('.pa-prose > *', arts[cur]);
-        var foot = $('[data-pa-foot]', sec);
+        var headParts = [$('[data-pa-head] > p', stage), titleEl, $('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
+        var blocks0 = $$('.pa-prose > *', arts[cur]), foot = $('[data-pa-foot]', sec);
+        var aside = $('aside', stage);
 
-        G.set(hdr[0], { opacity: 0, x: -30 });
-        G.set(hdr[1], { opacity: 0, x: 40 });
+        G.set(eyebrow, { opacity: 0, x: -30 });
+        G.set(introP, { opacity: 0, x: 40 });
         G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
-        G.set(stage, { clipPath: 'inset(0% 0% 100% 0% round 24px)', y: 30 });
-        G.set(items, { opacity: 0, x: -44 });
+        G.set(stage, { opacity: 0 });
+        G.set(items, { opacity: 0, x: -36 });
         G.set(hl, { opacity: 0 });
-        G.set([titleEl, bigEl, iconWrap], { opacity: 0 });
-        G.set(blocks0, { opacity: 0, y: 24 });
-        G.set(foot, { opacity: 0, y: 16 });
+        G.set(headParts, { opacity: 0, x: 36 });
+        G.set(blocks0, { opacity: 0, y: 22 });
+        G.set(aside, { opacity: 0, x: 36 });
+        G.set(foot, { opacity: 0, y: 14 });
 
         ST.create({ trigger: sec, start: 'top 72%', once: true, onEnter: function () {
           var tl = G.timeline({ defaults: { ease: 'power3.out' } });
-          tl.to(hdr[0], { opacity: 1, x: 0, duration: 0.8 }, 0)
-            .to(words, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.07, ease: 'expo.out' }, 0.05)
-            .to(hdr[1], { opacity: 1, x: 0, duration: 0.9 }, 0.25)
-            .to(stage, { clipPath: 'inset(0% 0% 0% 0% round 24px)', y: 0, duration: 1.15, ease: 'power4.inOut', clearProps: 'clipPath' }, 0.3)
-            .to(items, { opacity: 1, x: 0, duration: 0.7, stagger: { amount: 0.9 }, clearProps: 'opacity,transform' }, 0.65)
-            .to(hl, { opacity: 1, duration: 0.5 }, 1.0)
-            .to(iconWrap, { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.8)' }, 0.95)
-            .to(titleEl, { opacity: 1, duration: 0.01 }, 0.95)
-            .fromTo(titleEl, { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'expo.out' }, 0.95)
-            .to(bigEl, { opacity: 1, duration: 0.9 }, 1.0)
-            .to(blocks0, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08 }, 1.1)
-            .to(foot, { opacity: 1, y: 0, duration: 0.7 }, 1.4);
+          tl.to(eyebrow, { opacity: 1, x: 0, duration: 0.7 }, 0)
+            .to(words, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.07, ease: 'expo.out' }, 0.05)
+            .to(introP, { opacity: 1, x: 0, duration: 0.8 }, 0.25)
+            .to(stage, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.3)
+            .to(items, { opacity: 1, x: 0, duration: 0.65, stagger: { amount: 0.8 }, clearProps: 'opacity,transform' }, 0.45)
+            .to(hl, { opacity: 1, duration: 0.5 }, 0.9)
+            .to(headParts, { opacity: 1, x: 0, duration: 0.8, stagger: 0.08 }, 0.7)
+            .to(blocks0, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, 0.95)
+            .to(aside, { opacity: 1, x: 0, duration: 0.8 }, 1.0)
+            .to(foot, { opacity: 1, y: 0, duration: 0.6 }, 1.2);
         } });
-
-        G.to(blobSvg, { rotation: 360, duration: 40, repeat: -1, ease: 'none' });
       }
     }
 
     /* =====================================================================
-       ABOUT animations
+       ABOUT animations + magnetic buttons
        ===================================================================== */
     if (anim) {
       try {
         var ab = $('[data-ab-section]');
         if (ab) {
           var abH = $('[data-ab-split]'), abWords = splitWords(abH);
-          var abEye = $('[data-ab-eyebrow]'), abPara = $('[data-ab-para]'), abItems = $$('[data-ab-item]'), abCta = $('[data-ab-cta]');
-          var abFrame = $('[data-ab-frame]'), abBrass = $('[data-ab-brass]'), abCard = $('[data-ab-card]'), abBadge = $('[data-ab-badge]');
+          var abEye = $('[data-ab-eyebrow]'), abPara = $('[data-ab-para]'), abItems = $$('[data-ab-item]'), abCta = $('[data-ab-cta]'), abStats = $('[data-ab-stats]');
+          var abFrame = $('[data-ab-frame]'), abCap = $('[data-ab-caption]');
 
-          G.set(abFrame, { clipPath: 'inset(0% 100% 0% 0%)' });
-          G.set(abBrass, { opacity: 0, scale: 0.92 });
-          G.set(abCard, { opacity: 0, y: 40, scale: 0.9 });
-          G.set(abBadge, { opacity: 0, y: -14 });
+          G.set(abFrame, { clipPath: 'inset(0% 100% 0% 0% round 16px)' });
+          G.set(abCap, { opacity: 0, y: 16 });
           G.set(abWords, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
-          G.set([abEye, abPara, abCta], { opacity: 0, y: 24 });
-          G.set(abItems, { opacity: 0, x: 50 });
+          G.set([abEye, abPara, abCta, abStats], { opacity: 0, y: 22 });
+          G.set(abItems, { opacity: 0, x: 40 });
 
           ST.create({ trigger: ab, start: 'top 68%', once: true, onEnter: function () {
             var tl = G.timeline({ defaults: { ease: 'power3.out' } });
-            tl.to(abFrame, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: 'power4.inOut', clearProps: 'clipPath' }, 0)
-              .to(abBrass, { opacity: 1, scale: 1, duration: 1.2 }, 0.3)
-              .to(abEye, { opacity: 1, y: 0, duration: 0.7 }, 0.15)
-              .to(abWords, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.05, ease: 'expo.out' }, 0.25)
-              .to(abPara, { opacity: 1, y: 0, duration: 0.9 }, 0.6)
-              .to(abItems, { opacity: 1, x: 0, duration: 0.8, stagger: 0.12 }, 0.8)
-              .to(abCta, { opacity: 1, y: 0, duration: 0.9 }, 1.2)
-              .to(abBadge, { opacity: 1, y: 0, duration: 0.8 }, 1.0)
-              .to(abCard, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'back.out(1.6)' }, 0.9);
+            tl.to(abFrame, { clipPath: 'inset(0% 0% 0% 0% round 16px)', duration: 1.2, ease: 'power4.inOut', clearProps: 'clipPath' }, 0)
+              .to(abCap, { opacity: 1, y: 0, duration: 0.8 }, 0.9)
+              .to(abEye, { opacity: 1, y: 0, duration: 0.7 }, 0.1)
+              .to(abWords, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.05, ease: 'expo.out' }, 0.2)
+              .to(abPara, { opacity: 1, y: 0, duration: 0.8 }, 0.55)
+              .to(abItems, { opacity: 1, x: 0, duration: 0.7, stagger: 0.1 }, 0.75)
+              .to(abStats, { opacity: 1, y: 0, duration: 0.8 }, 1.05)
+              .to(abCta, { opacity: 1, y: 0, duration: 0.8 }, 1.2);
             if (yrEl) countTo(yrEl, yrs, '+');
             var ac = $('[data-ab-count]'); if (ac) countTo(ac, parseInt(ac.getAttribute('data-ab-count'), 10) || 0, '');
           } });
 
-          G.fromTo('[data-ab-img]', { scale: 1.2, yPercent: -6 }, { scale: 1.2, yPercent: 6, ease: 'none',
+          G.fromTo('[data-ab-img]', { scale: 1.15, yPercent: -5 }, { scale: 1.15, yPercent: 5, ease: 'none',
             scrollTrigger: { trigger: abFrame, start: 'top bottom', end: 'bottom top', scrub: true } });
         }
 
-        /* magnetic buttons (desktop pointers) */
         G.matchMedia().add('(hover: hover) and (pointer: fine)', function () {
           var cleanups = [];
           $$('[data-pa-magnet]').forEach(function (el) {
             var qx = G.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' }), qy = G.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
-            var pm = function (e) { var r = el.getBoundingClientRect(); qx((e.clientX - (r.left + r.width / 2)) * 0.28); qy((e.clientY - (r.top + r.height / 2)) * 0.35); };
+            var pm = function (e) { var r = el.getBoundingClientRect(); qx((e.clientX - (r.left + r.width / 2)) * 0.22); qy((e.clientY - (r.top + r.height / 2)) * 0.3); };
             var pl = function () { qx(0); qy(0); };
             el.addEventListener('pointermove', pm); el.addEventListener('pointerleave', pl);
             cleanups.push(function () { el.removeEventListener('pointermove', pm); el.removeEventListener('pointerleave', pl); });
