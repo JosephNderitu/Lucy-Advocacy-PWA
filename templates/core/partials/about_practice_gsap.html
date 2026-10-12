@@ -1,5 +1,5 @@
 {% load static %}
-<!-- ============ ABOUT + PRACTICE AREAS v5 (editorial, brand colours, GSAP, scroll hand-off, touch affordances) ============ -->
+<!-- ============ ABOUT + PRACTICE AREAS v6 (editorial, brand colours, GSAP, scroll hand-off, touch affordances, mobile motion) ============ -->
 <!-- Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. -->
 <style>
   .pa-scroll { scrollbar-width: thin; scrollbar-color: rgba(31,34,48,.25) transparent;
@@ -385,7 +385,7 @@
       function minutes(i) { return Math.max(1, Math.round((parseInt(arts[i].getAttribute('data-words'), 10) || 0) / 200)); }
       $$('[data-pa-rt]', stage).forEach(function (el, i) { el.textContent = minutes(i) + ' min read'; });
 
-      var cur = -1, swapTl = null, locked = false, touched = false;
+      var cur = -1, swapTl = null, locked = false, touched = false, focusIdx = -1;
 
       /* soft edge fades: tell the user whether there is more above / below */
       function edges(el) {
@@ -448,7 +448,7 @@
       function paintTabs(i) {
         var show = mqLg.matches || touched;      // phones: no row looks "selected" until the person has opened one
         tabs.forEach(function (t, k) {
-          var on = k === i, vis = on && show, ico = $('.pa-ico', t);
+          var on = k === i, vis = (on && show) || (k === focusIdx && !mqLg.matches), ico = $('.pa-ico', t);
           t.classList.toggle('is-active', vis);
           t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
           ico.classList.toggle('bg-brand-teal-600', vis); ico.classList.toggle('text-white', vis);
@@ -481,7 +481,7 @@
       }
 
       function swapDetail(prev, i, dir) {
-        if (!anim || prev === -1) { fillDetail(i); body.scrollTop = 0; onBodyScroll(); return; }
+        if (!anim || prev === -1 || (!mqLg.matches && !stage.classList.contains('is-detail'))) { fillDetail(i); body.scrollTop = 0; onBodyScroll(); return; }
         if (swapTl) swapTl.kill();
         var blocks = $$('.pa-prose > *', arts[i]);
         var headBits = [$('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
@@ -500,6 +500,25 @@
           .to(titleEl, { yPercent: 0, duration: 0.75, ease: 'expo.out' }, 0.32)
           .to(headBits, { opacity: 1, duration: 0.5 }, 0.4)
           .to(blocks, { opacity: 1, y: 0, duration: 0.55, stagger: { amount: Math.min(0.5, blocks.length * 0.06) } }, 0.4);
+      }
+
+      /* phones: when the brief slides in, its pieces fly in after it, one by one */
+      function playBriefIn() {
+        if (!anim) return;
+        if (swapTl) swapTl.kill();
+        var blocks = $$('.pa-prose > *', arts[cur]);
+        var bits = [$('[data-pa-head] > p', stage), $('[data-pa-byline]', stage), $('[data-pa-copy]', stage).parentNode.parentNode];
+        var cards = $$('aside > div', stage);
+        G.set(titleEl, { yPercent: 110 });
+        G.set(bits, { opacity: 0, x: 44 });
+        G.set(blocks, { opacity: 0, y: 36 });
+        G.set(cards, { opacity: 0, y: 32, scale: 0.97 });
+        swapTl = G.timeline({ delay: 0.2, defaults: { ease: 'power3.out' } });
+        swapTl.to(bits, { opacity: 1, x: 0, duration: 0.6, stagger: 0.08, clearProps: 'opacity,transform' }, 0)
+          .to(titleEl, { yPercent: 0, duration: 0.85, ease: 'expo.out' }, 0.05)
+          .fromTo(iconWrap, { scale: 0.4, rotate: -20, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, rotate: 0, opacity: 1, duration: 0.7, ease: 'back.out(2.2)', clearProps: 'transform,opacity' }, 0.1)
+          .to(blocks, { opacity: 1, y: 0, duration: 0.65, stagger: { amount: Math.min(0.6, blocks.length * 0.08) }, clearProps: 'opacity,transform' }, 0.3)
+          .to(cards, { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.1, clearProps: 'opacity,transform' }, 0.55);
       }
 
       /* select an area (desktop: swap article; phones: caller also slides the page in) */
@@ -530,6 +549,7 @@
         if (mqLg.matches || stage.classList.contains('is-detail')) return;
         touched = true; paintTabs(cur);
         stage.classList.add('is-detail'); lockScroll();
+        playBriefIn();
         history.pushState({ pa: cur }, '', '#area-' + areas[cur].id);
         setTimeout(function () { if (backBtn) backBtn.focus({ preventScroll: true }); }, 350);
       }
@@ -544,6 +564,7 @@
       function hideDetail() {
         stage.classList.remove('is-detail'); unlockScroll();
         if (!mqLg.matches && items[cur]) returnCue(items[cur]);
+        spy();
         setTimeout(function () { if (tabs[cur] && !mqLg.matches) tabs[cur].focus({ preventScroll: true }); }, 350);
       }
       function closeDetail() {
@@ -559,7 +580,12 @@
       });
 
       /* wiring */
-      tabs.forEach(function (t, i) { t.addEventListener('click', function () { select(i); openDetail(); }); });
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () {
+          if (anim && !mqLg.matches) G.fromTo($('.pa-ico', t), { scale: 0.8 }, { scale: 1, duration: 0.55, ease: 'back.out(3)', clearProps: 'transform' });
+          select(i); openDetail();
+        });
+      });
       navBtns.forEach(function (b) { b.addEventListener('click', function () { step(b.getAttribute('data-pa-nav') === 'next' ? 1 : -1); }); });
       if (N < 2) navBtns.forEach(function (b) { b.style.display = 'none'; });
       if (backBtn) backBtn.addEventListener('click', closeDetail);
@@ -603,7 +629,7 @@
           G.fromTo(vis, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out', overwrite: true, clearProps: 'opacity,transform',
             stagger: { amount: Math.min(0.4, vis.length * 0.025) } });
         }
-        requestAnimationFrame(function () { moveHl(false); updateHint(); });
+        requestAnimationFrame(function () { moveHl(false); updateHint(); if (anim) ST.refresh(); spy(); });
       }
       search.addEventListener('input', function () { clearTimeout(ft); ft = setTimeout(applyFilter, 120); });
       clearBtn.addEventListener('click', function () { search.value = ''; applyFilter(); search.focus(); });
@@ -615,7 +641,7 @@
         clearTimeout(rz);
         rz = setTimeout(function () {
           if (mqLg.matches && stage.classList.contains('is-detail')) hideDetail();   // rotated/resized to desktop: back to the split view
-          paintTabs(cur); moveHl(false); updateHint(); onBodyScroll();
+          paintTabs(cur); moveHl(false); updateHint(); onBodyScroll(); spy();
         }, 150);
       });
 
@@ -624,6 +650,27 @@
       scroller.addEventListener('scroll', function () {
         if (tick) return; tick = requestAnimationFrame(function () { tick = 0; updateHint(); });
       }, { passive: true });
+
+      /* phones: as you scroll the list, the row crossing the middle of the screen lights up and its chevron nudges */
+      var spyTick = 0;
+      function spy() {
+        spyTick = 0;
+        var best = -1;
+        if (!mqLg.matches && !stage.classList.contains('is-detail')) {
+          var sr = stage.getBoundingClientRect(), line = window.innerHeight * 0.5;
+          if (sr.bottom > 0 && sr.top < window.innerHeight) {
+            for (var k = 0; k < N; k++) {
+              if (items[k].hidden) continue;
+              var r = items[k].getBoundingClientRect();
+              if (r.top <= line && r.bottom > line) { best = k; break; }
+            }
+          }
+        }
+        if (best === focusIdx) return;
+        focusIdx = best; paintTabs(cur);
+        if (anim && best > -1) G.fromTo($('.pa-chev', tabs[best]), { x: 0 }, { x: 7, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out', overwrite: 'auto' });
+      }
+      window.addEventListener('scroll', function () { if (!spyTick) spyTick = requestAnimationFrame(spy); }, { passive: true });
 
       /* Desktop wheel: each gesture is owned by ONE scroller. A gesture that starts mid-list scrolls the list and
          stops at the end (no overshoot); the next gesture at the edge goes straight to the page. */
@@ -654,7 +701,7 @@
       if (m0) { var f = areas.map(function (a) { return a.id; }).indexOf(m0[1]); if (f > -1) { startIdx = f; deep = true; } }
       touched = deep;
       select(startIdx, { instant: true, noHash: true });
-      updateHint(); onBodyScroll();
+      updateHint(); onBodyScroll(); spy();
       if (deep) {
         if (!mqLg.matches) { stage.classList.add('is-detail'); lockScroll(); history.replaceState({ pa: startIdx, deep: true }, '', '#area-' + areas[startIdx].id); }
         else setTimeout(function () { sec.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 350);
@@ -672,7 +719,8 @@
         G.set(introP, { opacity: 0, x: 40 });
         G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
         G.set(stage, { opacity: 0 });
-        G.set(items, { opacity: 0, x: -36 });
+        var mobileList = !mqLg.matches;
+        if (!mobileList) G.set(items, { opacity: 0, x: -36 });
         G.set(hl, { opacity: 0 });
         G.set(headParts, { opacity: 0, x: 36 });
         G.set(blocks0, { opacity: 0, y: 22 });
@@ -685,7 +733,7 @@
             .to(words, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.07, ease: 'expo.out' }, 0.05)
             .to(introP, { opacity: 1, x: 0, duration: 0.8 }, 0.25)
             .to(stage, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.3)
-            .to(items, { opacity: 1, x: 0, duration: 0.65, stagger: { amount: 0.8 }, clearProps: 'opacity,transform' }, 0.45)
+            .to(mobileList ? [] : items, { opacity: 1, x: 0, duration: 0.65, stagger: { amount: 0.8 }, clearProps: 'opacity,transform' }, 0.45)
             .to(hl, { opacity: 1, duration: 0.5 }, 0.9)
             .to(headParts, { opacity: 1, x: 0, duration: 0.8, stagger: 0.08 }, 0.7)
             .to(blocks0, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, 0.95)
@@ -701,6 +749,17 @@
             .to(chevs, { x: 8, duration: 0.3, ease: 'power2.out', stagger: 0.09 })
             .to(chevs, { x: 0, duration: 0.9, ease: 'elastic.out(1,0.45)', stagger: 0.09 }, '>-0.15');
         } });
+
+        /* phones: rows fly in from alternating sides as they scroll into view (rows already above the fold stay put) */
+        if (mobileList) {
+          var vh = window.innerHeight;
+          var fly = items.filter(function (it) { return it.getBoundingClientRect().top > vh * 0.9; });
+          G.set(fly, { opacity: 0, y: 44, x: function (i) { return i % 2 ? 36 : -36; }, scale: 0.96 });
+          ST.batch(fly, { start: 'top 90%', once: true, onEnter: function (batch) {
+            G.to(batch, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.85, ease: 'expo.out', stagger: 0.09, overwrite: true, clearProps: 'opacity,transform' });
+            G.from(batch.map(function (b) { return $('.pa-ico', b); }), { scale: 0.4, rotate: -18, duration: 0.7, ease: 'back.out(2.2)', stagger: 0.09, delay: 0.1, clearProps: 'transform' });
+          } });
+        }
       }
     }
 
