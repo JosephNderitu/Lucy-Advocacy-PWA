@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load process_tags %}
 
 {% block title %}Ngima Wangai & Company Advocates | Nairobi Law Firm{% endblock %}
 
@@ -12,6 +13,9 @@
 
 <!-- ============ LEADERSHIP ============ -->
 {% include 'core/partials/_leadership.html' with show_cta=True %}
+
+<!-- ============process section===================== -->
+{% process_section %}
 
 <!-- ============ LATEST ARTICLES (editorial) ============ -->
 {% include "core/_latest_articles.html" %}

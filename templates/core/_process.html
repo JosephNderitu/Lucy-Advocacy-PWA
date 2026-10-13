@@ -1,0 +1,187 @@
+{% comment %}
+  "Our Process" section. The admin edits only the words (heading, intro, steps). The design lives here.
+  Use it on any page:  {% load process_tags %}  ...  {% process_section %}
+  Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. If JS fails or the
+  visitor prefers reduced motion, everything simply stays visible. No bottom margins anywhere.
+{% endcomment %}
+{% if section and steps %}
+<style>
+  /* DESIGN TOKENS (developer-owned): change the two colours here to restyle the whole section */
+  .pr-section {
+    --pr-bg: #3A0B16; --pr-accent: #E8A0A9;
+    --pr-hex: 3.5rem; --pr-pad: 1.5rem; --pr-w: calc(var(--pr-hex) * 1.14);
+    background-color: var(--pr-bg);
+  }
+  @media (min-width: 1024px) { .pr-section { --pr-hex: 4.5rem; --pr-pad: 2rem; } }
+
+  .pr-accent { color: var(--pr-accent); }
+
+  /* soft depth: glows tinted by the accent colour, plus a faint dot grid */
+  .pr-glow-a { background: radial-gradient(circle, color-mix(in srgb, var(--pr-accent) 20%, transparent), transparent 65%); }
+  .pr-glow-b { background: radial-gradient(circle, color-mix(in srgb, var(--pr-accent) 12%, transparent), transparent 65%); }
+  .pr-dots { background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 24px 24px; }
+
+  .pr-row { position: relative; padding-block: var(--pr-pad); }
+
+  /* step marker */
+  .pr-node {
+    position: relative; z-index: 1; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    width: var(--pr-w); height: var(--pr-hex);
+    font-family: inherit; font-size: 1.125rem; font-weight: 600; letter-spacing: .02em; color: var(--pr-accent);
+    background: rgba(255,255,255,.14);
+    background: color-mix(in srgb, var(--pr-accent) 14%, var(--pr-bg));
+    transition: background-color .5s ease, color .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .pr-node { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+  .pr-node.is-on { background: var(--pr-accent); color: var(--pr-bg); transform: scale(1.06); }
+
+  /* the line that links the steps and fills as you scroll (full by default, so it works without JS) */
+  .pr-seg { position: absolute; z-index: 0; left: calc(var(--pr-w) / 2); top: calc(var(--pr-pad) + var(--pr-hex) / 2); height: 100%; width: 1px; background: rgba(255,255,255,.16); }
+  .pr-fill { position: absolute; inset: 0; background: var(--pr-accent); transform-origin: top; }
+
+  .pr-title { transition: color .35s ease; }
+  .pr-row:hover .pr-title { color: var(--pr-accent); }
+  @media (prefers-reduced-motion: reduce) { .pr-node, .pr-title { transition: none; } }
+</style>
+
+<section id="process" data-process
+         class="pr-section relative scroll-mt-20 overflow-x-clip py-14 text-white sm:py-16 lg:py-24">
+
+  <!-- Decoration -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="pr-glow-a absolute -right-40 -top-40 h-[32rem] w-[32rem] rounded-full"></div>
+    <div class="pr-glow-b absolute -bottom-48 -left-40 h-[30rem] w-[30rem] rounded-full"></div>
+    <div class="pr-dots absolute inset-0"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <!-- Header: heading flies in from the left, intro from the right -->
+    <div class="grid gap-6 lg:grid-cols-12 lg:items-end lg:gap-10">
+      <div data-pr-hl class="lg:col-span-5">
+        {% if section.eyebrow %}<p class="pr-accent text-xs font-semibold uppercase tracking-[0.16em]">{{ section.eyebrow }}</p>{% endif %}
+        <h2 class="mt-3 font-serif text-3xl font-bold leading-[1.15] tracking-tight [text-wrap:balance] sm:text-4xl lg:text-[2.6rem]">{{ section.heading }}</h2>
+      </div>
+      {% if section.intro %}
+      <p data-pr-hr class="text-base leading-relaxed text-white/75 sm:text-[1.0625rem] lg:col-span-7 lg:pl-6">{{ section.intro|linebreaksbr }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Steps -->
+    <ol data-pr-list class="mt-10 border-t border-white/10 lg:mt-14">
+      {% for step in steps %}
+      <li data-pr-row class="pr-row border-b border-white/10">
+        {% if not forloop.last %}<span class="pr-seg" aria-hidden="true"><span data-pr-fill class="pr-fill"></span></span>{% endif %}
+
+        <div class="grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-0">
+          <div data-pr-left class="flex items-center gap-4 lg:gap-5">
+            <span data-pr-node class="pr-node is-on" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+            <h3 class="pr-title font-serif text-xl font-semibold leading-snug text-white sm:text-2xl">
+              <span class="sr-only">Step {{ forloop.counter }}: </span>{{ step.title }}
+            </h3>
+          </div>
+
+          <div data-pr-right class="pl-[calc(var(--pr-w)+1rem)] lg:flex lg:min-h-[var(--pr-hex)] lg:items-center lg:border-l lg:border-white/10 lg:pl-10">
+            <p class="text-[0.9375rem] leading-relaxed text-white/70 sm:text-base">{{ step.description|linebreaksbr }}</p>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+
+    <div data-pr-cta class="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6 lg:mt-12">
+      <p class="text-base font-medium text-white/80">Ready to get started?</p>
+      <a href="{% url 'core:contact' %}"
+         class="group inline-flex items-center justify-center gap-2.5 rounded-lg bg-brand-orange-500 px-6 py-3 text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--pr-bg)]">
+        Book a consultation
+        <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var sec = document.querySelector('[data-process]');
+  if (!sec) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
+  function load(src, done) { var s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = done; document.head.appendChild(s); }
+  function ready(cb) {
+    if (window.gsap && window.ScrollTrigger) return cb();
+    function st() { if (window.ScrollTrigger) return cb(); load(CDN + 'ScrollTrigger.min.js', cb); }
+    if (window.gsap) st(); else load(CDN + 'gsap.min.js', st);
+  }
+
+  ready(function () {
+    if (!window.gsap || !window.ScrollTrigger) return;          // static section: everything stays visible
+    var G = window.gsap, ST = window.ScrollTrigger;
+    try {
+      G.registerPlugin(ST);
+      var X = window.matchMedia('(max-width: 1023px)').matches ? 36 : 96;
+      var vh = window.innerHeight;
+      /* only things below the fold are hidden, so nothing can get stuck invisible after a reload mid-page */
+      function below(el) { return el.getBoundingClientRect().top > vh * 0.92; }
+      function from(el, dir) { return { opacity: 0, x: dir * X, y: 0 }; }
+      var to = { opacity: 1, x: 0, y: 0, duration: 1.05, ease: 'expo.out', clearProps: 'transform' };
+
+      /* header: heading from the left, intro from the right */
+      var hl = sec.querySelector('[data-pr-hl]'), hr = sec.querySelector('[data-pr-hr]');
+      if (hl && below(hl) === false) { /* already on screen, leave as is */ }
+      else {
+        if (hl) G.set(hl, from(hl, -1));
+        if (hr) G.set(hr, from(hr, 1));
+        ST.create({ trigger: sec, start: 'top 75%', once: true, onEnter: function () {
+          if (hl) G.to(hl, to);
+          if (hr) G.to(hr, Object.assign({ delay: 0.12 }, to));
+        } });
+      }
+
+      /* each step: title flies in from the left, description from the right, marker pops */
+      [].slice.call(sec.querySelectorAll('[data-pr-row]')).forEach(function (row) {
+        if (!below(row)) return;
+        var L = row.querySelector('[data-pr-left]'), R = row.querySelector('[data-pr-right]'), N = row.querySelector('[data-pr-node]');
+        G.set(L, from(L, -1)); G.set(R, from(R, 1)); G.set(N, { scale: 0.4, rotate: -80 });
+        ST.create({ trigger: row, start: 'top 88%', once: true, onEnter: function () {
+          G.to(L, to);
+          G.to(R, Object.assign({ delay: 0.14 }, to));
+          G.to(N, { scale: 1, rotate: 0, duration: 0.9, ease: 'back.out(1.8)', clearProps: 'transform' });
+        } });
+      });
+
+      var cta = sec.querySelector('[data-pr-cta]');
+      if (cta && below(cta)) {
+        G.set(cta, { opacity: 0, y: 24 });
+        ST.create({ trigger: cta, start: 'top 94%', once: true, onEnter: function () { G.to(cta, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }); } });
+      }
+
+      /* the line fills as you scroll and lights each marker when it is reached */
+      var nodes = [].slice.call(sec.querySelectorAll('[data-pr-node]')), fills = [].slice.call(sec.querySelectorAll('[data-pr-fill]'));
+      var list = sec.querySelector('[data-pr-list]');
+      if (fills.length) {
+        nodes.forEach(function (n) { n.classList.remove('is-on'); });
+        G.set(fills, { scaleY: 0 });
+        var tl = G.timeline({
+          scrollTrigger: {
+            trigger: list, start: 'top 68%', end: 'bottom 58%', scrub: 0.5,
+            onUpdate: function () {
+              var t = tl.time();
+              nodes.forEach(function (n, i) { n.classList.toggle('is-on', i === 0 ? t > 0 : t >= i - 0.01); });
+            }
+          }
+        });
+        fills.forEach(function (f, i) { tl.to(f, { scaleY: 1, ease: 'none', duration: 1 }, i); });
+      }
+
+      window.addEventListener('load', function () { ST.refresh(); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ST.refresh(); });
+    } catch (err) {
+      console.error('Process animation failed, showing static section:', err);
+      G.set(sec.querySelectorAll('[data-pr-hl],[data-pr-hr],[data-pr-left],[data-pr-right],[data-pr-node],[data-pr-cta],[data-pr-fill]'), { clearProps: 'all' });
+      [].slice.call(sec.querySelectorAll('[data-pr-node]')).forEach(function (n) { n.classList.add('is-on'); });
+    }
+  });
+})();
+</script>
+{% endif %}

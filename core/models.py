@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.core.cache import cache
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from datetime import timedelta
 import os
@@ -29,6 +29,7 @@ from django.utils.text import Truncator, slugify
 from io import BytesIO
 from PIL import Image as PILImage
 from django.core.files.base import ContentFile
+from django.db import models
 
 def group_name_for_email(email):
     return f"chat_{email.replace('@', '_at_').replace('.', '_dot_')}"
@@ -550,3 +551,50 @@ class TeamMember(models.Model):
         if len(parts) == 1:
             return parts[0][:2].upper()
         return (parts[0][0] + parts[-1][0]).upper()
+
+# ---------------------------------------------------------------------------
+# Process section (homepage)
+# ---------------------------------------------------------------------------
+
+PROCESS_CACHE_KEY = "process:section:v1"
+
+
+class ProcessSection(models.Model):
+    """The words of the 'Our Process' section. There is only ever one. Design lives in the template."""
+
+    is_published = models.BooleanField(default=True, help_text="Untick to hide the section on the website.")
+    eyebrow = models.CharField(max_length=60, blank=True, default="Our Process", help_text="Small label above the heading.")
+    heading = models.CharField(max_length=120, default="How We Serve Our Clients")
+    intro = models.TextField(blank=True, help_text="Short paragraph next to the heading.")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Process section"
+        verbose_name_plural = "Process section"
+
+    def __str__(self):
+        return "Our Process section"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # singleton
+        super().save(*args, **kwargs)
+
+
+class ProcessStep(models.Model):
+    section = models.ForeignKey(ProcessSection, related_name="steps", on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    description = models.TextField(help_text="One to three sentences works best.")
+    order = models.PositiveIntegerField(default=0, help_text="Lower numbers appear first. Steps are numbered automatically.")
+    is_active = models.BooleanField(default=True, help_text="Untick to hide this step without deleting it.")
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.title
+
+
+@receiver([post_save, post_delete], sender=ProcessSection)
+@receiver([post_save, post_delete], sender=ProcessStep)
+def _clear_process_cache(sender, **kwargs):
+    cache.delete(PROCESS_CACHE_KEY)

@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
+from django.db import models
 from django.db.models import Count, F, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,7 +26,7 @@ from . import forms as admin_forms  # CaseAdminForm lives in core/forms.py
 from .models import (
     ActivityLog, Article, ArticleImage, Case, CaseDocument, ChatMessage,
     ClientProfile, Conversation, DocumentRequest, NewsletterCampaign,
-    NewsletterSubscriber, PracticeArea, Review, TeamMember
+    NewsletterSubscriber, PracticeArea, ProcessSection, ProcessStep, Review, TeamMember
 )
 from .newsletter_utils import get_newsletter_connection, make_unsubscribe_token
 
@@ -754,3 +755,43 @@ class TeamMemberAdmin(admin.ModelAdmin):
         if obj.photo:
             return format_html('<img src="{}" style="max-height:200px;border-radius:4px;">', obj.photo.url)
         return "No photo uploaded yet"
+    
+# ---------------------------------------------------------------------------
+# Add this block to core/admin.py
+# Imports needed at the top of admin.py (add any that are missing):
+#   from django import forms
+#   from django.db import models
+#   from django.shortcuts import redirect
+#   from django.urls import reverse
+#   from .models import ProcessSection, ProcessStep
+# ---------------------------------------------------------------------------
+
+class ProcessStepInline(admin.TabularInline):
+    model = ProcessStep
+    extra = 1
+    fields = ("order", "title", "description", "is_active")
+    ordering = ("order", "id")
+    formfield_overrides = {
+        models.TextField: {"widget": forms.Textarea(attrs={"rows": 3, "cols": 52})},
+    }
+
+
+@admin.register(ProcessSection)
+class ProcessSectionAdmin(admin.ModelAdmin):
+    inlines = [ProcessStepInline]
+    fieldsets = (
+        (None, {"fields": ("is_published", "eyebrow", "heading", "intro")}),
+    )
+
+    # There is only one section: skip the list page and go straight to editing it.
+    def changelist_view(self, request, extra_context=None):
+        obj = ProcessSection.objects.first()
+        if obj:
+            return redirect(reverse("admin:core_processsection_change", args=[obj.pk]))
+        return super().changelist_view(request, extra_context)
+
+    def has_add_permission(self, request):
+        return not ProcessSection.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
