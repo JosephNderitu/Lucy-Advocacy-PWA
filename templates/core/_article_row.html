@@ -1,0 +1,80 @@
+{% comment %}
+  One Medium-style feed row. Used by the home section, the article list and "Keep reading".
+  Usage: {% include "core/_article_row.html" with article=article %}
+  Feed querysets should come from Article.objects.for_feed() so images/topics are prefetched.
+{% endcomment %}
+{% url 'core:article_detail' article.slug as article_url %}
+{% with topic=article.topics.all.0 %}
+<article data-rv class="group relative flex items-start gap-5 py-6 sm:gap-10 sm:py-7">
+  <div class="min-w-0 flex-1">
+
+    <!-- Author line -->
+    <div class="flex items-center gap-2 text-[0.8125rem] text-brand-ink-700 sm:text-sm">
+      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-teal-900 text-[0.65rem] font-bold text-white" aria-hidden="true">{{ article.display_author|slice:":1"|upper }}</span>
+      <span class="truncate font-medium text-brand-ink-900">{{ article.display_author }}</span>
+      <span class="text-brand-ink-900/30" aria-hidden="true">&middot;</span>
+      <time class="shrink-0" datetime="{{ article.published_at|date:'Y-m-d' }}">{{ article.published_at|date:"M j" }}</time>
+    </div>
+
+    <!-- Title + summary (the title link covers the whole row) -->
+    <h2 class="mt-3 line-clamp-3 font-sans text-xl font-bold leading-[1.25] tracking-[-0.015em] text-brand-ink-900 sm:text-[1.5rem]">
+      <a href="{{ article_url }}" class="after:absolute after:inset-0 after:z-10 focus-visible:outline-none">{{ article.title }}</a>
+    </h2>
+    {% if article.excerpt %}
+    <p class="mt-2 line-clamp-2 text-base leading-snug text-brand-ink-700 sm:text-[1.0625rem] sm:leading-relaxed">{{ article.excerpt }}</p>
+    {% endif %}
+
+    <!-- Meta + actions -->
+    <div class="mt-4 flex items-center justify-between gap-3 sm:mt-5">
+      <div class="flex min-w-0 items-center gap-2.5 text-xs text-brand-ink-700 sm:text-sm">
+        {% if topic %}
+        <a href="{% url 'core:article_list' %}?topic={{ topic.slug }}" class="relative z-20 truncate rounded-full bg-brand-mist-50 px-3 py-1 text-xs font-medium text-brand-ink-800 ring-1 ring-brand-ink-900/5 transition-colors hover:bg-brand-ink-900/5 sm:text-[0.8125rem]">{{ topic.name }}</a>
+        {% endif %}
+        <span class="whitespace-nowrap">{{ article.reading_time }} min read</span>
+      </div>
+
+      <div class="relative z-20 flex shrink-0 items-center">
+        <button type="button" data-save="{{ article.slug }}" aria-pressed="false" aria-label="Save for later"
+                class="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink-700 transition-colors hover:bg-brand-ink-900/5 hover:text-brand-ink-900">
+          <i class="fa-regular fa-bookmark"></i>
+        </button>
+
+        <div class="relative" x-data="{ open: false, copied: false }" @click.outside="open = false" @keydown.escape="open = false">
+          <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="More options"
+                  class="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink-700 transition-colors hover:bg-brand-ink-900/5 hover:text-brand-ink-900">
+            <i class="fa-solid fa-ellipsis"></i>
+          </button>
+          <div x-show="open" x-cloak x-transition.origin.top.right.duration.150ms
+               class="absolute right-0 top-full z-30 mt-1 w-52 overflow-hidden rounded-xl bg-white py-1.5 text-sm shadow-xl shadow-brand-ink-900/10 ring-1 ring-brand-ink-900/10">
+            <button type="button"
+                    @click="(navigator.clipboard ? navigator.clipboard.writeText(location.origin + '{{ article_url }}') : Promise.resolve()).then(() => { copied = true; setTimeout(() => { copied = false; open = false }, 900) })"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-brand-ink-800 transition-colors hover:bg-brand-mist-50">
+              <i class="fa-solid w-4 text-center" :class="copied ? 'fa-check text-brand-teal-600' : 'fa-link'"></i>
+              <span x-text="copied ? 'Link copied' : 'Copy link'"></span>
+            </button>
+            <button type="button"
+                    @click="window.open('https://wa.me/?text=' + encodeURIComponent('{{ article.title|escapejs }} ' + location.origin + '{{ article_url }}'), '_blank', 'noopener'); open = false"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-brand-ink-800 transition-colors hover:bg-brand-mist-50">
+              <i class="fa-brands fa-whatsapp w-4 text-center"></i> Share on WhatsApp
+            </button>
+            <button type="button"
+                    @click="window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent('{{ article.title|escapejs }}') + '&url=' + encodeURIComponent(location.origin + '{{ article_url }}'), '_blank', 'noopener'); open = false"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-brand-ink-800 transition-colors hover:bg-brand-mist-50">
+              <i class="fa-brands fa-x-twitter w-4 text-center"></i> Share on X
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thumbnail -->
+  <div class="art-media relative h-20 w-20 shrink-0 overflow-hidden rounded bg-brand-mist-50 sm:mt-1 sm:h-[8.375rem] sm:w-[12.5rem]">
+    {% if article.cover_image %}
+    <img src="{{ article.cover_image.url }}" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async">
+    {% else %}
+    <div class="absolute inset-0 flex items-center justify-center text-brand-ink-900/15"><i class="fa-solid fa-newspaper text-2xl"></i></div>
+    {% endif %}
+  </div>
+</article>
+{% endwith %}

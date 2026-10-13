@@ -1,138 +1,100 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Articles | Ngima Wangai & Company Advocates{% endblock %}
+{% block title %}{% if active_topic %}{{ active_topic.name }} | {% endif %}Articles | Ngima Wangai & Company Advocates{% endblock %}
 
 {% block content %}
 <script>
   (function () {
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('art-anim');
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      var root = document.documentElement;
+      root.classList.add('art-anim');
+      /* safety net: never leave the page hidden if GSAP is slow or blocked */
+      setTimeout(function () { if (!root.hasAttribute('data-art-ready')) root.classList.remove('art-anim'); }, 6000);
+    }
   })();
 </script>
 
 <style>
   [x-cloak] { display: none !important; }
   /* Hidden start states exist ONLY while GSAP is active (class is removed on failure) */
-  .art-anim [data-intro], .art-anim [data-split] { opacity: 0; }
-  .art-anim [data-intro-media] { clip-path: inset(0 0 100% 0); }
+  .art-anim [data-intro], .art-anim [data-split], .art-anim [data-rv] { opacity: 0; }
 
   .w-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
   .w-in { display: inline-block; will-change: transform; }
 
-  /* Title underline that draws in on hover (works across wrapped lines) */
-  .art-link {
-    background-image: linear-gradient(currentColor, currentColor);
-    background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 2px;
-    padding-bottom: 2px; transition: background-size .55s cubic-bezier(.22,1,.36,1);
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-  }
-  .group:hover .art-link, .group:focus-within .art-link { background-size: 100% 2px; }
   .art-media img { transition: transform 1s cubic-bezier(.22,1,.36,1); }
-  .group:hover .art-media img { transform: scale(1.045); }
-  @media (prefers-reduced-motion: reduce) { .art-link, .art-media img { transition: none; } }
+  .group:hover .art-media img { transform: scale(1.04); }
+  @media (prefers-reduced-motion: reduce) { .art-media img { transition: none; } }
 </style>
 
 <section data-art-list class="bg-white py-10 sm:py-12 lg:py-16">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
     <!-- Header -->
-    <header class="max-w-3xl">
-      <p data-intro class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Insights</p>
-      <h1 data-split class="mt-3 font-serif text-4xl font-bold tracking-tight text-brand-ink-900 sm:text-5xl lg:text-6xl">Articles</h1>
-      <p data-intro class="mt-4 text-base leading-relaxed text-brand-ink-700 sm:text-lg">
-        Legal insight and commentary from our team, written to help you understand the issues that affect you.
-      </p>
-      {% if page_obj.object_list %}
-      <p data-intro class="mt-5 text-sm font-medium text-brand-ink-700/80">
-        {{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }}
-      </p>
-      {% endif %}
+    <header class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+      <div class="max-w-2xl">
+        <p data-intro class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Insights</p>
+        <h1 data-split class="mt-3 font-sans text-4xl font-bold tracking-[-0.025em] text-brand-ink-900 sm:text-5xl lg:text-6xl">Articles</h1>
+        <p data-intro class="mt-4 text-base leading-relaxed text-brand-ink-700 sm:text-lg">
+          Legal insight and commentary from our team, written to help you understand the issues that affect you.
+        </p>
+      </div>
+
+      <form data-intro method="get" role="search" action="{% url 'core:article_list' %}" class="w-full lg:w-80">
+        {% if active_topic %}<input type="hidden" name="topic" value="{{ active_topic.slug }}">{% endif %}
+        <label class="relative block">
+          <span class="sr-only">Search articles</span>
+          <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-brand-ink-700/60"></i>
+          <input type="search" name="q" value="{{ q }}" placeholder="Search articles" autocomplete="off"
+                 class="w-full rounded-full border border-transparent bg-brand-mist-50 py-3 pl-11 pr-5 text-base text-brand-ink-900 placeholder:text-brand-ink-700/60 focus:border-brand-teal-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal-600/20 sm:text-sm">
+        </label>
+      </form>
     </header>
 
-    {% if page_obj.object_list %}
-    <div class="mt-10 grid gap-12 border-t border-brand-ink-900/10 pt-10 lg:mt-12 lg:grid-cols-12 lg:gap-16 lg:pt-12">
+    <!-- Topic tabs -->
+    {% if topics %}
+    <nav data-intro aria-label="Topics" class="mt-8 border-b border-brand-ink-900/10">
+      <div class="-mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <a href="{% url 'core:article_list' %}{% if q %}?q={{ q|urlencode }}{% endif %}"
+           {% if not active_topic %}aria-current="page"{% endif %}
+           class="relative top-px shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors {% if not active_topic %}border-brand-ink-900 text-brand-ink-900{% else %}border-transparent text-brand-ink-700 hover:text-brand-ink-900{% endif %}">All</a>
+        {% for t in topics %}
+        <a href="{% url 'core:article_list' %}?topic={{ t.slug }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+           {% if active_topic and active_topic.pk == t.pk %}aria-current="page"{% endif %}
+           class="relative top-px shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors {% if active_topic and active_topic.pk == t.pk %}border-brand-ink-900 text-brand-ink-900{% else %}border-transparent text-brand-ink-700 hover:text-brand-ink-900{% endif %}">{{ t.name }}</a>
+        {% endfor %}
+      </div>
+    </nav>
+    {% else %}
+    <div class="mt-8 border-b border-brand-ink-900/10"></div>
+    {% endif %}
+
+    <div class="grid gap-12 pt-2 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-16">
 
       <!-- ===== Feed ===== -->
-      <div class="min-w-0 lg:col-span-8">
-
-        {% if page_obj.number == 1 %}
-        {% with article=page_obj.object_list.0 %}
-        <article class="group relative">
-          <div data-intro-media class="art-media relative aspect-[16/9] overflow-hidden rounded-2xl bg-brand-mist-50">
-            {% if article.cover_image %}
-            <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="absolute inset-0 h-full w-full object-cover" fetchpriority="high" decoding="async">
-            {% else %}
-            <div class="absolute inset-0 flex items-center justify-center text-brand-ink-900/15"><i class="fa-solid fa-newspaper text-6xl"></i></div>
-            {% endif %}
-          </div>
-
-          <div data-intro class="mt-6 flex items-center gap-2.5 text-sm text-brand-ink-700">
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-teal-900 text-xs font-bold text-white">{{ article.display_author|slice:":1"|upper }}</span>
-            <span class="font-medium text-brand-ink-900">{{ article.display_author }}</span>
-            <span class="text-brand-ink-900/30" aria-hidden="true">&middot;</span>
-            <time datetime="{{ article.published_at|date:'Y-m-d' }}">{{ article.published_at|date:"F j, Y" }}</time>
-          </div>
-
-          <h2 data-intro class="mt-3 font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 [text-wrap:balance] sm:text-4xl">
-            <a href="{% url 'core:article_detail' article.slug %}" class="after:absolute after:inset-0 after:z-10 focus-visible:outline-none">
-              <span class="art-link">{{ article.title }}</span>
-            </a>
-          </h2>
-
-          {% if article.excerpt %}
-          <p data-intro class="mt-4 line-clamp-3 text-base leading-relaxed text-brand-ink-700 sm:text-lg">{{ article.excerpt }}</p>
-          {% endif %}
-
-          <p data-intro class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-teal-600">
-            Read story
-            <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
-          </p>
-        </article>
-        {% endwith %}
+      <div class="min-w-0">
+        {% if q or active_topic %}
+        <p data-intro class="pt-6 text-sm text-brand-ink-700">
+          {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}
+          {% if q %}for <span class="font-semibold text-brand-ink-900">&ldquo;{{ q }}&rdquo;</span>{% endif %}
+          {% if active_topic %}in <span class="font-semibold text-brand-ink-900">{{ active_topic.name }}</span>{% endif %}
+          <a href="{% url 'core:article_list' %}" class="ml-2 font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">Clear</a>
+        </p>
         {% endif %}
 
-        <!-- Story rows -->
-        <div class="{% if page_obj.number == 1 %}mt-10 border-t border-brand-ink-900/10 {% endif %}flex flex-col divide-y divide-brand-ink-900/10">
+        {% if page_obj.object_list %}
+        <div class="flex flex-col divide-y divide-brand-ink-900/10">
           {% for article in page_obj %}
-          {% if page_obj.number == 1 and forloop.first %}{% else %}
-          <article data-rv class="group relative flex items-start gap-5 py-6 sm:gap-8 sm:py-8">
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2 text-xs text-brand-ink-700 sm:text-sm">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-teal-900 text-[0.65rem] font-bold text-white">{{ article.display_author|slice:":1"|upper }}</span>
-                <span class="truncate font-medium text-brand-ink-900">{{ article.display_author }}</span>
-                <span class="text-brand-ink-900/30" aria-hidden="true">&middot;</span>
-                <time class="shrink-0" datetime="{{ article.published_at|date:'Y-m-d' }}">{{ article.published_at|date:"M j, Y" }}</time>
-              </div>
-              <h2 class="mt-2.5 line-clamp-3 font-serif text-xl font-bold leading-snug tracking-tight text-brand-ink-900 sm:text-2xl">
-                <a href="{% url 'core:article_detail' article.slug %}" class="after:absolute after:inset-0 after:z-10 focus-visible:outline-none">
-                  <span class="art-link">{{ article.title }}</span>
-                </a>
-              </h2>
-              {% if article.excerpt %}
-              <p class="mt-2.5 hidden line-clamp-2 text-base leading-relaxed text-brand-ink-700 sm:block">{{ article.excerpt }}</p>
-              {% endif %}
-              <p class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-teal-600 sm:mt-4">
-                Read
-                <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
-              </p>
-            </div>
-            <div class="art-media relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-brand-mist-50 sm:h-28 sm:w-44">
-              {% if article.cover_image %}
-              <img src="{{ article.cover_image.url }}" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async">
-              {% else %}
-              <div class="absolute inset-0 flex items-center justify-center text-brand-ink-900/15"><i class="fa-solid fa-newspaper text-2xl"></i></div>
-              {% endif %}
-            </div>
-          </article>
-          {% endif %}
+            {% include "core/_article_row.html" with article=article %}
           {% endfor %}
         </div>
 
         <!-- Pagination -->
         {% if page_obj.has_other_pages %}
-        <nav aria-label="Pagination" class="mt-8 flex items-center justify-between gap-4 border-t border-brand-ink-900/10 pt-6">
+        <nav aria-label="Pagination" class="flex items-center justify-between gap-4 border-t border-brand-ink-900/10 pt-6">
           {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
             <i class="fa-solid fa-arrow-left text-xs transition-transform duration-300 group-hover:-translate-x-1"></i> Newer
           </a>
           {% else %}
@@ -142,9 +104,9 @@
           <ul class="hidden items-center gap-1 sm:flex">
             {% for num in page_obj.paginator.page_range %}
               {% if num == page_obj.number %}
-              <li><span aria-current="page" class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal-600 text-sm font-semibold text-white">{{ num }}</span></li>
+              <li><span aria-current="page" class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-ink-900 text-sm font-semibold text-white">{{ num }}</span></li>
               {% elif num == 1 or num == page_obj.paginator.num_pages or num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
-              <li><a href="?page={{ num }}" class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-brand-ink-700 transition-colors hover:bg-brand-mist-50 hover:text-brand-ink-900">{{ num }}</a></li>
+              <li><a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}" class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-brand-ink-700 transition-colors hover:bg-brand-mist-50 hover:text-brand-ink-900">{{ num }}</a></li>
               {% elif num == page_obj.number|add:'-2' or num == page_obj.number|add:'2' %}
               <li class="px-1 text-brand-ink-700/60" aria-hidden="true">&hellip;</li>
               {% endif %}
@@ -153,7 +115,7 @@
           <span class="text-sm font-medium text-brand-ink-700 sm:hidden">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
 
           {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
             Older <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
           </a>
           {% else %}
@@ -161,30 +123,54 @@
           {% endif %}
         </nav>
         {% endif %}
+
+        {% else %}
+        <div class="mt-8 rounded-2xl border-2 border-dashed border-brand-ink-900/10 px-6 py-16 text-center">
+          {% if q or active_topic %}
+          <p class="text-brand-ink-700">Nothing matched your search.</p>
+          <a href="{% url 'core:article_list' %}" class="mt-3 inline-block text-sm font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900">Show all articles</a>
+          {% else %}
+          <p class="text-brand-ink-700">No articles published yet, check back soon.</p>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
 
       <!-- ===== Sidebar ===== -->
-      <aside class="lg:col-span-4">
-        <div data-rv class="rounded-2xl bg-brand-mist-50 p-6 ring-1 ring-brand-ink-900/5 sm:p-7 lg:sticky lg:top-24">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Ngima Wangai &amp; Company</p>
-          <p class="mt-3 font-serif text-xl font-bold leading-snug text-brand-ink-900">Have a question about your own matter?</p>
-          <p class="mt-2 text-sm leading-relaxed text-brand-ink-700">Our advocates respond promptly and keep every conversation personal.</p>
-          <a href="{% url 'core:contact' %}"
-             class="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
-            Book a consultation
-            <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
-          </a>
+      <aside class="lg:pt-8">
+        <div class="flex flex-col gap-8 lg:sticky lg:top-24">
+          {% if topics %}
+          <div data-intro>
+            <p class="text-sm font-semibold text-brand-ink-900">Browse by topic</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              {% for t in topics %}
+              <a href="{% url 'core:article_list' %}?topic={{ t.slug }}"
+                 class="rounded-full px-4 py-2 text-sm font-medium ring-1 transition-colors {% if active_topic and active_topic.pk == t.pk %}bg-brand-ink-900 text-white ring-brand-ink-900{% else %}bg-brand-mist-50 text-brand-ink-800 ring-brand-ink-900/5 hover:bg-brand-ink-900/5{% endif %}">{{ t.name }}</a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div data-intro class="rounded-2xl bg-brand-mist-50 p-6 ring-1 ring-brand-ink-900/5">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Ngima Wangai &amp; Company</p>
+            <p class="mt-3 font-sans text-xl font-bold leading-snug tracking-tight text-brand-ink-900">Have a question about your own matter?</p>
+            <p class="mt-2 text-sm leading-relaxed text-brand-ink-700">Our advocates respond promptly and keep every conversation personal.</p>
+            <a href="{% url 'core:contact' %}"
+               class="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
+              Book a consultation
+              <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+            </a>
+            {% if contact_phone %}
+            <a href="tel:{{ contact_phone|cut:' ' }}" class="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600"><i class="fa-solid fa-phone text-brand-teal-600"></i>{{ contact_phone }}</a>
+            {% endif %}
+          </div>
         </div>
       </aside>
     </div>
-
-    {% else %}
-    <div class="mt-12 rounded-2xl border-2 border-dashed border-brand-ink-900/10 py-16 text-center">
-      <p class="text-brand-ink-700">No articles published yet, check back soon.</p>
-    </div>
-    {% endif %}
   </div>
 </section>
+
+{% include "core/_article_save_js.html" %}
 
 <script>
 (function () {
@@ -225,36 +211,34 @@
     var G = window.gsap, ST = window.ScrollTrigger;
     try {
       G.registerPlugin(ST);
+      root.setAttribute('data-art-ready', '');
+
       var h1 = sec.querySelector('[data-split]'), words = h1 ? splitWords(h1) : [];
       G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
       if (h1) G.set(h1, { opacity: 1 });
 
-      /* intro: header, then the featured story */
-      var head = [].slice.call(sec.querySelectorAll('header [data-intro]'));
-      var feat = [].slice.call(sec.querySelectorAll('article [data-intro]'));
-      var fm = sec.querySelector('[data-intro-media]'), fimg = fm && fm.querySelector('img');
+      var intro = [].slice.call(sec.querySelectorAll('[data-intro]'));
+      var rows = [].slice.call(sec.querySelectorAll('[data-rv]'));
+      var vh = window.innerHeight;
+      var visible = rows.filter(function (el) { return el.getBoundingClientRect().top <= vh * 0.95; });
+      var later = rows.filter(function (el) { return visible.indexOf(el) === -1; });
+
+      G.set(rows, { opacity: 0, y: 26 });
       var tl = G.timeline({ defaults: { ease: 'power3.out' } });
       tl.to(words, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.07, ease: 'expo.out' }, 0.05)
-        .fromTo(head, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.1);
-      if (fm) {
-        tl.fromTo(fm, { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 1.2, ease: 'power4.inOut' }, 0.35);
-        if (fimg) tl.fromTo(fimg, { scale: 1.2 }, { scale: 1, duration: 1.6, ease: 'power3.out', clearProps: 'transform' }, 0.35);
-      }
-      tl.fromTo(feat, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.09 }, 0.8);
+        .fromTo(intro, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, clearProps: 'transform' }, 0.1)
+        .to(visible, { opacity: 1, y: 0, duration: 0.8, stagger: 0.09, clearProps: 'transform' }, 0.45);
 
-      /* rows and sidebar reveal on scroll (only those below the fold are hidden) */
-      var vh = window.innerHeight;
-      var rv = [].slice.call(sec.querySelectorAll('[data-rv]')).filter(function (el) { return el.getBoundingClientRect().top > vh * 0.92; });
-      G.set(rv, { opacity: 0, y: 28 });
-      ST.batch(rv, { start: 'top 92%', once: true, onEnter: function (b) {
-        G.to(b, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: 'power3.out', overwrite: true });
+      /* rows below the fold ease in as they arrive. Transform is cleared so the "more" menus stack correctly. */
+      ST.batch(later, { start: 'top 94%', once: true, onEnter: function (b) {
+        G.to(b, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, ease: 'power3.out', overwrite: true, clearProps: 'transform' });
       } });
 
       window.addEventListener('load', function () { ST.refresh(); });
     } catch (err) {
       console.error('Articles animation failed, showing static page:', err);
       root.classList.remove('art-anim');
-      G.set(sec.querySelectorAll('[data-intro],[data-split],[data-intro-media],[data-rv],.w-in'), { clearProps: 'all' });
+      G.set(sec.querySelectorAll('[data-intro],[data-split],[data-rv],.w-in'), { clearProps: 'all' });
     }
   });
 })();

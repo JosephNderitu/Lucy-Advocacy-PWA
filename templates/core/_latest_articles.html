@@ -1,0 +1,97 @@
+{% comment %}
+  Home page "Latest Articles". In home.html:  {% include "core/_latest_articles.html" %}
+  In the home view use:  "latest_articles": Article.objects.for_feed()[:4]
+  Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. If JS fails or the
+  visitor prefers reduced motion, everything simply stays visible. No bottom margins anywhere.
+{% endcomment %}
+{% if latest_articles %}
+<style>
+  [x-cloak] { display: none !important; }
+  .art-media img { transition: transform 1s cubic-bezier(.22,1,.36,1); }
+  .group:hover .art-media img { transform: scale(1.04); }
+  @media (prefers-reduced-motion: reduce) { .art-media img { transition: none; } }
+</style>
+
+<section id="latest-articles" data-art-home class="relative overflow-x-clip bg-white py-12 sm:py-14 lg:py-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+
+    <div class="flex items-end justify-between gap-6">
+      <div>
+        <p data-hd class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Insights</p>
+        <h2 data-hd class="mt-2 font-sans text-3xl font-bold tracking-[-0.025em] text-brand-ink-900 sm:text-4xl lg:text-[2.6rem]">Latest Articles</h2>
+      </div>
+      <a data-hd href="{% url 'core:article_list' %}"
+         class="group hidden shrink-0 items-center gap-2 text-sm font-semibold text-brand-teal-600 transition-colors hover:text-brand-teal-900 sm:inline-flex">
+        All articles
+        <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+      </a>
+    </div>
+
+    <div class="mt-6 grid gap-10 border-t border-brand-ink-900/10 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-16">
+
+      <!-- Feed -->
+      <div class="min-w-0">
+        <div class="flex flex-col divide-y divide-brand-ink-900/10">
+          {% for article in latest_articles %}
+            {% include "core/_article_row.html" with article=article %}
+          {% endfor %}
+        </div>
+        <a data-hd href="{% url 'core:article_list' %}"
+           class="mt-4 flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-base font-semibold text-brand-teal-600 ring-1 ring-brand-teal-600/30 transition-colors hover:bg-brand-teal-600 hover:text-white sm:hidden">
+          All articles <i class="fa-solid fa-arrow-right text-sm"></i>
+        </a>
+      </div>
+
+      <!-- Side note -->
+      <aside class="hidden lg:block lg:pt-8">
+        <div data-hd class="rounded-2xl bg-brand-mist-50 p-6 ring-1 ring-brand-ink-900/5 lg:sticky lg:top-24">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Ngima Wangai &amp; Company</p>
+          <p class="mt-3 font-sans text-xl font-bold leading-snug tracking-tight text-brand-ink-900">Have a question about your own matter?</p>
+          <p class="mt-2 text-sm leading-relaxed text-brand-ink-700">Our advocates respond promptly and keep every conversation personal.</p>
+          <a href="{% url 'core:contact' %}"
+             class="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
+            Book a consultation
+            <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% include "core/_article_save_js.html" %}
+
+<script>
+(function () {
+  var sec = document.querySelector('[data-art-home]');
+  if (!sec || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
+  function load(src, done) { var s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = done; document.head.appendChild(s); }
+  function ready(cb) {
+    if (window.gsap && window.ScrollTrigger) return cb();
+    function st() { if (window.ScrollTrigger) return cb(); load(CDN + 'ScrollTrigger.min.js', cb); }
+    if (window.gsap) st(); else load(CDN + 'gsap.min.js', st);
+  }
+
+  ready(function () {
+    if (!window.gsap || !window.ScrollTrigger) return;          // static page: everything stays visible
+    var G = window.gsap, ST = window.ScrollTrigger;
+    try {
+      G.registerPlugin(ST);
+      var vh = window.innerHeight;
+      /* only things below the fold are hidden, so nothing can get stuck invisible after a reload mid-page */
+      var els = [].slice.call(sec.querySelectorAll('[data-hd],[data-rv]')).filter(function (el) { return el.getBoundingClientRect().top > vh * 0.92; });
+      G.set(els, { opacity: 0, y: 28 });
+      ST.batch(els, { start: 'top 92%', once: true, onEnter: function (b) {
+        G.to(b, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: 'power3.out', overwrite: true, clearProps: 'transform' });
+      } });
+      window.addEventListener('load', function () { ST.refresh(); });
+    } catch (err) {
+      console.error('Latest articles animation failed, showing static content:', err);
+      G.set(sec.querySelectorAll('[data-hd],[data-rv]'), { clearProps: 'all' });
+    }
+  });
+})();
+</script>
+{% endif %}

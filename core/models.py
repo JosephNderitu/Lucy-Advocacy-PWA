@@ -337,41 +337,100 @@ class ActivityLog(models.Model):
     
 from django.utils.text import slugify
 from django.utils import timezone
+import re
 
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.text import Truncator, slugify
+
+WORDS_PER_MINUTE = 200
+
+
+def unique_slug(model, value, instance_pk=None, max_length=200, fallback="item"):
+    """Slugify `value` and add -2, -3, ... until it is unique for `model`."""
+    base = slugify(value)[:max_length] or fallback
+    slug, counter = base, 1
+    while model.objects.filter(slug=slug).exclude(pk=instance_pk).exists():
+        counter += 1
+        suffix = f"-{counter}"
+        slug = f"{base[:max_length - len(suffix)]}{suffix}"
+    return slug
+
+class ArticleTopic(models.Model):
+    """Medium-style topic (e.g. Commercial Law, Litigation). Used for chips, tabs and filtering."""
+
+    name = models.CharField(max_length=60, unique=True)
+    slug = models.SlugField(max_length=70, unique=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = unique_slug(ArticleTopic, self.name, self.pk, 70, "topic")
+        super().save(*args, **kwargs)
+
+class ArticleQuerySet(models.QuerySet):
+    def published(self):
+        """Live articles only. A future published_at schedules the article."""
+        return self.filter(status="published", published_at__lte=timezone.now())
+
+    def for_feed(self):
+        """Everything a feed row needs in 3 queries total (no N+1), without loading the long body."""
+        return self.published().defer("body").prefetch_related("images", "topics")
 
 class Article(models.Model):
     STATUS_CHOICES = [("draft", "Draft"), ("published", "Published")]
 
-    title = models.CharField(max_length=200, help_text="Used for the card, the URL, and search.")
+    title = models.CharField(max_length=200, help_text="Shown in feeds and search, and used for the URL.")
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     headline = models.CharField(max_length=200, help_text="The big, bold headline at the top of the article.")
-    subheadline = models.CharField(max_length=200, blank=True, help_text="Smaller headline shown above the body text.")
-    excerpt = models.CharField(max_length=300, blank=True, help_text="Short summary shown on the article cards.")
+    subheadline = models.CharField(max_length=200, blank=True, help_text="Smaller line shown under the headline.")
+    excerpt = models.CharField(
+        max_length=300, blank=True,
+        help_text="Short summary shown in feeds. Leave blank to use the start of the article.",
+    )
     author_name = models.CharField(max_length=150, blank=True, help_text="Leave blank to use the firm name.")
-    body = models.TextField(help_text="Separate paragraphs with a blank line. This gets split into pages automatically based on length.")
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="draft")
-    published_at = models.DateTimeField(null=True, blank=True)
+    topics = models.ManyToManyField(ArticleTopic, related_name="articles", blank=True)
+    body = models.TextField(help_text="Separate paragraphs with a blank line.")
+    reading_time = models.PositiveSmallIntegerField(default=1, editable=False, help_text="Minutes, calculated automatically.")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="draft", db_index=True)
+    published_at = models.DateTimeField(null=True, blank=True, help_text="Set a future date to schedule the article.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = ArticleQuerySet.as_manager()
+
     class Meta:
         ordering = ["-published_at", "-created_at"]
+        indexes = [models.Index(fields=["status", "-published_at"])]
 
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse("core:article_detail", args=[self.slug])
+
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title)[:200] or "article"
-            slug = base_slug
-            counter = 1
-            while Article.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                counter += 1
-                slug = f"{base_slug}-{counter}"
-            self.slug = slug
+            self.slug = unique_slug(Article, self.title, self.pk, 200, "article")
         if self.status == "published" and not self.published_at:
             self.published_at = timezone.now()
+
+        body = (self.body or "").strip()
+        self.reading_time = max(1, round(len(body.split()) / WORDS_PER_MINUTE))
+        if not self.excerpt and body:
+            first = re.split(r"\n\s*\n", body.replace("\r\n", "\n"), maxsplit=1)[0]
+            self.excerpt = Truncator(" ".join(first.split())).chars(280)
         super().save(*args, **kwargs)
+
+    @property
+    def is_live(self):
+        return self.status == "published" and self.published_at is not None and self.published_at <= timezone.now()
 
     @property
     def display_author(self):
@@ -379,9 +438,23 @@ class Article(models.Model):
 
     @property
     def cover_image(self):
-        first = self.images.first()
-        return first.image if first else None
+        # Iterate .all() (not .first()) so a prefetch_related("images") cache is used.
+        for img in self.images.all():
+            return img.image
+        return None
 
+class ArticleImage(models.Model):
+    article = models.ForeignKey(Article, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="articles/%Y/%m/")
+    caption = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"Image for {self.article.title}"
+ 
 import re
 class TeamMember(models.Model):
     FOCUS_CENTER = "center"
@@ -438,15 +511,3 @@ class TeamMember(models.Model):
         if len(parts) == 1:
             return parts[0][:2].upper()
         return (parts[0][0] + parts[-1][0]).upper()
-
-class ArticleImage(models.Model):
-    article = models.ForeignKey(Article, related_name="images", on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="articles/%Y/%m/")
-    caption = models.CharField(max_length=200, blank=True)
-    order = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ["order", "id"]
-
-    def __str__(self):
-        return f"Image for {self.article.title}"

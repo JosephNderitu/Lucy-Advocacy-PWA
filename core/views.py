@@ -66,14 +66,12 @@ def home(request):
     agg = Review.objects.aggregate(avg=Avg("rating"))
     review_avg = round(agg["avg"] or 0, 1)
     review_total = Review.objects.count()
-    latest_articles = Article.objects.filter(status="published")[:4]
 
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "reviews": reviews,
         "review_avg": review_avg,
         "review_total": review_total,
-        "latest_articles": latest_articles,
         "leadership": TeamMember.objects.filter(is_active=True, is_leadership=True),
     })
 
@@ -576,18 +574,36 @@ def service_worker(request):
         content = f.read()
     return HttpResponse(content, content_type='application/javascript')
 
+import os
+import re
+from io import BytesIO
+
+from django.conf import settings
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
+from django.utils import timezone
+
+from .models import Article, ArticleTopic
+
+# Move these into settings.py when convenient (FIRM_CONTACT_EMAIL / FIRM_CONTACT_PHONE).
+FIRM_EMAIL = getattr(settings, "FIRM_CONTACT_EMAIL", "nwangailawadvocates@gmail.com")
+FIRM_PHONE = getattr(settings, "FIRM_CONTACT_PHONE", "+254 714 535 492")
+
 
 def paginate_article_body(body, words_per_page=550):
-    paragraphs = [p.strip() for p in body.split("\n\n") if p.strip()]
-    pages = []
-    current_page = []
-    current_words = 0
+    """Split the body into 'pages' of paragraphs. Used for the PDF and for the gallery position on the web page."""
+    # Browsers submit textarea line breaks as \r\n, so normalise before splitting on blank lines.
+    text = (body or "").replace("\r\n", "\n").replace("\r", "\n")
+    paragraphs = [" ".join(p.split()) for p in re.split(r"\n\s*\n", text) if p.strip()]
+    pages, current_page, current_words = [], [], 0
     for para in paragraphs:
         word_count = len(para.split())
         if current_page and current_words + word_count > words_per_page:
             pages.append(current_page)
-            current_page = []
-            current_words = 0
+            current_page, current_words = [], 0
         current_page.append(para)
         current_words += word_count
     if current_page:
@@ -595,45 +611,124 @@ def paginate_article_body(body, words_per_page=550):
     return pages or [[]]
 
 
+def _live_topics():
+    now = timezone.now()
+    return (
+        ArticleTopic.objects
+        .annotate(n=Count("articles", filter=Q(articles__status="published", articles__published_at__lte=now)))
+        .filter(n__gt=0)
+    )
+
+
 def article_list(request):
-    articles = Article.objects.filter(status="published")
-    paginator = Paginator(articles, 10)
-    page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "core/article_list.html", {"page_obj": page_obj})
+    q = request.GET.get("q", "").strip()[:100]
+    topic_slug = request.GET.get("topic", "").strip()
+
+    articles = Article.objects.for_feed()
+    active_topic = None
+    if topic_slug:
+        active_topic = get_object_or_404(ArticleTopic, slug=topic_slug)
+        articles = articles.filter(topics=active_topic)
+    if q:
+        articles = articles.filter(
+            Q(title__icontains=q) | Q(headline__icontains=q) | Q(subheadline__icontains=q)
+            | Q(excerpt__icontains=q) | Q(body__icontains=q)
+        )
+
+    page_obj = Paginator(articles, 10).get_page(request.GET.get("page"))
+
+    # Keep search/topic in the pagination links
+    params = request.GET.copy()
+    params.pop("page", None)
+
+    return render(request, "core/article_list.html", {
+        "page_obj": page_obj,
+        "topics": _live_topics(),
+        "active_topic": active_topic,
+        "q": q,
+        "querystring": params.urlencode(),
+        "contact_email": FIRM_EMAIL,
+        "contact_phone": FIRM_PHONE,
+    })
+
+
+def _get_article_or_404(request, slug):
+    article = get_object_or_404(Article.objects.prefetch_related("images", "topics"), slug=slug)
+    is_preview = not article.is_live
+    if is_preview and not request.user.is_staff:
+        raise Http404
+    return article, is_preview
+
+
+def _related_articles(article, limit=3):
+    topic_ids = [t.pk for t in article.topics.all()]
+    base = Article.objects.for_feed().exclude(pk=article.pk)
+    related = list(base.filter(topics__in=topic_ids).distinct()[:limit]) if topic_ids else []
+    if len(related) < limit:  # top up with the newest articles
+        have = [a.pk for a in related]
+        related += list(base.exclude(pk__in=have)[: limit - len(related)])
+    return related
+
+
+def _article_context(request, article, is_preview):
+    images = list(article.images.all())
+    return {
+        "article": article,
+        "pages": paginate_article_body(article.body),
+        "images": images,
+        "is_preview": is_preview,
+        "contact_email": FIRM_EMAIL,
+        "contact_phone": FIRM_PHONE,
+    }
 
 
 def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug)
-    if article.status != "published" and not request.user.is_staff:
-        raise Http404
-    pages = paginate_article_body(article.body)
-    images = list(article.images.all())
-    return render(request, "core/article_detail.html", {
-        "article": article,
-        "pages": pages,
-        "images": images,
-        "contact_email": "nwangailawadvocates@gmail.com",
-        "contact_phone": "+254 714 535 492",
+    article, is_preview = _get_article_or_404(request, slug)
+    context = _article_context(request, article, is_preview)
+    context.update({
+        "related_articles": _related_articles(article),
+        # Optional: use these in base.html (<meta name="description">, og:image, og:title)
+        "meta_description": article.excerpt,
+        "og_image": request.build_absolute_uri(article.cover_image.url) if article.cover_image else "",
     })
+    return render(request, "core/article_detail.html", context)
+
+
+# ---------------------------------------------------------------- PDF
+
+def _pdf_link_callback(uri, rel):
+    """Let xhtml2pdf find /media/ and /static/ files on disk. Absolute file paths pass through untouched."""
+    from django.contrib.staticfiles import finders
+
+    if settings.MEDIA_URL and uri.startswith(settings.MEDIA_URL):
+        return os.path.join(settings.MEDIA_ROOT, uri[len(settings.MEDIA_URL):])
+    if settings.STATIC_URL and uri.startswith(settings.STATIC_URL):
+        rel_path = uri[len(settings.STATIC_URL):]
+        return finders.find(rel_path) or os.path.join(settings.STATIC_ROOT or "", rel_path)
+    return uri
+
+
+def _html_to_pdf(html, request):
+    """Uses WeasyPrint if installed, otherwise xhtml2pdf. Install one of them: pip install weasyprint  OR  pip install xhtml2pdf"""
+    try:
+        from weasyprint import HTML
+        return HTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf()
+    except ImportError:
+        pass
+    try:
+        from xhtml2pdf import pisa
+    except ImportError as exc:
+        raise RuntimeError("Install WeasyPrint or xhtml2pdf to generate article PDFs.") from exc
+    buffer = BytesIO()
+    result = pisa.CreatePDF(src=html, dest=buffer, link_callback=_pdf_link_callback, encoding="utf-8")
+    if result.err:
+        raise RuntimeError("PDF generation failed.")
+    return buffer.getvalue()
 
 
 def article_pdf(request, slug):
-    article = get_object_or_404(Article, slug=slug)
-    if article.status != "published" and not request.user.is_staff:
-        raise Http404
-    pages = paginate_article_body(article.body)
-    images = list(article.images.all())
-    template = get_template("core/article_pdf.html")
-    html = template.render({
-        "article": article,
-        "pages": pages,
-        "images": images,
-        "contact_email": "nwangailawadvocates@gmail.com",
-        "contact_phone": "+254 7XX XXX XXX",
-    })
-    response = HttpResponse(content_type="application/pdf")
+    article, is_preview = _get_article_or_404(request, slug)
+    html = render_to_string("core/article_pdf.html", _article_context(request, article, is_preview), request=request)
+    response = HttpResponse(_html_to_pdf(html, request), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{article.slug}.pdf"'
-    result = pisa.CreatePDF(html, dest=response)
-    if result.err:
-        return HttpResponse("Could not generate the PDF for this article.", status=500)
     return response

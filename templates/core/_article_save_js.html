@@ -1,0 +1,33 @@
+{% comment %} "Save for later" bookmarks, kept in the visitor's browser (no account needed). Include once per page. {% endcomment %}
+<script>
+(function () {
+  var KEY = 'nw:saved';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  function write(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+
+  function paint() {
+    var saved = read();
+    [].slice.call(document.querySelectorAll('[data-save]')).forEach(function (btn) {
+      var on = saved.indexOf(btn.getAttribute('data-save')) > -1, icon = btn.querySelector('i');
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.setAttribute('aria-label', on ? 'Remove from saved' : 'Save for later');
+      if (icon) icon.className = on ? 'fa-solid fa-bookmark text-brand-teal-600' : 'fa-regular fa-bookmark';
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-save]');
+    if (!btn) return;
+    e.preventDefault();
+    var slug = btn.getAttribute('data-save'), list = read(), i = list.indexOf(slug);
+    if (i > -1) list.splice(i, 1); else list.push(slug);
+    write(list);
+    paint();
+    if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.gsap.fromTo(btn.querySelector('i'), { scale: 0.6 }, { scale: 1, duration: 0.5, ease: 'back.out(3)' });
+    }
+  });
+
+  paint();
+})();
+</script>

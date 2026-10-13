@@ -1,18 +1,6 @@
 """
 core/admin.py
 =============
-
-Ngima Wangai & Company Advocates: firm administration.
-
-The back office is organised around how the firm actually works:
-
-    1. Client Portal       Cases, documents, requests and the audit trail
-    2. Client Conversations  The live chat inbox from the website
-    3. Newsletter          Subscribers and campaign history
-    4. Website Content     Articles, practice areas and client reviews
-
-Visual theming lives in static/core/admin/brand.css and the JAZZMIN_SETTINGS
-in settings.py. This module owns behaviour, list design and workflow shortcuts.
 """
 import csv
 import json
@@ -108,14 +96,7 @@ def _ids(queryset):
 
 # =============================================================================
 #  1. CLIENT PORTAL
-#  The firm's daily workspace. A single screen creates the client and the
-#  matter together, then becomes the place to review documents, request more
-#  from the client, and read the full audit trail.
 # =============================================================================
-
-# ---- Client profiles --------------------------------------------------------
-# Registered so the link from a case still resolves, but hidden from the index:
-# clients are created and managed from the Case screen, never directly.
 @admin.register(ClientProfile)
 class ClientProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "id_no", "phone", "created_at")
@@ -126,8 +107,6 @@ class ClientProfileAdmin(admin.ModelAdmin):
 
 
 # ---- Case documents ---------------------------------------------------------
-# Managed as an inline on the Case page. The standalone admin exists only to
-# serve the one-click "Confirm" action and stays out of the sidebar.
 class CaseDocumentInline(admin.TabularInline):
     """Evidence on file for a matter, with a one-click confirmation per row."""
     model = CaseDocument
@@ -385,9 +364,6 @@ class ActivityLogAdmin(admin.ModelAdmin):
 
 # =============================================================================
 #  2. CLIENT CONVERSATIONS
-#  The website chat, presented as an inbox. Unread threads rise to the top and
-#  wear a red badge; opening a thread marks it read, and replying from the
-#  custom thread view emails the guest automatically.
 # =============================================================================
 class UnreadFilter(admin.SimpleListFilter):
     title = "inbox"
@@ -512,10 +488,6 @@ class ConversationAdmin(admin.ModelAdmin):
 
 # =============================================================================
 #  3. NEWSLETTER
-#  Subscribers are never deleted, only deactivated, so the firm keeps a full
-#  consent history and a re-signup reactivates the same record. Campaigns are
-#  composed and sent from the subscriber list; sent campaigns are a permanent,
-#  read-only record.
 # =============================================================================
 class CampaignForm(forms.Form):
     subject = forms.CharField(
@@ -655,9 +627,6 @@ class NewsletterCampaignAdmin(admin.ModelAdmin):
 
 # =============================================================================
 #  4. WEBSITE CONTENT
-#  What visitors read: articles in the newspaper layout, the practice-areas
-#  grid on the homepage, and the reviews they leave. Everything here can be
-#  changed without touching code or redeploying.
 # =============================================================================
 
 # ---- Practice areas ---------------------------------------------------------
@@ -680,66 +649,54 @@ class PracticeAreaAdmin(admin.ModelAdmin):
 
 
 # ---- Articles ---------------------------------------------------------------
+from django.contrib import admin
+from django.utils import timezone
+
+from .models import Article, ArticleImage, ArticleTopic
+
+
 class ArticleImageInline(admin.TabularInline):
     model = ArticleImage
     extra = 1
     fields = ("image", "caption", "order")
+    ordering = ("order", "id")
+
+
+@admin.register(ArticleTopic)
+class ArticleTopicAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug")
+    search_fields = ("name",)
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    """Editorial desk: draft privately, preview the live design, publish in one click."""
-    list_display = ("cover_thumb", "title", "status_col", "published_at", "preview_link")
-    list_display_links = ("cover_thumb", "title")
-    list_filter = ("status", ("published_at", admin.DateFieldListFilter))
-    search_fields = ("title", "headline", "body")
-    date_hierarchy = "published_at"
+    list_display = ("title", "status", "published_at", "reading_time", "author_name")
+    list_filter = ("status", "topics", "published_at")
+    search_fields = ("title", "headline", "excerpt", "body")
     prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ("topics",)
+    readonly_fields = ("reading_time", "created_at", "updated_at")
+    date_hierarchy = "published_at"
     inlines = [ArticleImageInline]
-    save_on_top = True
-    actions = ["publish", "unpublish"]
+    actions = ["publish_selected", "unpublish_selected"]
     fieldsets = (
-        (None, {"fields": ("title", "slug")}),
-        ("Publishing", {"fields": ("status", "published_at")}),
-        ("Newspaper layout", {"fields": ("headline", "subheadline", "excerpt", "author_name")}),
-        ("Content", {"fields": ("body",)}),
+        ("Card and URL", {"fields": ("title", "slug", "excerpt", "topics")}),
+        ("Article", {"fields": ("headline", "subheadline", "author_name", "body")}),
+        ("Publishing", {"fields": ("status", "published_at", "reading_time", "created_at", "updated_at")}),
     )
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("images")
+    @admin.action(description="Publish selected articles")
+    def publish_selected(self, request, queryset):
+        for article in queryset:
+            article.status = "published"
+            article.save()  # save() sets published_at when it is empty
+        self.message_user(request, f"{queryset.count()} article(s) published.")
 
-    @admin.display(description="Cover")
-    def cover_thumb(self, obj):
-        cover = obj.cover_image
-        if not cover:
-            return muted("No image")
-        return format_html(
-            '<img src="{}" style="height:38px;width:58px;object-fit:cover;border-radius:6px;'
-            'border:1px solid #E2E8F0">', cover.url)
-
-    @admin.display(description="Status", ordering="status")
-    def status_col(self, obj):
-        return pill("Published", DOC_PILL["confirmed"]) if obj.status == "published" else pill("Draft", AMBER)
-
-    @admin.display(description="Preview")
-    def preview_link(self, obj):
-        if not obj.pk:
-            return muted("Save to preview")
-        url = reverse("core:article_detail", args=[obj.slug])
-        return format_html('<a href="{}" target="_blank" rel="noopener">View live design</a>', url)
-
-    @admin.action(description="Publish selected articles", permissions=["change"])
-    def publish(self, request, queryset):
-        n = queryset.filter(status="draft").update(status="published")
-        # update() skips save(), so give first-time publications their date here.
-        queryset.filter(status="published", published_at__isnull=True).update(published_at=timezone.now())
-        self.message_user(request, f"{n} article(s) published.", messages.SUCCESS)
-
-    @admin.action(description="Move selected to draft", permissions=["change"])
-    def unpublish(self, request, queryset):
-        n = queryset.filter(status="published").update(status="draft")
-        self.message_user(request, f"{n} article(s) moved to draft.", messages.WARNING)
-
+    @admin.action(description="Move selected articles back to draft")
+    def unpublish_selected(self, request, queryset):
+        queryset.update(status="draft", updated_at=timezone.now())
+        self.message_user(request, f"{queryset.count()} article(s) moved to draft.")
 
 # ---- Reviews ----------------------------------------------------------------
 @admin.register(Review)
