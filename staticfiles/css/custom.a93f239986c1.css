@@ -1,0 +1,135 @@
+/* Ngima Wangai & Company Advocates — global custom styles
+   Tailwind (CDN) handles nearly everything; this file only holds
+   the handful of things that are cleaner as real CSS. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4,
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Visible focus ring everywhere, including inside Tailwind's utility-only markup */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #F4791F;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Desktop nav links: quiet by default, orange underline grows in on hover/focus */
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-bottom: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2F3340;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background-color: #F4791F;
+  transition: width 0.25s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  color: #3F9199;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  width: 100%;
+}
+
+/* Active page indicator: solid pill instead of the underline, so the two states never overlap */
+.nav-link-active {
+  color: #ffffff;
+  background-color: #3F9199;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+}
+
+.nav-link-active::after {
+  display: none;
+}
+
+/* Mobile nav links */
+.mobile-nav-link {
+  padding: 0.75rem 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #2F3340;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:focus-visible {
+  background-color: #F4F8F8;
+  color: #3F9199;
+}
+
+.mobile-nav-link-active {
+  background-color: #EEF7F8;
+  color: #3F9199;
+  font-weight: 600;
+}
+
+/* Footer links */
+.footer-link {
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible {
+  color: #5BB5BD;
+}
+
+/* Footer social icons: quiet circles that light up teal on hover */
+.footer-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #d1d5db;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.footer-social:hover,
+.footer-social:focus-visible {
+  background-color: #5BB5BD;
+  color: #ffffff;
+}
+
+/* Header gets a subtle shadow once the page is scrolled (toggled in main.js) */
+#site-header.is-scrolled {
+  box-shadow: 0 4px 14px rgba(34, 37, 46, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
