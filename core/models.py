@@ -18,6 +18,18 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import EmailMultiAlternatives
 
+from django.utils.text import slugify
+import re
+
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.text import Truncator, slugify
+
+from io import BytesIO
+from PIL import Image as PILImage
+from django.core.files.base import ContentFile
+
 def group_name_for_email(email):
     return f"chat_{email.replace('@', '_at_').replace('.', '_dot_')}"
 
@@ -335,15 +347,6 @@ class ActivityLog(models.Model):
     def __str__(self):
         return f"[{self.case.case_number}] {self.get_action_display()}"
     
-from django.utils.text import slugify
-from django.utils import timezone
-import re
-
-from django.db import models
-from django.urls import reverse
-from django.utils import timezone
-from django.utils.text import Truncator, slugify
-
 WORDS_PER_MINUTE = 200
 
 
@@ -444,16 +447,52 @@ class Article(models.Model):
         return None
 
 class ArticleImage(models.Model):
-    article = models.ForeignKey(Article, related_name="images", on_delete=models.CASCADE)
+    article = models.ForeignKey("Article", related_name="images", on_delete=models.CASCADE)
     image = models.ImageField(upload_to="articles/%Y/%m/")
     caption = models.CharField(max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0)
+    
+    # Store dimensions to prevent layout shifts (CLS)
+    width = models.PositiveIntegerField(editable=False, null=True)
+    height = models.PositiveIntegerField(editable=False, null=True)
 
     class Meta:
         ordering = ["order", "id"]
 
     def __str__(self):
-        return f"Image for {self.article.title}"
+        return f"Image for {self.article.headline}"
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            try:
+                img = PILImage.open(self.image)
+                
+                # Capture original dimensions
+                self.width, self.height = img.size
+
+                # Convert RGBA/Palette modes to RGB for JPEG/WebP compression compatibility
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+
+                # Resize large images down to max 1600px width to save bandwidth & prevent ragging/lagging
+                max_size = (1600, 1600)
+                img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
+
+                # Compress and save to buffer
+                buffer = BytesIO()
+                img.save(buffer, format="JPEG", quality=85, optimize=True)
+                buffer.seek(0)
+
+                # Replace original file with compressed content
+                file_name = self.image.name.rsplit(".", 1)[0] + ".jpg"
+                self.image.save(file_name, ContentFile(buffer.read()), save=False)
+                
+                # Re-fetch updated dimensions after compression resize
+                self.width, self.height = img.size
+            except Exception:
+                pass  # Fallback gracefully if image processing fails
+
+        super().save(*args, **kwargs)
  
 import re
 class TeamMember(models.Model):

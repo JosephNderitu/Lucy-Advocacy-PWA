@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static cache %}
 
-{% block title %}{{ article.title }} | Ngima Wangai & Company Advocates{% endblock %}
+{% block title %}{{ article.headline }} | Ngima Wangai & Company Advocates{% endblock %}
 
 {% block content %}
 <script>
@@ -12,18 +12,31 @@
 
 <style>
   [x-cloak] { display: none !important; }
-  /* Hidden start states exist ONLY while GSAP is active (class is removed on failure) */
   .art-anim [data-intro], .art-anim [data-split] { opacity: 0; }
   .art-anim [data-intro-media] { clip-path: inset(0 0 100% 0); }
 
   .w-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
   .w-in { display: inline-block; will-change: transform; }
 
-  /* Reading serif, like long-form article sites */
   .art-read { font-family: Charter, 'Iowan Old Style', 'Source Serif Pro', Georgia, Cambria, 'Times New Roman', serif; }
   .art-read p::selection { background: rgba(13, 148, 136, .18); }
-  .art-media img { transition: transform 1s cubic-bezier(.22,1,.36,1); }
-  .group:hover .art-media img { transform: scale(1.04); }
+  
+  /* Bulletproof image container preventing layout shift and supporting any image dimension */
+  .art-media-box {
+    position: relative;
+    width: 100%;
+    background-color: #f8fafc;
+    overflow: hidden;
+  }
+  .art-media-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 1s cubic-bezier(.22,1,.36,1);
+  }
+  .group:hover .art-media-box img { transform: scale(1.04); }
+
   .art-link {
     background-image: linear-gradient(currentColor, currentColor);
     background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 2px;
@@ -31,7 +44,7 @@
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
   }
   .group:hover .art-link, .group:focus-within .art-link { background-size: 100% 2px; }
-  @media (prefers-reduced-motion: reduce) { .art-media img, .art-link { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .art-media-box img, .art-link { transition: none; } }
 </style>
 
 <div
@@ -75,7 +88,7 @@
   x-effect="document.documentElement.style.overflow = lb.open ? 'hidden' : ''"
 >
 
-  <!-- Reading progress -->
+  <!-- Reading progress bar -->
   <div class="fixed inset-x-0 top-0 z-[70] h-[3px]" aria-hidden="true">
     <div class="h-full origin-left bg-brand-teal-600" :style="'transform: scaleX(' + progress + ')'"></div>
   </div>
@@ -135,19 +148,29 @@
     </div>
   </header>
 
-  <!-- ===== Lead image ===== -->
-  {% if images.0 %}
+  <!-- ===== Cached Lead Image with Aspect-Ratio Safeguards ===== -->
+  {% cache 600 article_lead_image article.id %}
+  {% with lead_img=images.0 %}
+  {% if lead_img %}
   <figure class="mx-auto mt-8 max-w-5xl sm:px-6 lg:mt-10">
-    <div data-intro-media class="art-media overflow-hidden bg-brand-mist-50 sm:rounded-2xl">
-      <img src="{{ images.0.image.url }}" alt="{% if images.0.caption %}{{ images.0.caption }}{% else %}{{ article.title }}{% endif %}"
-           data-src="{{ images.0.image.url }}" data-cap="{{ images.0.caption }}" @click="openLb($el)"
-           class="aspect-[4/3] w-full cursor-zoom-in object-cover sm:aspect-[16/9]" fetchpriority="high" decoding="async">
+    <div data-intro-media class="art-media-box overflow-hidden bg-brand-mist-50 sm:rounded-2xl aspect-[16/9]">
+      <img src="{{ lead_img.image.url }}" 
+           alt="{% if lead_img.caption %}{{ lead_img.caption }}{% else %}{{ article.headline }}{% endif %}"
+           data-src="{{ lead_img.image.url }}" 
+           data-cap="{{ lead_img.caption }}" 
+           @click="openLb($el)"
+           {% if lead_img.width and lead_img.height %}width="{{ lead_img.width }}" height="{{ lead_img.height }}"{% endif %}
+           class="w-full h-full cursor-zoom-in object-cover" 
+           fetchpriority="high" 
+           decoding="async">
     </div>
-    {% if images.0.caption %}
-    <figcaption data-intro class="mt-3 px-4 text-center text-sm leading-relaxed text-brand-ink-700/80 sm:px-0">{{ images.0.caption }}</figcaption>
+    {% if lead_img.caption %}
+    <figcaption data-intro class="mt-3 px-4 text-center text-sm leading-relaxed text-brand-ink-700/80 sm:px-0">{{ lead_img.caption }}</figcaption>
     {% endif %}
   </figure>
   {% endif %}
+  {% endwith %}
+  {% endcache %}
 
   <!-- ===== Body ===== -->
   <div x-ref="body" class="art-read mx-auto flex max-w-[44rem] flex-col gap-6 px-4 pt-10 text-[1.125rem] leading-[1.85] text-brand-ink-800 [text-wrap:pretty] sm:px-6 sm:text-[1.1875rem] lg:pt-12">
@@ -157,7 +180,8 @@
       {% endfor %}
 
       {% if forloop.first and images|length > 1 %}
-      <!-- Gallery: swipe on touch, buttons on desktop, tap to zoom -->
+      <!-- Cached Gallery -->
+      {% cache 600 article_gallery article.id %}
       <section data-rv class="-mx-4 flex flex-col gap-4 font-sans text-base leading-normal sm:-mx-6 lg:-mx-20" aria-label="Article images">
         <div class="flex items-center justify-between px-4 sm:px-6 lg:px-20">
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-ink-700">Gallery <span class="text-brand-ink-900/30">&middot;</span> {{ images|length|add:"-1" }}</p>
@@ -170,14 +194,20 @@
           {% for img in images|slice:"1:" %}
           <figure class="group w-[82%] shrink-0 snap-start sm:w-[22rem]">
             <button type="button" data-src="{{ img.image.url }}" data-cap="{{ img.caption }}" @click="openLb($el)"
-                    class="art-media relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden rounded-xl bg-brand-mist-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600">
-              <img src="{{ img.image.url }}" alt="{% if img.caption %}{{ img.caption }}{% else %}{{ article.title }}{% endif %}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async">
+                    class="art-media-box relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden rounded-xl bg-brand-mist-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600">
+              <img src="{{ img.image.url }}" 
+                   alt="{% if img.caption %}{{ img.caption }}{% else %}{{ article.headline }}{% endif %}" 
+                   {% if img.width and img.height %}width="{{ img.width }}" height="{{ img.height }}"{% endif %}
+                   class="absolute inset-0 h-full w-full object-cover" 
+                   loading="lazy" 
+                   decoding="async">
             </button>
             {% if img.caption %}<figcaption class="mt-2 text-sm leading-snug text-brand-ink-700/80">{{ img.caption }}</figcaption>{% endif %}
           </figure>
           {% endfor %}
         </div>
       </section>
+      {% endcache %}
       {% endif %}
     {% endfor %}
   </div>
@@ -205,7 +235,7 @@
       <p class="mt-2 text-sm leading-relaxed text-brand-ink-700 sm:text-base">Speak to one of our advocates. We respond promptly and keep every conversation personal.</p>
       <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <a href="{% url 'core:contact' %}"
-           class="group inline-flex items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
+            class="group inline-flex items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
           Book a consultation
           <i class="fa-solid fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         </a>
@@ -259,7 +289,7 @@
 <script>
 (function () {
   var root = document.documentElement, sec = document.querySelector('[data-art-detail]');
-  if (!root.classList.contains('art-anim') || !sec) return;     // reduced motion: static page
+  if (!root.classList.contains('art-anim') || !sec) return;
 
   var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
   function load(src, done) { var s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = done; document.head.appendChild(s); }
@@ -299,7 +329,6 @@
       G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
       if (h1) G.set(h1, { opacity: 1 });
 
-      /* intro: headline words rise, then deck, byline, actions and the lead image */
       var intro = [].slice.call(sec.querySelectorAll('header [data-intro], figcaption[data-intro]'));
       var fm = sec.querySelector('[data-intro-media]'), fimg = fm && fm.querySelector('img');
       var tl = G.timeline({ defaults: { ease: 'power3.out' } });
@@ -310,7 +339,6 @@
         if (fimg) tl.fromTo(fimg, { scale: 1.18 }, { scale: 1, duration: 1.6, ease: 'power3.out', clearProps: 'transform' }, 0.5);
       }
 
-      /* paragraphs, gallery and footer blocks ease in as you read (only those below the fold are hidden) */
       var vh = window.innerHeight;
       var rv = [].slice.call(sec.querySelectorAll('[data-rv]')).filter(function (el) { return el.getBoundingClientRect().top > vh * 0.92; });
       G.set(rv, { opacity: 0, y: 22 });
