@@ -66,12 +66,14 @@ def home(request):
     agg = Review.objects.aggregate(avg=Avg("rating"))
     review_avg = round(agg["avg"] or 0, 1)
     review_total = Review.objects.count()
+    latest_articles = Article.objects.filter(status="published")[:4]
 
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "reviews": reviews,
         "review_avg": review_avg,
         "review_total": review_total,
+        "latest_articles": latest_articles,
         "leadership": TeamMember.objects.filter(is_active=True, is_leadership=True),
     })
 
