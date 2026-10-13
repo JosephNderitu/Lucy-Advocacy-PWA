@@ -2,50 +2,60 @@
 <html>
 <head>
 <meta charset="utf-8">
+<title>{{ article.title }}</title>
 <style>
-  @page { size: A4; margin: 2cm; }
+  /* Plain CSS only (no flex, grid or variables) so it renders the same in any PDF engine. */
+  @page { size: A4; margin: 2cm 2.2cm; }
   body { font-family: Helvetica, Arial, sans-serif; color: #1A2B3C; }
-  .masthead { text-align: center; border-bottom: 2px solid #1A2B3C; padding-bottom: 12px; margin-bottom: 12px; }
-  .masthead h2 { font-size: 20px; margin: 0; }
-  .masthead p { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #A9824C; margin: 4px 0 0; }
-  .meta { text-align: center; font-size: 11px; margin-bottom: 16px; }
-  .headline { text-align: center; font-size: 26px; font-weight: bold; color: #C4622D; margin-bottom: 20px; }
-  .subheadline { font-size: 15px; font-weight: bold; margin-bottom: 10px; }
-  .cover-image { width: 100%; margin-bottom: 6px; }
-  .caption { text-align: center; font-size: 9px; text-transform: uppercase; color: #666; margin-bottom: 18px; }
-  p.body-text { font-size: 11px; line-height: 1.6; margin-bottom: 10px; text-align: justify; }
+
+  .masthead { border-bottom: 1px solid #1A2B3C; padding-bottom: 10px; }
+  .masthead .firm { font-size: 11px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+  .masthead .tag { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #C4622D; margin-top: 4px; }
+
+  .headline { font-family: "Times New Roman", Times, serif; font-size: 28px; line-height: 1.2; font-weight: bold; margin-top: 22px; }
+  .subheadline { font-size: 14px; line-height: 1.5; color: #55606B; margin-top: 10px; }
+  .meta { font-size: 10px; color: #55606B; margin-top: 14px; padding-bottom: 12px; border-bottom: 1px solid #D9DEE3; }
+  .meta b { color: #1A2B3C; }
+
+  .cover-image { width: 100%; margin-top: 18px; }
+  .caption { font-size: 9px; line-height: 1.4; color: #6B7580; margin-top: 5px; }
+
+  p.body-text { font-family: "Times New Roman", Times, serif; font-size: 12px; line-height: 1.7; margin-top: 11px; text-align: left; }
+  p.lead { font-size: 14px; line-height: 1.6; margin-top: 18px; }
+
   .page-break { page-break-after: always; }
-  .footer { text-align: center; border-top: 2px solid #1A2B3C; padding-top: 10px; margin-top: 20px; font-size: 11px; font-weight: bold; }
+  .footer { border-top: 1px solid #1A2B3C; margin-top: 26px; padding-top: 10px; font-size: 10px; }
+  .footer b { letter-spacing: 1px; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
 <div class="masthead">
-  <h2>Ngima Wangai &amp; Company</h2>
-  <p>Legal Insights</p>
+  <div class="firm">Ngima Wangai &amp; Company Advocates</div>
+  <div class="tag">Legal Insights</div>
 </div>
 
-<div class="meta">{{ article.published_at|date:"F j, Y" }} by {{ article.display_author }}</div>
 <div class="headline">{{ article.headline }}</div>
+{% if article.subheadline %}<div class="subheadline">{{ article.subheadline }}</div>{% endif %}
+<div class="meta"><b>{{ article.display_author }}</b> &nbsp;|&nbsp; {{ article.published_at|date:"F j, Y" }}</div>
+
+{% if images.0 %}
+<img class="cover-image" src="{{ images.0.image.path }}">
+{% if images.0.caption %}<div class="caption">{{ images.0.caption }}</div>{% endif %}
+{% endif %}
 
 {% for page in pages %}
-  {% if forloop.first and article.subheadline %}
-  <div class="subheadline">{{ article.subheadline }}</div>
-  {% endif %}
-
-  {% if forloop.first and images.0 %}
-  <img class="cover-image" src="{{ images.0.image.path }}">
-  {% if images.0.caption %}<div class="caption">{{ images.0.caption }}</div>{% endif %}
-  {% endif %}
-
   {% for para in page %}
-  <p class="body-text">{{ para }}</p>
+  <p class="body-text{% if forloop.parentloop.first and forloop.first %} lead{% endif %}">{{ para }}</p>
   {% endfor %}
 
   {% if not forloop.last %}<div class="page-break"></div>{% endif %}
 {% endfor %}
 
-<div class="footer">{{ contact_email }} &nbsp;|&nbsp; {{ contact_phone }}</div>
+<div class="footer">
+  <b>Ngima Wangai &amp; Company Advocates</b><br>
+  {{ contact_email }} &nbsp;|&nbsp; {{ contact_phone }}
+</div>
 
 </body>
 </html>

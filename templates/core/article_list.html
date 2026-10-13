@@ -4,79 +4,259 @@
 {% block title %}Articles | Ngima Wangai & Company Advocates{% endblock %}
 
 {% block content %}
-<section class="py-14 lg:py-20 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<script>
+  (function () {
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('art-anim');
+  })();
+</script>
 
-    <div class="text-center max-w-2xl mx-auto mb-12">
-      <p class="text-sm font-medium text-[#A9824C] mb-3">Insights</p>
-      <h1 class="font-serif text-4xl sm:text-5xl font-bold text-brand-ink-900">Articles</h1>
-      <p class="mt-4 text-brand-ink-700 leading-relaxed">
+<style>
+  [x-cloak] { display: none !important; }
+  /* Hidden start states exist ONLY while GSAP is active (class is removed on failure) */
+  .art-anim [data-intro], .art-anim [data-split] { opacity: 0; }
+  .art-anim [data-intro-media] { clip-path: inset(0 0 100% 0); }
+
+  .w-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .08em .16em 0; margin-bottom: -.16em; }
+  .w-in { display: inline-block; will-change: transform; }
+
+  /* Title underline that draws in on hover (works across wrapped lines) */
+  .art-link {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 2px;
+    padding-bottom: 2px; transition: background-size .55s cubic-bezier(.22,1,.36,1);
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  .group:hover .art-link, .group:focus-within .art-link { background-size: 100% 2px; }
+  .art-media img { transition: transform 1s cubic-bezier(.22,1,.36,1); }
+  .group:hover .art-media img { transform: scale(1.045); }
+  @media (prefers-reduced-motion: reduce) { .art-link, .art-media img { transition: none; } }
+</style>
+
+<section data-art-list class="bg-white py-10 sm:py-12 lg:py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <header class="max-w-3xl">
+      <p data-intro class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Insights</p>
+      <h1 data-split class="mt-3 font-serif text-4xl font-bold tracking-tight text-brand-ink-900 sm:text-5xl lg:text-6xl">Articles</h1>
+      <p data-intro class="mt-4 text-base leading-relaxed text-brand-ink-700 sm:text-lg">
         Legal insight and commentary from our team, written to help you understand the issues that affect you.
       </p>
-    </div>
+      {% if page_obj.object_list %}
+      <p data-intro class="mt-5 text-sm font-medium text-brand-ink-700/80">
+        {{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }}
+      </p>
+      {% endif %}
+    </header>
 
     {% if page_obj.object_list %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-      {% for article in page_obj %}
-      <div class="bg-white rounded-2xl ring-1 ring-brand-ink-900/5 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-300">
-        {% if article.cover_image %}
-          <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="w-full h-36 object-cover">
-        {% else %}
-          <div class="w-full h-36 bg-brand-mist-50 flex items-center justify-center text-brand-ink-900/20">
-            <i class="fa-solid fa-newspaper text-3xl"></i>
+    <div class="mt-10 grid gap-12 border-t border-brand-ink-900/10 pt-10 lg:mt-12 lg:grid-cols-12 lg:gap-16 lg:pt-12">
+
+      <!-- ===== Feed ===== -->
+      <div class="min-w-0 lg:col-span-8">
+
+        {% if page_obj.number == 1 %}
+        {% with article=page_obj.object_list.0 %}
+        <article class="group relative">
+          <div data-intro-media class="art-media relative aspect-[16/9] overflow-hidden rounded-2xl bg-brand-mist-50">
+            {% if article.cover_image %}
+            <img src="{{ article.cover_image.url }}" alt="{{ article.title }}" class="absolute inset-0 h-full w-full object-cover" fetchpriority="high" decoding="async">
+            {% else %}
+            <div class="absolute inset-0 flex items-center justify-center text-brand-ink-900/15"><i class="fa-solid fa-newspaper text-6xl"></i></div>
+            {% endif %}
           </div>
+
+          <div data-intro class="mt-6 flex items-center gap-2.5 text-sm text-brand-ink-700">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-teal-900 text-xs font-bold text-white">{{ article.display_author|slice:":1"|upper }}</span>
+            <span class="font-medium text-brand-ink-900">{{ article.display_author }}</span>
+            <span class="text-brand-ink-900/30" aria-hidden="true">&middot;</span>
+            <time datetime="{{ article.published_at|date:'Y-m-d' }}">{{ article.published_at|date:"F j, Y" }}</time>
+          </div>
+
+          <h2 data-intro class="mt-3 font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 [text-wrap:balance] sm:text-4xl">
+            <a href="{% url 'core:article_detail' article.slug %}" class="after:absolute after:inset-0 after:z-10 focus-visible:outline-none">
+              <span class="art-link">{{ article.title }}</span>
+            </a>
+          </h2>
+
+          {% if article.excerpt %}
+          <p data-intro class="mt-4 line-clamp-3 text-base leading-relaxed text-brand-ink-700 sm:text-lg">{{ article.excerpt }}</p>
+          {% endif %}
+
+          <p data-intro class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-teal-600">
+            Read story
+            <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+          </p>
+        </article>
+        {% endwith %}
         {% endif %}
-        <div class="p-5 flex flex-col flex-1">
-          <p class="text-xs text-brand-ink-700/70 mb-1.5">
-            {{ article.published_at|date:"F j, Y" }}
-          </p>
-          <h3 class="font-serif font-semibold text-brand-ink-900 leading-snug mb-2 line-clamp-3">
-            {{ article.title }}
-          </h3>
-          <p class="text-sm text-brand-ink-700 leading-relaxed line-clamp-3 flex-1">
-            {{ article.excerpt }}
-          </p>
-          <a href="{% url 'core:article_detail' article.slug %}"
-             class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-teal-600 hover:text-brand-teal-700">
-            Read more
-            <i class="fa-solid fa-arrow-right text-xs"></i>
+
+        <!-- Story rows -->
+        <div class="{% if page_obj.number == 1 %}mt-10 border-t border-brand-ink-900/10 {% endif %}flex flex-col divide-y divide-brand-ink-900/10">
+          {% for article in page_obj %}
+          {% if page_obj.number == 1 and forloop.first %}{% else %}
+          <article data-rv class="group relative flex items-start gap-5 py-6 sm:gap-8 sm:py-8">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 text-xs text-brand-ink-700 sm:text-sm">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-teal-900 text-[0.65rem] font-bold text-white">{{ article.display_author|slice:":1"|upper }}</span>
+                <span class="truncate font-medium text-brand-ink-900">{{ article.display_author }}</span>
+                <span class="text-brand-ink-900/30" aria-hidden="true">&middot;</span>
+                <time class="shrink-0" datetime="{{ article.published_at|date:'Y-m-d' }}">{{ article.published_at|date:"M j, Y" }}</time>
+              </div>
+              <h2 class="mt-2.5 line-clamp-3 font-serif text-xl font-bold leading-snug tracking-tight text-brand-ink-900 sm:text-2xl">
+                <a href="{% url 'core:article_detail' article.slug %}" class="after:absolute after:inset-0 after:z-10 focus-visible:outline-none">
+                  <span class="art-link">{{ article.title }}</span>
+                </a>
+              </h2>
+              {% if article.excerpt %}
+              <p class="mt-2.5 hidden line-clamp-2 text-base leading-relaxed text-brand-ink-700 sm:block">{{ article.excerpt }}</p>
+              {% endif %}
+              <p class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-teal-600 sm:mt-4">
+                Read
+                <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+              </p>
+            </div>
+            <div class="art-media relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-brand-mist-50 sm:h-28 sm:w-44">
+              {% if article.cover_image %}
+              <img src="{{ article.cover_image.url }}" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async">
+              {% else %}
+              <div class="absolute inset-0 flex items-center justify-center text-brand-ink-900/15"><i class="fa-solid fa-newspaper text-2xl"></i></div>
+              {% endif %}
+            </div>
+          </article>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Pagination" class="mt-8 flex items-center justify-between gap-4 border-t border-brand-ink-900/10 pt-6">
+          {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
+            <i class="fa-solid fa-arrow-left text-xs transition-transform duration-300 group-hover:-translate-x-1"></i> Newer
+          </a>
+          {% else %}
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900/30"><i class="fa-solid fa-arrow-left text-xs"></i> Newer</span>
+          {% endif %}
+
+          <ul class="hidden items-center gap-1 sm:flex">
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+              <li><span aria-current="page" class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-teal-600 text-sm font-semibold text-white">{{ num }}</span></li>
+              {% elif num == 1 or num == page_obj.paginator.num_pages or num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
+              <li><a href="?page={{ num }}" class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-brand-ink-700 transition-colors hover:bg-brand-mist-50 hover:text-brand-ink-900">{{ num }}</a></li>
+              {% elif num == page_obj.number|add:'-2' or num == page_obj.number|add:'2' %}
+              <li class="px-1 text-brand-ink-700/60" aria-hidden="true">&hellip;</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          <span class="text-sm font-medium text-brand-ink-700 sm:hidden">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="group inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900 transition-colors hover:text-brand-teal-600">
+            Older <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
+          </a>
+          {% else %}
+          <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-ink-900/30">Older <i class="fa-solid fa-arrow-right text-xs"></i></span>
+          {% endif %}
+        </nav>
+        {% endif %}
+      </div>
+
+      <!-- ===== Sidebar ===== -->
+      <aside class="lg:col-span-4">
+        <div data-rv class="rounded-2xl bg-brand-mist-50 p-6 ring-1 ring-brand-ink-900/5 sm:p-7 lg:sticky lg:top-24">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-brand-teal-600">Ngima Wangai &amp; Company</p>
+          <p class="mt-3 font-serif text-xl font-bold leading-snug text-brand-ink-900">Have a question about your own matter?</p>
+          <p class="mt-2 text-sm leading-relaxed text-brand-ink-700">Our advocates respond promptly and keep every conversation personal.</p>
+          <a href="{% url 'core:contact' %}"
+             class="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2">
+            Book a consultation
+            <i class="fa-solid fa-arrow-right text-xs transition-transform duration-300 group-hover:translate-x-1"></i>
           </a>
         </div>
-      </div>
-      {% endfor %}
+      </aside>
     </div>
-
-    {% if page_obj.has_other_pages %}
-    <div class="flex items-center justify-center gap-2 mt-12">
-      {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}"
-         class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors">
-        <i class="fa-solid fa-chevron-left text-sm"></i>
-      </a>
-      {% endif %}
-
-      {% for num in page_obj.paginator.page_range %}
-        <a href="?page={{ num }}"
-           class="h-10 w-10 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
-             {% if num == page_obj.number %}bg-brand-teal-600 text-white{% else %}ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-mist-50{% endif %}">
-          {{ num }}
-        </a>
-      {% endfor %}
-
-      {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}"
-         class="h-10 w-10 flex items-center justify-center rounded-full ring-1 ring-brand-ink-900/10 text-brand-ink-900 hover:bg-brand-teal-600 hover:text-white hover:ring-brand-teal-600 transition-colors">
-        <i class="fa-solid fa-chevron-right text-sm"></i>
-      </a>
-      {% endif %}
-    </div>
-    {% endif %}
 
     {% else %}
-    <div class="text-center py-16 border-2 border-dashed border-brand-ink-900/10 rounded-2xl">
+    <div class="mt-12 rounded-2xl border-2 border-dashed border-brand-ink-900/10 py-16 text-center">
       <p class="text-brand-ink-700">No articles published yet, check back soon.</p>
     </div>
     {% endif %}
   </div>
 </section>
+
+<script>
+(function () {
+  var root = document.documentElement, sec = document.querySelector('[data-art-list]');
+  if (!root.classList.contains('art-anim') || !sec) return;     // reduced motion: static page
+
+  var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
+  function load(src, done) { var s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = done; document.head.appendChild(s); }
+  function ready(cb) {
+    if (window.gsap && window.ScrollTrigger) return cb();
+    function st() { if (window.ScrollTrigger) return cb(); load(CDN + 'ScrollTrigger.min.js', cb); }
+    if (window.gsap) st(); else load(CDN + 'gsap.min.js', st);
+  }
+
+  function splitWords(el) {
+    el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+    var out = [];
+    (function walk(node) {
+      [].slice.call(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          child.textContent.split(/(\s+)/).forEach(function (part) {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            var m = document.createElement('span'); m.className = 'w-mask'; m.setAttribute('aria-hidden', 'true');
+            var w = document.createElement('span'); w.className = 'w-in'; w.textContent = part;
+            m.appendChild(w); frag.appendChild(m); out.push(w);
+          });
+          node.replaceChild(frag, child);
+        } else if (child.nodeType === 1) { walk(child); }
+      });
+    })(el);
+    return out;
+  }
+
+  ready(function () {
+    if (!window.gsap || !window.ScrollTrigger) { root.classList.remove('art-anim'); return; }
+    var G = window.gsap, ST = window.ScrollTrigger;
+    try {
+      G.registerPlugin(ST);
+      var h1 = sec.querySelector('[data-split]'), words = h1 ? splitWords(h1) : [];
+      G.set(words, { yPercent: 115, rotate: 3, transformOrigin: '0% 100%' });
+      if (h1) G.set(h1, { opacity: 1 });
+
+      /* intro: header, then the featured story */
+      var head = [].slice.call(sec.querySelectorAll('header [data-intro]'));
+      var feat = [].slice.call(sec.querySelectorAll('article [data-intro]'));
+      var fm = sec.querySelector('[data-intro-media]'), fimg = fm && fm.querySelector('img');
+      var tl = G.timeline({ defaults: { ease: 'power3.out' } });
+      tl.to(words, { yPercent: 0, rotate: 0, duration: 1, stagger: 0.07, ease: 'expo.out' }, 0.05)
+        .fromTo(head, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.1);
+      if (fm) {
+        tl.fromTo(fm, { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 1.2, ease: 'power4.inOut' }, 0.35);
+        if (fimg) tl.fromTo(fimg, { scale: 1.2 }, { scale: 1, duration: 1.6, ease: 'power3.out', clearProps: 'transform' }, 0.35);
+      }
+      tl.fromTo(feat, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.09 }, 0.8);
+
+      /* rows and sidebar reveal on scroll (only those below the fold are hidden) */
+      var vh = window.innerHeight;
+      var rv = [].slice.call(sec.querySelectorAll('[data-rv]')).filter(function (el) { return el.getBoundingClientRect().top > vh * 0.92; });
+      G.set(rv, { opacity: 0, y: 28 });
+      ST.batch(rv, { start: 'top 92%', once: true, onEnter: function (b) {
+        G.to(b, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: 'power3.out', overwrite: true });
+      } });
+
+      window.addEventListener('load', function () { ST.refresh(); });
+    } catch (err) {
+      console.error('Articles animation failed, showing static page:', err);
+      root.classList.remove('art-anim');
+      G.set(sec.querySelectorAll('[data-intro],[data-split],[data-intro-media],[data-rv],.w-in'), { clearProps: 'all' });
+    }
+  });
+})();
+</script>
 {% endblock %}
