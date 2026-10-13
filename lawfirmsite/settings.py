@@ -150,7 +150,8 @@ STORAGES = {
         # Adds a content hash to each filename (e.g. app.a1b2c3.css) so you
         # can cache static files aggressively without worrying about serving
         # stale CSS/JS after a deploy.
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        #"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
  
