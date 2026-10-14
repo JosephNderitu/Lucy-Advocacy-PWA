@@ -17,7 +17,12 @@
   .rv-star { color: var(--rv-star); }
   .rv-bg-rose { background-color: var(--rv-rose); }
   .rv-bg-ink  { background-color: var(--rv-ink); }
-
+  .rv-mark {
+    background-image: linear-gradient(transparent 62%, rgba(232, 160, 169, .55) 62%);
+    background-image: linear-gradient(transparent 62%, color-mix(in srgb, var(--rv-rose) 55%, transparent) 62%);
+    padding-inline: .15em; margin-inline: -.15em; border-radius: .125rem;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    }
   .rv-panel { background-color: var(--rv-bg); }
   .rv-glow  { background: radial-gradient(circle, color-mix(in srgb, var(--rv-ink) 14%, transparent), transparent 65%); }
   .rv-panel-glow { background: radial-gradient(circle, color-mix(in srgb, var(--rv-rose) 22%, transparent), transparent 65%); }
@@ -70,9 +75,10 @@
         <p class="rv-ink text-xs font-semibold uppercase tracking-[0.16em]">Client feedback</p>
         <h2 class="mt-3 font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 [text-wrap:balance] sm:text-4xl lg:text-[2.6rem]">What Our Clients Say</h2>
       </div>
-      <p data-rv-hr class="text-base leading-relaxed text-brand-ink-700 sm:text-[1.0625rem] lg:col-span-6 lg:pl-6">
-        Unfiltered feedback from people we have represented. Every word here comes straight from the client, unedited.
-      </p>
+     <p data-rv-hr class="text-base leading-relaxed text-brand-ink-700 sm:text-[1.0625rem] lg:col-span-6 lg:border-l-2 lg:border-[color:var(--rv-rose)] lg:pl-6">
+        <span class="rv-ink font-semibold">Unfiltered feedback</span> from <span class="font-medium text-brand-teal-600">people we have represented</span>.
+        Every word here comes <span class="rv-mark font-medium text-brand-ink-900">straight from the client</span>, <span class="font-semibold text-brand-orange-600">unedited</span>.
+    </p>
     </div>
 
     <div class="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-12 lg:gap-10">
