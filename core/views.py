@@ -52,11 +52,7 @@ def home(request):
     })
 
 def team(request):
-    members = list(TeamMember.objects.filter(is_active=True))  # one query
-    return render(request, "core/team.html", {
-        "leadership": [m for m in members if m.is_leadership],
-        "team_members": [m for m in members if not m.is_leadership],
-    })
+       return redirect(reverse('core:about') + '#team', permanent=True)
     
 def _token_ok(review, request):
     return secrets.compare_digest(str(review.edit_token), request.POST.get("token", ""))
@@ -135,6 +131,7 @@ def delete_review(request, review_id):
 
 def about(request):
     practice_area_count = PracticeArea.objects.filter(is_active=True).count()
+    members = TeamMember.objects.filter(is_active=True)
 
     faqs = [
         {
@@ -187,6 +184,8 @@ def about(request):
     return render(request, "core/about.html", {
         "practice_area_count": practice_area_count,
         "faqs": faqs,
+        'leadership': members.filter(is_leadership=True),
+        'team_members': members.filter(is_leadership=False),
     })
 
 MESSAGES_PAGE_SIZE = 30
