@@ -1,0 +1,487 @@
+{% comment %}
+  Hours and location partial.
+  Save as: templates/core/partials/hours_location.html
+  Include in contact.html with: {% include "core/partials/hours_location.html" %}
+
+  Edit these before launch:
+    1. The iframe src (use the embed code for your exact office from Google Maps > Share > Embed a map).
+    2. The directions link (data-directions) and data-address on the copy button.
+    3. The three "Before you visit" items at the bottom.
+    4. Hours: change data-days (0 = Sunday ... 6 = Saturday), data-open and data-close (24h, Nairobi time).
+       The visible time text sits in the dd next to each row.
+
+  GSAP: uses window.gsap (and ScrollTrigger if loaded). If GSAP is missing, the section simply shows
+  without animation. Reduced motion preferences are respected.
+{% endcomment %}
+
+<section id="hours-location" class="hl-section bg-brand-mist-50/60 py-16 sm:py-20 lg:py-24" aria-labelledby="hl-heading">
+
+  <style>
+    #hours-location {
+      --hl-b900: #4A0F1F;
+      --hl-b800: #5C1427;
+      --hl-b700: #6E1A30;
+      --hl-b600: #8A2440;
+      --hl-b100: #F7ECEF;
+    }
+
+    /* Burgundy accent bar above the heading */
+    #hours-location .hl-bar { background: var(--hl-b700); transform-origin: left center; }
+
+    /* Hours panel */
+    #hours-location .hl-panel {
+      background: linear-gradient(160deg, var(--hl-b700) 0%, var(--hl-b900) 100%);
+      box-shadow: 0 24px 50px -28px rgba(74, 15, 31, 0.7);
+    }
+
+    #hours-location .hl-ico {
+      display: inline-flex; align-items: center; justify-content: center; flex: none;
+      width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.12); color: #fff;
+      transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    }
+    #hours-location .hl-ico-light {
+      display: inline-flex; align-items: center; justify-content: center; flex: none;
+      width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+      background: var(--hl-b100); color: var(--hl-b700);
+    }
+
+    /* Live status chip */
+    #hours-location .hl-chip {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.35rem 0.8rem; border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.01em;
+    }
+    #hours-location .hl-dot { width: 8px; height: 8px; border-radius: 9999px; background: #FDA4AF; }
+    #hours-location .hl-chip[data-state="open"] .hl-dot {
+      background: #6EE7B7;
+      animation: hlPulse 2s ease-out infinite;
+    }
+    @keyframes hlPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.55); }
+      100% { box-shadow: 0 0 0 9px rgba(110, 231, 183, 0); }
+    }
+
+    /* Hours rows */
+    #hours-location .hl-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 0.7rem 0.9rem; border-radius: 0.75rem;
+      transition: background 0.3s ease;
+    }
+    #hours-location .hl-row dt { color: rgba(255, 255, 255, 0.78); }
+    #hours-location .hl-row dd { font-weight: 600; text-align: right; }
+    #hours-location .hl-row.is-today { background: rgba(255, 255, 255, 0.14); }
+    #hours-location .hl-row.is-today dt { color: #fff; }
+    #hours-location .hl-today-tag {
+      display: none; margin-left: 0.4rem; padding: 0.1rem 0.5rem;
+      border-radius: 9999px; background: #fff; color: var(--hl-b700);
+      font-size: 0.65rem; font-weight: 700; vertical-align: middle;
+    }
+    #hours-location .hl-row.is-today .hl-today-tag { display: inline-block; }
+
+    /* Contact links inside the panel */
+    #hours-location .hl-contact {
+      display: flex; align-items: center; gap: 0.85rem;
+      color: rgba(255, 255, 255, 0.9); font-size: 0.875rem;
+    }
+    #hours-location .hl-contact span.hl-text { min-width: 0; overflow-wrap: anywhere; }
+    #hours-location a.hl-contact:hover .hl-ico,
+    #hours-location a.hl-contact:focus-visible .hl-ico { background: #fff; color: var(--hl-b700); transform: translateY(-2px); }
+
+    /* Map */
+    #hours-location .hl-map {
+      box-shadow: 0 0 0 1px rgba(110, 26, 48, 0.16), 0 24px 50px -26px rgba(74, 15, 31, 0.45);
+    }
+    #hours-location .hl-map-frame { filter: saturate(0.8) contrast(1.03); transition: filter 0.5s ease; }
+    #hours-location .hl-map:hover .hl-map-frame,
+    #hours-location .hl-map.is-active .hl-map-frame { filter: none; }
+
+    #hours-location .hl-lock {
+      position: absolute; inset: 0; z-index: 5;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 1rem; background: transparent; cursor: pointer; border: 0;
+    }
+    #hours-location .hl-lock-pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 0.9rem; border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.94); color: var(--hl-b700);
+      font-size: 0.75rem; font-weight: 600;
+      box-shadow: 0 6px 20px -8px rgba(74, 15, 31, 0.5);
+      transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+    }
+    #hours-location .hl-lock:hover .hl-lock-pill,
+    #hours-location .hl-lock:focus-visible .hl-lock-pill { background: var(--hl-b700); color: #fff; transform: translateY(-2px); }
+
+    /* Address card: sits under the map on small screens, floats over it from sm up */
+    #hours-location .hl-mapcard {
+      position: relative; z-index: 10;
+      padding: 1.1rem 1.25rem; background: #fff;
+      border-top: 3px solid var(--hl-b700);
+    }
+    @media (min-width: 640px) {
+      #hours-location .hl-mapcard {
+        position: absolute; left: 1rem; bottom: 1rem; width: calc(100% - 2rem); max-width: 22rem;
+        border-top: 0; border-left: 4px solid var(--hl-b700); border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+        box-shadow: 0 18px 40px -18px rgba(74, 15, 31, 0.55);
+      }
+    }
+    #hours-location .hl-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.55rem 1rem; border-radius: 9999px;
+      font-size: 0.8125rem; font-weight: 600; line-height: 1;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+    #hours-location .hl-btn-solid { background: var(--hl-b700); color: #fff; border: 1px solid var(--hl-b700); }
+    #hours-location .hl-btn-solid:hover { background: var(--hl-b900); border-color: var(--hl-b900); }
+    #hours-location .hl-btn-ghost { background: transparent; color: var(--hl-b700); border: 1px solid rgba(110, 26, 48, 0.3); }
+    #hours-location .hl-btn-ghost:hover { background: var(--hl-b100); border-color: var(--hl-b700); }
+
+    /* Before you visit strip */
+    #hours-location .hl-strip { border-top: 1px solid rgba(110, 26, 48, 0.18); }
+
+    #hours-location a:focus-visible,
+    #hours-location button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      #hours-location .hl-chip[data-state="open"] .hl-dot { animation: none; }
+      #hours-location .hl-map-frame,
+      #hours-location .hl-ico,
+      #hours-location .hl-lock-pill,
+      #hours-location .hl-row { transition: none; }
+    }
+  </style>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Heading -->
+    <header class="max-w-2xl">
+      <span data-hl-rule class="hl-bar block h-[3px] w-14 rounded-full"></span>
+      <h2 id="hl-heading" class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl font-bold leading-tight text-brand-ink-900">
+        <span data-hl-line class="block">Visit our offices</span>
+      </h2>
+      <p data-hl-fade class="mt-3 text-base sm:text-lg leading-relaxed text-brand-ink-700">
+        Come in during office hours, call ahead, or message us in the chat above.
+      </p>
+    </header>
+
+    <div class="mt-10 lg:mt-12 grid gap-6 lg:grid-cols-5 lg:gap-8">
+
+      <!-- Hours panel -->
+      <div data-hl-panel class="hl-panel lg:col-span-2 rounded-3xl p-6 sm:p-8 text-white">
+
+        <div data-hl-item class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="hl-ico"><i class="fa-regular fa-clock"></i></span>
+            <h3 class="font-serif text-lg font-semibold">Working hours</h3>
+          </div>
+          <p class="hl-chip" data-status-chip data-state="closed" role="status">
+            <span class="hl-dot"></span>
+            <span data-status-label>Office hours</span>
+          </p>
+        </div>
+
+        <p data-hl-item data-status-detail class="mt-4 text-sm text-white/80">Monday to Friday, 8:00 AM to 5:00 PM</p>
+
+        <dl class="mt-5 flex flex-col gap-1.5 text-sm">
+          <div data-hl-item data-hours-row data-days="1,2,3,4,5" data-open="08:00" data-close="17:00" class="hl-row">
+            <dt>Monday to Friday<span class="hl-today-tag">Today</span></dt>
+            <dd>8:00 AM to 5:00 PM</dd>
+          </div>
+          <div data-hl-item data-hours-row data-days="6" data-open="09:00" data-close="13:00" class="hl-row">
+            <dt>Saturday<span class="hl-today-tag">Today</span></dt>
+            <dd>9:00 AM to 1:00 PM</dd>
+          </div>
+          <div data-hl-item data-hours-row data-days="0" class="hl-row">
+            <dt>Sunday<span class="hl-today-tag">Today</span></dt>
+            <dd>Closed</dd>
+          </div>
+        </dl>
+
+        <div data-hl-item class="mt-6 h-px bg-white/15"></div>
+
+        <ul class="mt-6 flex flex-col gap-4">
+          <li data-hl-item>
+            <a href="tel:+254714535492" class="hl-contact">
+              <span class="hl-ico"><i class="fa-solid fa-phone"></i></span>
+              <span class="hl-text">+254 714 535 492</span>
+            </a>
+          </li>
+          <li data-hl-item>
+            <a href="mailto:nwangailawadvocates@gmail.com" class="hl-contact">
+              <span class="hl-ico"><i class="fa-solid fa-envelope"></i></span>
+              <span class="hl-text">nwangailawadvocates@gmail.com</span>
+            </a>
+          </li>
+          <li data-hl-item>
+            <p class="hl-contact">
+              <span class="hl-ico"><i class="fa-solid fa-location-dot"></i></span>
+              <span class="hl-text">P.O. Box 000-00100, Nairobi</span>
+            </p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Map -->
+      <div class="lg:col-span-3 lg:h-full">
+        <div data-hl-map class="hl-map relative flex h-full flex-col overflow-hidden rounded-3xl bg-white">
+
+          <div class="relative h-72 sm:h-[26rem] lg:h-auto lg:min-h-[32rem] lg:flex-1">
+            <iframe
+              data-map-frame
+              class="hl-map-frame pointer-events-none absolute inset-0 h-full w-full border-0"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63776.5!2d36.8172!3d-1.2864!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10d4e26e46c9%3A0x0!2sNairobi%2C%20Kenya!5e0!3m2!1sen!2ske!4v1699999999999"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Firm location on Google Maps"></iframe>
+
+            <button type="button" data-map-lock class="hl-lock" aria-label="Activate the map so you can pan and zoom">
+              <span class="hl-lock-pill"><i class="fa-solid fa-hand-pointer"></i>Click to explore the map</span>
+            </button>
+          </div>
+
+          <div data-hl-mapcard class="hl-mapcard">
+            <div class="flex items-start gap-3">
+              <span class="hl-ico-light"><i class="fa-solid fa-location-dot"></i></span>
+              <div class="min-w-0">
+                <p class="font-serif font-semibold leading-snug text-brand-ink-900">Ngima Wangai &amp; Company Advocates</p>
+                <p class="mt-1 text-sm text-brand-ink-700">Nairobi, Kenya</p>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a class="hl-btn hl-btn-solid"
+                 href="https://www.google.com/maps/dir/?api=1&amp;destination=Ngima%20Wangai%20%26%20Company%20Advocates%2C%20Nairobi"
+                 target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-diamond-turn-right"></i>Get directions
+              </a>
+              <button type="button" class="hl-btn hl-btn-ghost" data-copy-address data-address="Ngima Wangai &amp; Company Advocates, P.O. Box 000-00100, Nairobi">
+                <i class="fa-regular fa-copy"></i><span data-copy-label>Copy address</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Before you visit -->
+    <ul class="hl-strip mt-10 lg:mt-12 grid gap-6 pt-8 sm:grid-cols-3 sm:gap-8">
+      <li data-hl-extra class="flex items-start gap-4">
+        <span class="hl-ico-light"><i class="fa-regular fa-calendar-check"></i></span>
+        <div>
+          <h3 class="font-serif font-semibold text-brand-ink-900">Book ahead</h3>
+          <p class="mt-1 text-sm leading-relaxed text-brand-ink-700">An appointment lets us set aside time with the right advocate for your matter.</p>
+        </div>
+      </li>
+      <li data-hl-extra class="flex items-start gap-4">
+        <span class="hl-ico-light"><i class="fa-regular fa-folder-open"></i></span>
+        <div>
+          <h3 class="font-serif font-semibold text-brand-ink-900">Bring your documents</h3>
+          <p class="mt-1 text-sm leading-relaxed text-brand-ink-700">Bring identification and any papers related to your matter so we can advise you properly.</p>
+        </div>
+      </li>
+      <li data-hl-extra class="flex items-start gap-4">
+        <span class="hl-ico-light"><i class="fa-regular fa-comments"></i></span>
+        <div>
+          <h3 class="font-serif font-semibold text-brand-ink-900">Out of hours</h3>
+          <p class="mt-1 text-sm leading-relaxed text-brand-ink-700">Leave a message in the chat and we will reply by email on the next working day.</p>
+        </div>
+      </li>
+    </ul>
+
+  </div>
+
+  <script>
+  (function () {
+    var root = document.getElementById('hours-location');
+    if (!root) return;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- Open now status (Africa/Nairobi time) ---------- */
+    var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var rows = Array.prototype.slice.call(root.querySelectorAll('[data-hours-row]'));
+    var chip = root.querySelector('[data-status-chip]');
+    var chipLabel = root.querySelector('[data-status-label]');
+    var detail = root.querySelector('[data-status-detail]');
+    var schedule = {};
+
+    function toMinutes(hhmm) {
+      var p = hhmm.split(':');
+      return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+    }
+
+    function fmt(minutes) {
+      var h = Math.floor(minutes / 60), m = minutes % 60;
+      var suffix = h >= 12 ? 'PM' : 'AM';
+      var h12 = h % 12 === 0 ? 12 : h % 12;
+      return h12 + ':' + (m < 10 ? '0' + m : m) + ' ' + suffix;
+    }
+
+    rows.forEach(function (row) {
+      var open = row.getAttribute('data-open');
+      var close = row.getAttribute('data-close');
+      row.getAttribute('data-days').split(',').forEach(function (d) {
+        schedule[parseInt(d, 10)] = open && close
+          ? { open: toMinutes(open), close: toMinutes(close), row: row }
+          : { row: row };
+      });
+    });
+
+    function nairobiNow() {
+      var parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Africa/Nairobi', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(new Date());
+      var map = {};
+      parts.forEach(function (p) { map[p.type] = p.value; });
+      var dayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[map.weekday];
+      return { day: dayIndex, minutes: (parseInt(map.hour, 10) % 24) * 60 + parseInt(map.minute, 10) };
+    }
+
+    function updateStatus() {
+      if (!chip || !window.Intl || !Intl.DateTimeFormat.prototype.formatToParts) return;
+      var now = nairobiNow();
+      var today = schedule[now.day];
+
+      rows.forEach(function (row) {
+        var isToday = !!today && today.row === row;
+        row.classList.toggle('is-today', isToday);
+        if (isToday) row.setAttribute('aria-current', 'date'); else row.removeAttribute('aria-current');
+      });
+
+      var isOpen = !!today && today.open !== undefined && now.minutes >= today.open && now.minutes < today.close;
+      chip.setAttribute('data-state', isOpen ? 'open' : 'closed');
+      chipLabel.textContent = isOpen ? 'Open now' : 'Closed now';
+
+      if (isOpen) {
+        detail.textContent = 'We close today at ' + fmt(today.close) + '.';
+        return;
+      }
+      if (today && today.open !== undefined && now.minutes < today.open) {
+        detail.textContent = 'We open today at ' + fmt(today.open) + '.';
+        return;
+      }
+      for (var i = 1; i <= 7; i++) {
+        var d = (now.day + i) % 7;
+        if (schedule[d] && schedule[d].open !== undefined) {
+          detail.textContent = 'We open ' + (i === 1 ? 'tomorrow' : dayNames[d]) + ' at ' + fmt(schedule[d].open) + '.';
+          return;
+        }
+      }
+    }
+
+    updateStatus();
+    setInterval(updateStatus, 60000);
+
+    /* ---------- Map: click to activate, so touch scrolling never gets trapped ---------- */
+    var mapBox = root.querySelector('[data-hl-map]');
+    var frame = root.querySelector('[data-map-frame]');
+    var lock = root.querySelector('[data-map-lock]');
+
+    function unlockMap() {
+      frame.classList.remove('pointer-events-none');
+      lock.style.display = 'none';
+      mapBox.classList.add('is-active');
+      frame.focus();
+    }
+    function relockMap() {
+      if (!mapBox.classList.contains('is-active')) return;
+      frame.classList.add('pointer-events-none');
+      lock.style.display = '';
+      mapBox.classList.remove('is-active');
+    }
+    if (lock && frame && mapBox) {
+      lock.addEventListener('click', unlockMap);
+      mapBox.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') relockMap(); });
+      document.addEventListener('pointerdown', function (e) { if (!mapBox.contains(e.target)) relockMap(); });
+    }
+
+    /* ---------- Copy address ---------- */
+    var copyBtn = root.querySelector('[data-copy-address]');
+    if (copyBtn) {
+      var copyLabel = copyBtn.querySelector('[data-copy-label]');
+      var original = copyLabel.textContent;
+      var showCopied = function () {
+        copyLabel.textContent = 'Copied';
+        setTimeout(function () { copyLabel.textContent = original; }, 2200);
+      };
+      var legacyCopy = function (text) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showCopied(); } catch (err) {}
+        document.body.removeChild(ta);
+      };
+      copyBtn.addEventListener('click', function () {
+        var text = copyBtn.getAttribute('data-address');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(showCopied, function () { legacyCopy(text); });
+        } else {
+          legacyCopy(text);
+        }
+      });
+    }
+
+    /* ---------- GSAP: one orchestrated reveal when the section scrolls in ---------- */
+    var g = window.gsap;
+    if (!g || reduceMotion) return;
+    if (window.ScrollTrigger) g.registerPlugin(window.ScrollTrigger);
+
+    var bar = root.querySelector('[data-hl-rule]');
+    var lines = root.querySelectorAll('[data-hl-line]');
+    var fades = root.querySelectorAll('[data-hl-fade]');
+    var panel = root.querySelector('[data-hl-panel]');
+    var panelItems = root.querySelectorAll('[data-hl-item]');
+    var mapCard = root.querySelector('[data-hl-mapcard]');
+    var extras = root.querySelectorAll('[data-hl-extra]');
+
+    var panelHidden = 'inset(0% 0% 100% 0% round 1.5rem)';
+    var panelShown = 'inset(0% 0% 0% 0% round 1.5rem)';
+    var mapHidden = 'inset(0% 0% 0% 100% round 1.5rem)';
+
+    g.set(bar, { scaleX: 0 });
+    g.set(lines, { yPercent: 110 });
+    g.set(fades, { autoAlpha: 0, y: 16 });
+    g.set(panel, { clipPath: panelHidden });
+    g.set(panelItems, { autoAlpha: 0, y: 14 });
+    g.set(mapBox, { clipPath: mapHidden });
+    g.set(frame, { scale: 1.15 });
+    g.set(mapCard, { autoAlpha: 0, y: 24 });
+    g.set(extras, { autoAlpha: 0, y: 18 });
+
+    var tl = g.timeline({
+      paused: true,
+      defaults: { ease: 'power3.out' },
+      onComplete: function () {
+        // Hand control back to CSS so hover, focus and resizing behave normally.
+        g.set([bar, lines, fades, panel, panelItems, mapBox, frame, mapCard, extras], { clearProps: 'all' });
+      }
+    });
+
+    tl.to(bar, { scaleX: 1, duration: 0.8, ease: 'power2.inOut' })
+      .to(lines, { yPercent: 0, duration: 0.8, stagger: 0.08 }, '-=0.45')
+      .to(fades, { autoAlpha: 1, y: 0, duration: 0.6 }, '-=0.45')
+      .to(panel, { clipPath: panelShown, duration: 1, ease: 'power3.inOut' }, '-=0.3')
+      .to(panelItems, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.05 }, '-=0.5')
+      .to(mapBox, { clipPath: panelShown, duration: 1, ease: 'power3.inOut' }, '-=1.1')
+      .to(frame, { scale: 1, duration: 1.6, ease: 'power2.out' }, '<')
+      .to(mapCard, { autoAlpha: 1, y: 0, duration: 0.6 }, '-=0.6')
+      .to(extras, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1 }, '-=0.3');
+
+    if (window.ScrollTrigger) {
+      window.ScrollTrigger.create({ trigger: root, start: 'top 75%', once: true, onEnter: function () { tl.play(); } });
+    } else if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { tl.play(); io.disconnect(); }
+      }, { threshold: 0.1, rootMargin: '0px 0px -15% 0px' });
+      io.observe(root);
+    } else {
+      tl.play();
+    }
+  })();
+  </script>
+
+</section>

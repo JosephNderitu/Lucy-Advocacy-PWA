@@ -1,16 +1,14 @@
+import os
 import json
 import random
-from django.shortcuts import render
-
-from .models import PracticeArea
-from django.http import JsonResponse
+import re
+import secrets
+from io import BytesIO
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
-from .models import Conversation, ChatMessage, EmailVerification, TeamMember
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-import os
-from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
 from django.core import signing
@@ -26,14 +24,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
 from .forms import *
-from django.db.models import Avg
+from django.db.models import Avg, Count, Q
 
 from datetime import timedelta
 from django.core.paginator import Paginator
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
-import secrets
 from .reviews_support import home_review_context, review_stats, serialize_review
 
 def get_client_ip(request):
@@ -41,7 +38,6 @@ def get_client_ip(request):
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
     return request.META.get("REMOTE_ADDR")
-
 
 def home(request):
     practice_areas = list(
@@ -55,8 +51,6 @@ def home(request):
         **home_review_context(),   # adds "reviews" and "review_stats" (cached)
     })
 
-
-# new view
 def team(request):
     members = list(TeamMember.objects.filter(is_active=True))  # one query
     return render(request, "core/team.html", {
@@ -64,10 +58,8 @@ def team(request):
         "team_members": [m for m in members if not m.is_leadership],
     })
     
-
 def _token_ok(review, request):
     return secrets.compare_digest(str(review.edit_token), request.POST.get("token", ""))
- 
  
 @require_POST
 def submit_review(request):
@@ -98,7 +90,6 @@ def submit_review(request):
         "message": "Please fill in your name, a star rating, and your review.",
     }, status=400)
  
- 
 @require_POST
 def update_review(request, review_id):
     review = Review.objects.filter(pk=review_id).first()
@@ -121,7 +112,6 @@ def update_review(request, review_id):
             "review": serialize_review(review, include_private=True),
         })
     return JsonResponse({"status": "error", "message": "Please check your review and try again."}, status=400)
- 
  
 @require_POST
 def delete_review(request, review_id):
@@ -199,7 +189,6 @@ def about(request):
         "faqs": faqs,
     })
 
-
 MESSAGES_PAGE_SIZE = 30
 def contact(request):
     session_email = request.session.get('contact_email')
@@ -223,16 +212,11 @@ def contact(request):
 def privacy_policy(request):
     return render(request, "core/privacy_policy.html")
  
- 
 def terms_conditions(request):
     return render(request, "core/terms_conditions.html")
  
- 
 def cookie_policy(request):
     return render(request, "core/cookie_policy.html")
-
-
-from django.core.cache import cache
 
 @require_POST
 def send_verification_code(request):
@@ -309,7 +293,6 @@ def verify_code(request):
     messages = list(conversation.messages.values('id', 'sender', 'body', 'created_at'))
     return JsonResponse({'success': True, 'messages': messages})
 
-
 def get_messages(request):
     """Two modes, chosen by which query param is present:
     - ?before=<id>  — older history, for the "Load earlier messages" button.
@@ -344,7 +327,6 @@ def get_messages(request):
     has_more = qs.count() > MESSAGES_PAGE_SIZE
     return JsonResponse({'messages': list(reversed(page)), 'has_more': has_more})
 
-
 @require_POST
 def send_message(request):
     email = request.session.get('contact_email')
@@ -371,7 +353,6 @@ def send_message(request):
         },
     })
     
-
 def contact_logout(request):
     request.session.pop('contact_email', None)
     return JsonResponse({'success': True})
@@ -434,10 +415,8 @@ def newsletter_unsubscribe(request, token):
 LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_LOCKOUT_SECONDS = 15 * 60
 
-
 def _client_ip(request):
     return request.META.get("REMOTE_ADDR", "unknown")
-
 
 def _get_client_case(request):
     """MVP assumption: one active case per client. Extend with a case-picker
@@ -447,10 +426,8 @@ def _get_client_case(request):
         return None
     return profile.cases.order_by("-created_at").first()
 
-
 def _log_activity(case, actor, actor_role, action, description=""):
     ActivityLog.objects.create(case=case, actor=actor, actor_role=actor_role, action=action, description=description)
-
 
 def portal_login(request):
     if request.user.is_authenticated and hasattr(request.user, "client_profile"):
@@ -482,11 +459,9 @@ def portal_login(request):
 
     return render(request, "core/login.html", {"form": form})
 
-
 def portal_logout(request):
     logout(request)
     return redirect("core:portal_login")
-
 
 @login_required
 def portal_dashboard(request):
@@ -523,7 +498,6 @@ def portal_dashboard(request):
         "recent_activity": recent_activity, "form": form, "doc_counts": doc_counts,
     })
 
-
 @login_required
 def portal_document_delete(request, pk):
     case = _get_client_case(request)
@@ -536,7 +510,6 @@ def portal_document_delete(request, pk):
         doc.delete()
         messages.success(request, "Document deleted.")
     return redirect("core:portal_dashboard")
-
 
 @login_required
 def portal_activity_log(request):
@@ -556,24 +529,9 @@ def service_worker(request):
         content = f.read()
     return HttpResponse(content, content_type='application/javascript')
 
-import os
-import re
-from io import BytesIO
-
-from django.conf import settings
-from django.core.paginator import Paginator
-from django.db.models import Count, Q
-from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.template.loader import render_to_string
-from django.utils import timezone
-
-from .models import Article, ArticleTopic
-
 # Move these into settings.py when convenient (FIRM_CONTACT_EMAIL / FIRM_CONTACT_PHONE).
 FIRM_EMAIL = getattr(settings, "FIRM_CONTACT_EMAIL", "nwangailawadvocates@gmail.com")
 FIRM_PHONE = getattr(settings, "FIRM_CONTACT_PHONE", "+254 714 535 492")
-
 
 def paginate_article_body(body, words_per_page=550):
     """Split the body into 'pages' of paragraphs. Used for the PDF and for the gallery position on the web page."""
@@ -592,7 +550,6 @@ def paginate_article_body(body, words_per_page=550):
         pages.append(current_page)
     return pages or [[]]
 
-
 def _live_topics():
     now = timezone.now()
     return (
@@ -600,7 +557,6 @@ def _live_topics():
         .annotate(n=Count("articles", filter=Q(articles__status="published", articles__published_at__lte=now)))
         .filter(n__gt=0)
     )
-
 
 def article_list(request):
     q = request.GET.get("q", "").strip()[:100]
@@ -633,14 +589,12 @@ def article_list(request):
         "contact_phone": FIRM_PHONE,
     })
 
-
 def _get_article_or_404(request, slug):
     article = get_object_or_404(Article.objects.prefetch_related("images", "topics"), slug=slug)
     is_preview = not article.is_live
     if is_preview and not request.user.is_staff:
         raise Http404
     return article, is_preview
-
 
 def _related_articles(article, limit=3):
     topic_ids = [t.pk for t in article.topics.all()]
@@ -650,7 +604,6 @@ def _related_articles(article, limit=3):
         have = [a.pk for a in related]
         related += list(base.exclude(pk__in=have)[: limit - len(related)])
     return related
-
 
 def _article_context(request, article, is_preview):
     images = list(article.images.all())
@@ -663,7 +616,6 @@ def _article_context(request, article, is_preview):
         "contact_phone": FIRM_PHONE,
     }
 
-
 def article_detail(request, slug):
     article, is_preview = _get_article_or_404(request, slug)
     context = _article_context(request, article, is_preview)
@@ -675,9 +627,6 @@ def article_detail(request, slug):
     })
     return render(request, "core/article_detail.html", context)
 
-
-# ---------------------------------------------------------------- PDF
-
 def _pdf_link_callback(uri, rel):
     """Let xhtml2pdf find /media/ and /static/ files on disk. Absolute file paths pass through untouched."""
     from django.contrib.staticfiles import finders
@@ -688,7 +637,6 @@ def _pdf_link_callback(uri, rel):
         rel_path = uri[len(settings.STATIC_URL):]
         return finders.find(rel_path) or os.path.join(settings.STATIC_ROOT or "", rel_path)
     return uri
-
 
 def _html_to_pdf(html, request):
     """Uses WeasyPrint if installed, otherwise xhtml2pdf. Install one of them: pip install weasyprint  OR  pip install xhtml2pdf"""
@@ -706,7 +654,6 @@ def _html_to_pdf(html, request):
     if result.err:
         raise RuntimeError("PDF generation failed.")
     return buffer.getvalue()
-
 
 def article_pdf(request, slug):
     article, is_preview = _get_article_or_404(request, slug)
