@@ -52,7 +52,6 @@ def home(request):
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
         "latest_articles": latest_articles,
-        "leadership": TeamMember.objects.filter(is_active=True, is_leadership=True),
         **home_review_context(),   # adds "reviews" and "review_stats" (cached)
     })
 
