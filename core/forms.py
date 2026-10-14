@@ -97,3 +97,14 @@ class ReviewForm(forms.ModelForm):
         if rating not in (1, 2, 3, 4, 5):
             raise forms.ValidationError("Rating must be between 1 and 5.")
         return rating
+    def clean_name(self):
+         name = " ".join(self.cleaned_data["name"].split())
+         if len(name) < 2:
+             raise forms.ValidationError("Please enter your name.")
+         return name
+
+    def clean_message(self):
+         message = self.cleaned_data["message"].strip()
+         if len(message) < 10:
+             raise forms.ValidationError("Please write a little more about your experience.")
+         return message

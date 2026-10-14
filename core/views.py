@@ -33,6 +33,8 @@ from django.core.paginator import Paginator
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
+import secrets
+from .reviews_support import home_review_context, review_stats, serialize_review
 
 def get_client_ip(request):
     forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -41,40 +43,17 @@ def get_client_ip(request):
     return request.META.get("REMOTE_ADDR")
 
 
-def serialize_review(review, include_private=False):
-    data = {
-        "id": review.id,
-        "name": review.name,
-        "initials": review.initials,
-        "message": review.message,
-        "rating": review.rating,
-        "created_at": review.created_at.strftime("%B %Y"),
-    }
-    if include_private:
-        data["token"] = str(review.edit_token)
-    return data
-
-
 def home(request):
     practice_areas = list(
-        PracticeArea.objects.filter(is_active=True).values(
-            "id", "title", "description", "icon_class"
-        )
+        PracticeArea.objects.filter(is_active=True).values("id", "title", "description", "icon_class")
     )
-    review_qs = Review.objects.order_by("-created_at")[:30]
-    reviews = [serialize_review(r) for r in review_qs]
-    agg = Review.objects.aggregate(avg=Avg("rating"))
-    review_avg = round(agg["avg"] or 0, 1)
-    review_total = Review.objects.count()
     latest_articles = Article.objects.filter(status="published")[:4]
-
+ 
     return render(request, "core/home.html", {
         "practice_areas": practice_areas,
-        "reviews": reviews,
-        "review_avg": review_avg,
-        "review_total": review_total,
         "latest_articles": latest_articles,
         "leadership": TeamMember.objects.filter(is_active=True, is_leadership=True),
+        **home_review_context(),   # adds "reviews" and "review_stats" (cached)
     })
 
 
@@ -86,6 +65,11 @@ def team(request):
         "team_members": [m for m in members if not m.is_leadership],
     })
     
+
+def _token_ok(review, request):
+    return secrets.compare_digest(str(review.edit_token), request.POST.get("token", ""))
+ 
+ 
 @require_POST
 def submit_review(request):
     ip = get_client_ip(request)
@@ -95,72 +79,69 @@ def submit_review(request):
             "status": "error",
             "message": "Only one review per week is allowed from your connection. Please check back soon.",
         }, status=429)
-
+ 
     form = ReviewForm(request.POST)
     if form.is_valid():
         review = form.save(commit=False)
         review.ip_address = ip
         review.save()
-        new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+        stats = review_stats()
         return JsonResponse({
             "status": "success",
             "message": "Thank you for sharing your experience.",
-            "new_avg": new_avg,
-            "new_total": Review.objects.count(),
+            "stats": stats,
+            "new_avg": stats["avg"],      # kept for older scripts
+            "new_total": stats["total"],
             "review": serialize_review(review, include_private=True),
         })
     return JsonResponse({
         "status": "error",
         "message": "Please fill in your name, a star rating, and your review.",
     }, status=400)
-
-
+ 
+ 
 @require_POST
 def update_review(request, review_id):
-    try:
-        review = Review.objects.get(id=review_id)
-    except Review.DoesNotExist:
+    review = Review.objects.filter(pk=review_id).first()
+    if review is None:
         return JsonResponse({"status": "error", "message": "Review not found."}, status=404)
-
-    if str(review.edit_token) != request.POST.get("token", ""):
+    if not _token_ok(review, request):
         return JsonResponse({"status": "error", "message": "You are not allowed to edit this review."}, status=403)
-
     if not review.is_editable:
         return JsonResponse({"status": "error", "message": "The one minute edit window has closed."}, status=403)
-
+ 
     form = ReviewForm(request.POST, instance=review)
     if form.is_valid():
         form.save()
-        new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+        stats = review_stats()
         return JsonResponse({
             "status": "success",
             "message": "Your review has been updated.",
-            "new_avg": new_avg,
+            "stats": stats,
+            "new_avg": stats["avg"],
             "review": serialize_review(review, include_private=True),
         })
     return JsonResponse({"status": "error", "message": "Please check your review and try again."}, status=400)
-
-
+ 
+ 
 @require_POST
 def delete_review(request, review_id):
-    try:
-        review = Review.objects.get(id=review_id)
-    except Review.DoesNotExist:
+    review = Review.objects.filter(pk=review_id).first()
+    if review is None:
         return JsonResponse({"status": "error", "message": "Review not found."}, status=404)
-
-    if str(review.edit_token) != request.POST.get("token", ""):
+    if not _token_ok(review, request):
         return JsonResponse({"status": "error", "message": "You are not allowed to delete this review."}, status=403)
-
     if not review.is_editable:
         return JsonResponse({"status": "error", "message": "The one minute window to delete this review has closed."}, status=403)
-
+ 
     review.delete()
-    new_avg = round(Review.objects.aggregate(avg=Avg("rating"))["avg"] or 0, 1)
+    stats = review_stats()
     return JsonResponse({
         "status": "success",
         "message": "Your review has been deleted.",
-        "new_avg": new_avg,
-        "new_total": Review.objects.count(),
+        "stats": stats,
+        "new_avg": stats["avg"],
+        "new_total": stats["total"],
     })
 
 def about(request):

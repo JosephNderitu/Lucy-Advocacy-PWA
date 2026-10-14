@@ -1,0 +1,546 @@
+{% comment %}
+  REVIEWS section. In home.html:  {% include "core/_reviews.html" %}
+  Needs these in the template context (the updated home view provides them): reviews, review_stats
+  URL names used below must match your urls.py: core:submit_review, core:update_review, core:delete_review
+  This file defines its own Alpine component, reviewsSection(). Delete the old reviewsApp() script.
+  Self-sufficient: loads GSAP/ScrollTrigger itself if the page does not have them yet. If JS fails or the
+  visitor prefers reduced motion, everything stays visible. No bottom margins anywhere.
+{% endcomment %}
+<style>
+  [x-cloak] { display: none !important; }
+
+  /* DESIGN TOKENS (developer-owned). Same burgundy family as the Process section. */
+  .rv-section { --rv-bg: #3A0B16; --rv-ink: #6B1426; --rv-rose: #E8A0A9; --rv-star: #B3364F; }
+
+  .rv-ink  { color: var(--rv-ink); }
+  .rv-rose { color: var(--rv-rose); }
+  .rv-star { color: var(--rv-star); }
+  .rv-bg-rose { background-color: var(--rv-rose); }
+  .rv-bg-ink  { background-color: var(--rv-ink); }
+
+  .rv-panel { background-color: var(--rv-bg); }
+  .rv-glow  { background: radial-gradient(circle, color-mix(in srgb, var(--rv-ink) 14%, transparent), transparent 65%); }
+  .rv-panel-glow { background: radial-gradient(circle, color-mix(in srgb, var(--rv-rose) 22%, transparent), transparent 65%); }
+  .rv-dots { background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 22px 22px; }
+
+  .rv-track { scrollbar-width: none; -ms-overflow-style: none; }
+  .rv-track::-webkit-scrollbar { display: none; }
+  @media (min-width: 1024px) {
+    .rv-track { -webkit-mask-image: linear-gradient(to right, #000 94%, transparent); mask-image: linear-gradient(to right, #000 94%, transparent); }
+  }
+
+  .rv-card { transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s ease; }
+  .rv-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px -24px rgba(58, 11, 22, .35); }
+  .rv-quote { color: rgba(107, 20, 38, .10); }
+
+  .rv-btn { transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
+  .rv-btn:hover:not(:disabled) { background-color: var(--rv-ink); color: #fff; border-color: var(--rv-ink); }
+  .rv-solid { background-color: var(--rv-bg); color: #fff; transition: filter .3s ease; }
+  .rv-solid:hover:not(:disabled) { filter: brightness(1.25); }
+
+  .rv-input { transition: border-color .2s ease, box-shadow .2s ease; }
+  .rv-input:focus { outline: none; border-color: var(--rv-ink); box-shadow: 0 0 0 3px rgba(107, 20, 38, .16); }
+
+  @media (prefers-reduced-motion: reduce) { .rv-card, .rv-btn, .rv-solid, .rv-input { transition: none; } }
+</style>
+
+{{ reviews|json_script:"rv-data" }}
+{{ review_stats|json_script:"rv-stats" }}
+
+<section id="reviews" x-data="reviewsSection()" data-rv-section
+         data-submit-url="{% url 'core:submit_review' %}"
+         data-update-url="{% url 'core:update_review' 0 %}"
+         data-delete-url="{% url 'core:delete_review' 0 %}"
+         data-csrf="{{ csrf_token }}"
+         x-effect="document.documentElement.style.overflow = modalOpen ? 'hidden' : ''"
+         @keydown.escape.window="closeModal()"
+         class="rv-section relative scroll-mt-20 overflow-x-clip bg-brand-mist-50 py-14 sm:py-16 lg:py-24">
+
+  <!-- Decoration -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="rv-glow absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full"></div>
+    <div class="rv-glow absolute -bottom-56 -left-48 h-[30rem] w-[30rem] rounded-full"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <!-- Header: heading from the left, intro from the right -->
+    <div class="grid gap-6 lg:grid-cols-12 lg:items-end lg:gap-10">
+      <div data-rv-hl class="lg:col-span-6">
+        <p class="rv-ink text-xs font-semibold uppercase tracking-[0.16em]">Client feedback</p>
+        <h2 class="mt-3 font-serif text-3xl font-bold leading-[1.15] tracking-tight text-brand-ink-900 [text-wrap:balance] sm:text-4xl lg:text-[2.6rem]">What Our Clients Say</h2>
+      </div>
+      <p data-rv-hr class="text-base leading-relaxed text-brand-ink-700 sm:text-[1.0625rem] lg:col-span-6 lg:pl-6">
+        Unfiltered feedback from people we have represented. Every word here comes straight from the client, unedited.
+      </p>
+    </div>
+
+    <div class="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-12 lg:gap-10">
+
+      <!-- ===== Rating summary (burgundy) ===== -->
+      <aside data-rv-panel class="rv-panel relative self-start overflow-hidden rounded-3xl p-7 text-white sm:p-8 lg:sticky lg:top-24 lg:col-span-4">
+        <div class="rv-panel-glow pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full" aria-hidden="true"></div>
+        <div class="rv-dots pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+        <div class="relative">
+          <p class="rv-rose text-xs font-semibold uppercase tracking-[0.16em]">Overall rating</p>
+
+          <div class="mt-4 flex items-end gap-3">
+            <p class="font-serif text-6xl font-bold leading-none" data-rv-avg x-text="stats.avg.toFixed(1)"></p>
+            <p class="pb-1.5 text-lg text-white/50">/ 5</p>
+          </div>
+
+          <div class="rv-rose mt-3 flex items-center gap-1" role="img" :aria-label="'Average rating ' + stats.avg.toFixed(1) + ' out of 5'">
+            <template x-for="i in 5" :key="i">
+              <i data-rv-pstar class="text-base" :class="avgStar(i)"></i>
+            </template>
+          </div>
+
+          <p class="mt-2 text-sm text-white/70"><span data-rv-total x-text="stats.total"></span> review<span x-show="stats.total !== 1">s</span></p>
+
+          <ul class="mt-6 flex flex-col gap-2.5" aria-label="Rating breakdown">
+            <template x-for="(n, idx) in [5, 4, 3, 2, 1]" :key="n">
+              <li class="flex items-center gap-3 text-sm text-white/80">
+                <span class="w-3 text-right tabular-nums" x-text="n"></span>
+                <i class="fa-solid fa-star rv-rose text-[0.65rem]" aria-hidden="true"></i>
+                <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                  <span data-rv-bar class="rv-bg-rose block h-full rounded-full transition-[width] duration-700 ease-out" :style="'width:' + pct(idx) + '%'"></span>
+                </span>
+                <span class="w-7 text-right tabular-nums text-white/60" x-text="stats.breakdown[idx]"></span>
+              </li>
+            </template>
+          </ul>
+
+          <button type="button" @click="openModal()"
+                  class="group mt-7 inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-brand-orange-500 px-6 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--rv-bg)]">
+            <i class="fa-solid fa-pen-nib text-sm"></i>
+            Share your experience
+          </button>
+        </div>
+      </aside>
+
+      <!-- ===== Reviews carousel ===== -->
+      <div class="min-w-0 lg:col-span-8">
+        <div x-ref="track" @scroll.passive="onScroll()"
+             @mouseenter="paused = true" @mouseleave="paused = false"
+             @focusin="paused = true" @focusout="paused = false" @touchstart.passive="paused = true"
+             class="rv-track flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth py-2">
+
+          <template x-for="(r, i) in reviews" :key="r.id">
+            <figure data-rv-card class="rv-card relative flex w-[84%] shrink-0 snap-start flex-col rounded-2xl bg-white p-6 ring-1 ring-brand-ink-900/5 sm:w-[22rem] sm:p-7">
+              <i class="fa-solid fa-quote-right rv-quote absolute right-6 top-6 text-3xl" aria-hidden="true"></i>
+
+              <div class="rv-star flex items-center gap-0.5" role="img" :aria-label="r.rating + ' out of 5 stars'">
+                <template x-for="pos in 5" :key="pos">
+                  <i class="text-[0.8rem]" :class="pos <= r.rating ? 'fa-solid fa-star' : 'fa-regular fa-star opacity-30'"></i>
+                </template>
+              </div>
+
+              <blockquote class="mt-4 flex-1 text-[0.9375rem] leading-relaxed text-brand-ink-800 sm:text-base" x-text="r.message"></blockquote>
+
+              <figcaption class="mt-6 flex items-center gap-3 border-t border-brand-ink-900/10 pt-5">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-serif text-sm font-semibold text-white" :style="'background:' + avatarColor(i)" x-text="r.initials"></span>
+                <span class="min-w-0">
+                  <span class="block truncate font-semibold text-brand-ink-900" x-text="r.name"></span>
+                  <span class="block text-xs text-brand-ink-700/70" x-text="r.created_at"></span>
+                </span>
+              </figcaption>
+            </figure>
+          </template>
+
+          <div x-show="reviews.length === 0" x-cloak class="w-full rounded-2xl border-2 border-dashed border-brand-ink-900/10 px-6 py-16 text-center">
+            <p class="text-brand-ink-700">Be the first to share your experience with us.</p>
+          </div>
+        </div>
+
+        <!-- Progress + arrows -->
+        <div x-show="canScroll" x-cloak class="mt-6 flex items-center gap-5">
+          <div class="h-0.5 flex-1 overflow-hidden rounded-full bg-brand-ink-900/10" aria-hidden="true">
+            <span class="rv-bg-ink block h-full origin-left rounded-full" :style="'transform: scaleX(' + progress + ')'"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" @click="prev()" aria-label="Previous reviews"
+                    class="rv-btn flex h-10 w-10 items-center justify-center rounded-full bg-white text-brand-ink-900 ring-1 ring-brand-ink-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ink-900">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <button type="button" @click="next()" aria-label="Next reviews"
+                    class="rv-btn flex h-10 w-10 items-center justify-center rounded-full bg-white text-brand-ink-900 ring-1 ring-brand-ink-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ink-900">
+              <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Modal ===== -->
+  <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rv-modal-title">
+    <div x-show="modalOpen"
+         x-transition:enter="transition-opacity ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         @click="closeModal()" class="absolute inset-0 bg-brand-ink-900/70 backdrop-blur-sm"></div>
+
+    <div x-show="modalOpen"
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-3" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+         class="relative max-h-[92svh] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-2xl bg-white shadow-2xl">
+
+      <!-- burgundy header band -->
+      <div class="rv-panel relative px-6 py-5 text-white sm:px-8">
+        <div class="rv-panel-glow pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full" aria-hidden="true"></div>
+        <button type="button" @click="closeModal()" aria-label="Close"
+                class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-white/80 ring-1 ring-white/20 transition-colors hover:bg-white/10 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <p class="rv-rose relative text-xs font-semibold uppercase tracking-[0.16em]" x-text="modalState === 'form' ? 'Share your experience' : (secondsLeft > 0 ? 'Review posted' : 'Review saved')"></p>
+        <h3 id="rv-modal-title" class="relative mt-1 pr-10 font-serif text-xl font-bold" x-text="modalState === 'form' ? 'Leave a Review' : 'Thank you for your feedback'"></h3>
+      </div>
+
+      <div class="p-6 sm:p-8">
+
+        <!-- ---- write ---- -->
+        <template x-if="modalState === 'form'">
+          <div>
+            <p x-show="notice" x-text="notice" class="rounded-lg bg-brand-mist-50 px-4 py-3 text-sm text-brand-ink-800"></p>
+
+            <form @submit.prevent="submitReview()" class="flex flex-col gap-5" :class="notice ? 'mt-4' : ''">
+              <div>
+                <label for="rv-name" class="block text-sm font-medium text-brand-ink-800">Your name</label>
+                <input id="rv-name" x-ref="nameInput" type="text" x-model="form.name" required maxlength="100" placeholder="e.g. Jane Njoroge" autocomplete="name"
+                       class="rv-input mt-1.5 w-full rounded-xl border border-brand-ink-900/10 px-4 py-3 text-base sm:text-sm">
+              </div>
+
+              <div>
+                <p class="text-sm font-medium text-brand-ink-800">Your rating</p>
+                <div class="mt-1.5 flex items-center gap-1" @mouseleave="hoverRating = 0">
+                  <template x-for="pos in 5" :key="pos">
+                    <button type="button" @click="form.rating = pos" @mouseenter="hoverRating = pos"
+                            class="rv-star px-0.5 text-2xl leading-none transition-transform hover:scale-110" :aria-label="'Rate ' + pos + ' out of 5'" :aria-pressed="form.rating === pos">
+                      <i :class="pos <= (hoverRating || form.rating) ? 'fa-solid fa-star' : 'fa-regular fa-star opacity-30'"></i>
+                    </button>
+                  </template>
+                </div>
+                <p class="mt-1 h-4 text-xs text-brand-ink-700/70" x-text="ratingLabel(hoverRating || form.rating)"></p>
+              </div>
+
+              <div>
+                <label for="rv-message" class="block text-sm font-medium text-brand-ink-800">Your review</label>
+                <textarea id="rv-message" x-model="form.message" required rows="4" maxlength="600" placeholder="Tell us about your experience..."
+                          class="rv-input mt-1.5 w-full resize-none rounded-xl border border-brand-ink-900/10 px-4 py-3 text-base sm:text-sm"></textarea>
+                <p class="mt-1 text-right text-xs tabular-nums text-brand-ink-700/60"><span x-text="form.message.length"></span> / 600</p>
+              </div>
+
+              <p x-show="formError" x-text="formError" class="text-sm text-red-600" role="alert"></p>
+
+              <button type="submit" :disabled="submitting"
+                      class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange-500 px-6 py-3.5 text-base font-semibold text-white transition-colors duration-200 hover:bg-brand-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-500/50 focus-visible:ring-offset-2 disabled:opacity-70">
+                <i x-show="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+                <span x-text="submitting ? 'Submitting' : 'Submit review'"></span>
+              </button>
+            </form>
+          </div>
+        </template>
+
+        <!-- ---- posted: edit or delete for one minute ---- -->
+        <template x-if="modalState === 'posted'">
+          <div>
+            <p class="text-sm text-brand-ink-700" x-text="secondsLeft > 0 ? ('You can still edit or remove this review for ' + secondsLeft + ' more second' + (secondsLeft === 1 ? '' : 's') + '.') : 'This review is now saved and can no longer be changed.'"></p>
+            <div class="mt-3 h-1 overflow-hidden rounded-full bg-brand-ink-900/10" aria-hidden="true">
+              <span class="rv-bg-ink block h-full rounded-full transition-[width] duration-1000 ease-linear" :style="'width:' + (secondsLeft / 60 * 100) + '%'"></span>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-5" :class="secondsLeft <= 0 ? 'opacity-50' : ''">
+              <div>
+                <label for="rv-ename" class="block text-sm font-medium text-brand-ink-800">Your name</label>
+                <input id="rv-ename" type="text" x-model="editForm.name" :disabled="secondsLeft <= 0" maxlength="100"
+                       class="rv-input mt-1.5 w-full rounded-xl border border-brand-ink-900/10 px-4 py-3 text-base disabled:bg-brand-mist-50 sm:text-sm">
+              </div>
+
+              <div>
+                <p class="text-sm font-medium text-brand-ink-800">Your rating</p>
+                <div class="mt-1.5 flex items-center gap-1" @mouseleave="hoverRating = 0">
+                  <template x-for="pos in 5" :key="pos">
+                    <button type="button" :disabled="secondsLeft <= 0" @click="editForm.rating = pos" @mouseenter="hoverRating = pos"
+                            class="rv-star px-0.5 text-2xl leading-none" :aria-label="'Rate ' + pos + ' out of 5'">
+                      <i :class="pos <= (hoverRating || editForm.rating) ? 'fa-solid fa-star' : 'fa-regular fa-star opacity-30'"></i>
+                    </button>
+                  </template>
+                </div>
+                <p class="mt-1 h-4 text-xs text-brand-ink-700/70" x-text="ratingLabel(hoverRating || editForm.rating)"></p>
+              </div>
+
+              <div>
+                <label for="rv-emessage" class="block text-sm font-medium text-brand-ink-800">Your review</label>
+                <textarea id="rv-emessage" x-model="editForm.message" :disabled="secondsLeft <= 0" rows="4" maxlength="600"
+                          class="rv-input mt-1.5 w-full resize-none rounded-xl border border-brand-ink-900/10 px-4 py-3 text-base disabled:bg-brand-mist-50 sm:text-sm"></textarea>
+              </div>
+            </div>
+
+            <p x-show="notice" x-text="notice" class="mt-4 text-sm font-medium text-brand-teal-600"></p>
+            <p x-show="formError" x-text="formError" class="mt-4 text-sm text-red-600" role="alert"></p>
+
+            <div class="mt-6 flex gap-3" x-show="secondsLeft > 0">
+              <button type="button" @click="saveEdit()" :disabled="submitting"
+                      class="rv-solid inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold disabled:opacity-70">
+                <i x-show="submitting" class="fa-solid fa-circle-notch fa-spin"></i> Save changes
+              </button>
+              <button type="button" @click="deleteMine()" :disabled="submitting"
+                      class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border px-5 py-3 text-sm font-semibold transition-colors disabled:opacity-70"
+                      :class="confirmDelete ? 'border-red-600 bg-red-600 text-white' : 'border-red-300 text-red-600 hover:bg-red-50'">
+                <span x-text="confirmDelete ? 'Tap again to delete' : 'Delete'"></span>
+              </button>
+            </div>
+
+            <button type="button" @click="closeModal()" class="mt-5 w-full text-sm font-medium text-brand-ink-700 transition-colors hover:text-brand-ink-900">Done</button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function reviewsSection() {
+  var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var PALETTE = ['#6B1426', '#8E2A3F', '#0F3D40', '#1F2230', '#7A3045'];
+
+  function load(src, done) { var s = document.createElement('script'); s.src = src; s.onload = done; s.onerror = done; document.head.appendChild(s); }
+  function ready(cb) {
+    if (window.gsap && window.ScrollTrigger) return cb();
+    function st() { if (window.ScrollTrigger) return cb(); load(CDN + 'ScrollTrigger.min.js', cb); }
+    if (window.gsap) st(); else load(CDN + 'gsap.min.js', st);
+  }
+  function readJson(id, fallback) {
+    try { var el = document.getElementById(id); return el ? JSON.parse(el.textContent) : fallback; } catch (e) { return fallback; }
+  }
+  function normaliseStats(s) {
+    s = s || {};
+    var b = (s.breakdown || []).slice(0, 5);
+    while (b.length < 5) b.push(0);
+    return { avg: Number(s.avg) || 0, total: Number(s.total) || 0, breakdown: b };
+  }
+
+  return {
+    reviews: [], stats: normaliseStats(), urls: {}, csrf: '',
+    paused: false, inView: false, progress: 0, canScroll: false, timer: null,
+    modalOpen: false, modalState: 'form', submitting: false, formError: '', notice: '', hoverRating: 0,
+    form: { name: '', rating: 0, message: '' },
+    mine: null, editForm: { name: '', rating: 0, message: '' }, secondsLeft: 0, countdown: null, confirmDelete: false,
+
+    init() {
+      var self = this, el = this.$el;
+      this.reviews = readJson('rv-data', []);
+      this.stats = normaliseStats(readJson('rv-stats', {}));
+      this.urls = { submit: el.dataset.submitUrl, update: el.dataset.updateUrl, remove: el.dataset.deleteUrl };
+      this.csrf = el.dataset.csrf;
+
+      this.$nextTick(function () { self.onScroll(); self.animateIn(); });
+      window.addEventListener('resize', function () { self.onScroll(); }, { passive: true });
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (e) { self.inView = e[0].isIntersecting; }, { threshold: 0.2 }).observe(el);
+      } else { this.inView = true; }
+
+      /* gentle autoplay: only while visible, never while hovering, typing or with a dialog open */
+      if (!reduce) {
+        this.timer = setInterval(function () {
+          if (!self.paused && self.inView && !self.modalOpen && !document.hidden && self.reviews.length > 1) self.step(1);
+        }, 5500);
+      }
+    },
+
+    /* ---------- helpers ---------- */
+    pct(i) { return this.stats.total ? Math.round(this.stats.breakdown[i] / this.stats.total * 100) : 0; },
+    avgStar(i) {
+      var a = this.stats.avg;
+      if (a >= i - 0.25) return 'fa-solid fa-star';
+      if (a >= i - 0.75) return 'fa-solid fa-star-half-stroke';
+      return 'fa-regular fa-star opacity-40';
+    },
+    avatarColor(i) { return PALETTE[i % PALETTE.length]; },
+    ratingLabel(n) { return ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'][n] || 'Tap a star to rate'; },
+    headers() { return { 'X-CSRFToken': this.csrf, 'X-Requested-With': 'XMLHttpRequest' }; },
+    urlFor(base, id) { return base.replace(/\/0(\/|$)/, '/' + id + '$1'); },
+
+    /* ---------- carousel ---------- */
+    step(dir) {
+      var t = this.$refs.track; if (!t) return;
+      var card = t.querySelector('[data-rv-card]'), w = card ? card.offsetWidth + 20 : 320;
+      var max = t.scrollWidth - t.clientWidth, target = t.scrollLeft + dir * w;
+      if (dir > 0 && t.scrollLeft >= max - 4) target = 0;
+      if (dir < 0 && t.scrollLeft <= 4) target = max;
+      t.scrollTo({ left: target, behavior: reduce ? 'auto' : 'smooth' });
+    },
+    next() { this.step(1); },
+    prev() { this.step(-1); },
+    onScroll() {
+      var t = this.$refs.track; if (!t) return;
+      var max = t.scrollWidth - t.clientWidth;
+      this.canScroll = max > 4;
+      this.progress = max > 0 ? Math.min(1, t.scrollLeft / max) : 1;
+    },
+
+    /* ---------- modal ---------- */
+    openModal() {
+      this.formError = ''; this.notice = this.mine ? '' : this.notice;
+      this.modalState = this.mine ? 'posted' : 'form';
+      this.modalOpen = true;
+      var self = this;
+      this.$nextTick(function () { if (self.$refs.nameInput) self.$refs.nameInput.focus(); });
+    },
+    closeModal() { this.modalOpen = false; this.confirmDelete = false; },
+
+    startCountdown(secs) {
+      var self = this;
+      clearInterval(this.countdown);
+      this.secondsLeft = Math.max(0, (secs == null ? 60 : secs) - 1);
+      this.countdown = setInterval(function () {
+        self.secondsLeft = Math.max(0, self.secondsLeft - 1);
+        if (self.secondsLeft <= 0) clearInterval(self.countdown);
+      }, 1000);
+    },
+    applyStats(data) {
+      if (data.stats) this.stats = normaliseStats(data.stats);
+      else {
+        if (data.new_avg !== undefined) this.stats.avg = Number(data.new_avg);
+        if (data.new_total !== undefined) this.stats.total = Number(data.new_total);
+      }
+      this.pulse();
+    },
+    publicCopy(r) { var c = Object.assign({}, r); delete c.edit_token; delete c.seconds_left; return c; },
+
+    async post(url, params) {
+      var res = await fetch(url, { method: 'POST', headers: this.headers(), body: new URLSearchParams(params) });
+      var data = {}; try { data = await res.json(); } catch (e) {}
+      return { ok: res.ok && data.status === 'success', data: data };
+    },
+
+    async submitReview() {
+      this.formError = '';
+      if (!this.form.rating) { this.formError = 'Please choose a star rating.'; return; }
+      this.submitting = true;
+      try {
+        var out = await this.post(this.urls.submit, { name: this.form.name, message: this.form.message, rating: this.form.rating });
+        if (!out.ok) { this.formError = out.data.message || 'Something went wrong. Please try again.'; return; }
+        var r = out.data.review;
+        this.mine = { id: r.id, token: r.edit_token };
+        this.reviews.unshift(this.publicCopy(r));
+        this.editForm = { name: r.name, rating: r.rating, message: r.message };
+        this.form = { name: '', rating: 0, message: '' };
+        this.applyStats(out.data);
+        this.startCountdown(r.seconds_left);
+        this.notice = '';
+        this.modalState = 'posted';
+        var self = this; this.$nextTick(function () { self.flashNew(); });
+      } catch (e) {
+        this.formError = 'Network problem. Please check your connection and try again.';
+      } finally { this.submitting = false; }
+    },
+
+    async saveEdit() {
+      if (!this.mine || this.secondsLeft <= 0) return;
+      this.formError = ''; this.notice = ''; this.submitting = true;
+      try {
+        var out = await this.post(this.urlFor(this.urls.update, this.mine.id), {
+          token: this.mine.token, name: this.editForm.name, message: this.editForm.message, rating: this.editForm.rating
+        });
+        if (!out.ok) { this.formError = out.data.message || 'Could not save your changes.'; return; }
+        var r = out.data.review, i = this.reviews.findIndex(function (x) { return x.id === r.id; });
+        if (i > -1) this.reviews.splice(i, 1, this.publicCopy(r));
+        this.applyStats(out.data);
+        this.notice = 'Your changes are saved.';
+      } catch (e) {
+        this.formError = 'Network problem. Please try again.';
+      } finally { this.submitting = false; }
+    },
+
+    async deleteMine() {
+      if (!this.mine || this.secondsLeft <= 0) return;
+      var self = this;
+      if (!this.confirmDelete) { this.confirmDelete = true; setTimeout(function () { self.confirmDelete = false; }, 4000); return; }
+      this.formError = ''; this.submitting = true;
+      try {
+        var out = await this.post(this.urlFor(this.urls.remove, this.mine.id), { token: this.mine.token });
+        if (!out.ok) { this.formError = out.data.message || 'Could not delete your review.'; return; }
+        var id = this.mine.id;
+        this.reviews = this.reviews.filter(function (x) { return x.id !== id; });
+        this.mine = null; clearInterval(this.countdown); this.secondsLeft = 0;
+        this.applyStats(out.data);
+        this.notice = 'Your review has been deleted.';
+        this.modalState = 'form';
+        this.$nextTick(function () { self.onScroll(); });
+      } catch (e) {
+        this.formError = 'Network problem. Please try again.';
+      } finally { this.submitting = false; this.confirmDelete = false; }
+    },
+
+    /* ---------- motion ---------- */
+    pulse() {
+      if (reduce) return;
+      var sec = this.$el;
+      ready(function () {
+        if (!window.gsap) return;
+        var el = sec.querySelector('[data-rv-avg]');
+        if (el) window.gsap.fromTo(el, { scale: 1.12 }, { scale: 1, duration: 0.6, ease: 'back.out(2)', clearProps: 'transform' });
+      });
+    },
+    flashNew() {
+      var t = this.$refs.track; if (!t) return;
+      t.scrollTo({ left: 0, behavior: reduce ? 'auto' : 'smooth' });
+      if (reduce) return;
+      ready(function () {
+        var el = t.querySelector('[data-rv-card]');
+        if (el && window.gsap) window.gsap.fromTo(el, { opacity: 0, y: 28, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.6)', clearProps: 'transform' });
+      });
+    },
+    animateIn() {
+      if (reduce) return;
+      var sec = this.$el, self = this;
+      ready(function () {
+        if (!window.gsap || !window.ScrollTrigger) return;        // static section: everything stays visible
+        var G = window.gsap, ST = window.ScrollTrigger;
+        try {
+          G.registerPlugin(ST);
+          /* only hide things if the section is still below the fold, so nothing can get stuck invisible */
+          if (sec.getBoundingClientRect().top < window.innerHeight * 0.8) return;
+          var X = window.innerWidth < 1024 ? 36 : 90;
+          var hl = sec.querySelector('[data-rv-hl]'), hr = sec.querySelector('[data-rv-hr]'), panel = sec.querySelector('[data-rv-panel]');
+          var cards = [].slice.call(sec.querySelectorAll('[data-rv-card]')), bars = [].slice.call(sec.querySelectorAll('[data-rv-bar]'));
+          var stars = [].slice.call(sec.querySelectorAll('[data-rv-pstar]'));
+          var avgEl = sec.querySelector('[data-rv-avg]'), totalEl = sec.querySelector('[data-rv-total]');
+          var avgV = self.stats.avg, totalV = self.stats.total;
+
+          G.set(hl, { opacity: 0, x: -X }); G.set(hr, { opacity: 0, x: X }); G.set(panel, { opacity: 0, x: -X });
+          G.set(cards, { opacity: 0, x: X, scale: 0.96 });
+          G.set(bars, { scaleX: 0, transformOrigin: '0% 50%' });
+          G.set(stars, { scale: 0, opacity: 0 });
+          if (avgEl) avgEl.textContent = '0.0';
+          if (totalEl) totalEl.textContent = '0';
+
+          ST.create({ trigger: sec, start: 'top 72%', once: true, onEnter: function () {
+            var tl = G.timeline({ defaults: { ease: 'expo.out' } });
+            tl.to(hl, { opacity: 1, x: 0, duration: 1.05, clearProps: 'transform' }, 0)
+              .to(hr, { opacity: 1, x: 0, duration: 1.05, clearProps: 'transform' }, 0.12)
+              .to(panel, { opacity: 1, x: 0, duration: 1.1, clearProps: 'transform' }, 0.2)
+              .to(cards, { opacity: 1, x: 0, scale: 1, duration: 1, stagger: 0.1, clearProps: 'transform' }, 0.35)
+              .to(stars, { scale: 1, opacity: 1, duration: 0.5, stagger: 0.07, ease: 'back.out(2.4)', clearProps: 'transform' }, 0.7)
+              .to(bars, { scaleX: 1, duration: 1.1, stagger: 0.08, ease: 'power3.out', clearProps: 'transform' }, 0.8);
+            var o = { a: 0, t: 0 };
+            G.to(o, { a: avgV, t: totalV, duration: 1.4, delay: 0.5, ease: 'power2.out', onUpdate: function () {
+              if (avgEl) avgEl.textContent = o.a.toFixed(1);
+              if (totalEl) totalEl.textContent = Math.round(o.t);
+            } });
+          } });
+
+          window.addEventListener('load', function () { ST.refresh(); });
+        } catch (err) {
+          console.error('Reviews animation failed, showing static section:', err);
+          G.set(sec.querySelectorAll('[data-rv-hl],[data-rv-hr],[data-rv-panel],[data-rv-card],[data-rv-bar],[data-rv-pstar]'), { clearProps: 'all' });
+          if (self.stats) { var a = sec.querySelector('[data-rv-avg]'), t = sec.querySelector('[data-rv-total]'); if (a) a.textContent = self.stats.avg.toFixed(1); if (t) t.textContent = self.stats.total; }
+        }
+      });
+    }
+  };
+}
+</script>

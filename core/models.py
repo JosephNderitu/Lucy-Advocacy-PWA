@@ -208,7 +208,7 @@ class NewsletterCampaign(models.Model):
     def __str__(self):
         return f"{self.subject} ({self.sent_at:%Y-%m-%d})"
     
-
+REVIEWS_CACHE_KEY = "reviews:home:v1"
 class Review(models.Model):
     RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
 
@@ -221,6 +221,7 @@ class Review(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [models.Index(fields=["ip_address", "created_at"])]
 
     def __str__(self):
         return f"{self.name} - {self.rating} stars"
@@ -237,6 +238,13 @@ class Review(models.Model):
     @property
     def is_editable(self):
         return (timezone.now() - self.created_at).total_seconds() <= 60
+    
+REVIEWS_CACHE_KEY = "reviews:home:v1"
+
+
+@receiver([post_save, post_delete], sender=Review)
+def _clear_reviews_cache(sender, **kwargs):
+    cache.delete(REVIEWS_CACHE_KEY)
     
 
 # Uses your existing User model (django.contrib.auth.models.User) as the login account.
