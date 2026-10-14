@@ -2,263 +2,490 @@
 {% load static %}
 
 {% block title %}About Us | Ngima Wangai & Company Advocates{% endblock %}
+{% block meta_description %}Meet Ngima Wangai &amp; Company Advocates, a full-service law firm in Nairobi built on personal, accessible counsel, and the advocates who handle your matter.{% endblock %}
 
 {% block content %}
 
+{% comment %}
+  ============================================================
+  ABOUT PAGE (includes the team)
+  Context from core.views.about:
+    practice_area_count  - number shown in the hero stats
+    faqs                 - FAQ rows (question, answer)
+    leadership           - active TeamMember rows, is_leadership=True
+    team_members         - active TeamMember rows, is_leadership=False
+  Partial: core/partials/_about_team.html (leadership + wider team)
+  Animation: GSAP + ScrollTrigger (loaded in base.html). Content is
+  always visible if GSAP is missing or the visitor prefers reduced motion.
+  Removed on purpose: "How we work" and practice areas (both live on home).
+  ============================================================
+{% endcomment %}
+
+<div id="about-page" class="ab">
+<script>
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.getElementById('about-page').classList.add('ab-anim');
+  }
+</script>
+
+<style>
+  #about-page {
+    --ab-b900: #4A0F1F;
+    --ab-b800: #5C1427;
+    --ab-b700: #6E1A30;
+    --ab-b600: #8A2440;
+    --ab-b200: #E9CBD3;
+    --ab-b100: #F7ECEF;
+  }
+
+  /* Hidden only while GSAP is about to animate them. Without JS or GSAP everything shows. */
+  #about-page.ab-anim [data-a],
+  #about-page.ab-anim [data-a-group] > *,
+  #about-page.ab-anim [data-hero-a],
+  #about-page.ab-anim [data-hero-line] { opacity: 0; }
+
+  #about-page .ab-bar { background: var(--ab-b700); }
+
+  /* Hero */
+  #about-page .ab-hero-glow {
+    background:
+      radial-gradient(70% 90% at 100% 100%, rgba(110, 26, 48, 0.85) 0%, rgba(110, 26, 48, 0) 70%),
+      radial-gradient(40% 60% at 0% 0%, rgba(138, 36, 64, 0.25) 0%, rgba(138, 36, 64, 0) 70%);
+  }
+
+  /* Pull quote */
+  #about-page .ab-quote {
+    background: linear-gradient(155deg, var(--ab-b700) 0%, var(--ab-b900) 100%);
+    box-shadow: 0 30px 60px -32px rgba(74, 15, 31, 0.7);
+  }
+
+  /* Values */
+  #about-page .ab-value { border-top: 1px solid rgba(110, 26, 48, 0.25); transition: border-color 0.3s ease; }
+  #about-page .ab-value:hover { border-top-color: var(--ab-b700); }
+  #about-page .ab-value-ico {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 3.25rem; height: 3.25rem; border-radius: 9999px;
+    background: var(--ab-b100); color: var(--ab-b700); font-size: 1.05rem;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+  }
+  #about-page .ab-value:hover .ab-value-ico { background: var(--ab-b700); color: #fff; transform: scale(1.06); }
+  #about-page .ab-value:hover h3 { color: var(--ab-b700); }
+  #about-page .ab-value h3 { transition: color 0.3s ease; }
+
+  /* Leadership (burgundy section) */
+  #about-page .ab-burgundy {
+    background: linear-gradient(170deg, var(--ab-b700) 0%, var(--ab-b900) 100%);
+  }
+  #about-page .ab-initials { background: var(--ab-b800); }
+  #about-page .ab-photo-shade {
+    background: linear-gradient(to top, rgba(74, 15, 31, 0.65) 0%, rgba(74, 15, 31, 0) 55%);
+  }
+  #about-page .ab-social {
+    display: flex; align-items: center; justify-content: center;
+    width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(74, 15, 31, 0.55); color: #fff;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  #about-page .ab-social:hover,
+  #about-page .ab-social:focus-visible { background: #fff; color: var(--ab-b700); border-color: #fff; }
+
+  /* Wider team */
+  #about-page .ab-team-photo img { transition: transform 0.8s ease; }
+  #about-page .ab-team-card:hover .ab-team-photo img { transform: scale(1.04); }
+  #about-page .ab-team-shade {
+    background: linear-gradient(to top, rgba(74, 15, 31, 0.78) 0%, rgba(74, 15, 31, 0) 60%);
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+  #about-page .ab-team-card:hover .ab-team-shade,
+  #about-page .ab-team-card:focus-within .ab-team-shade { opacity: 1; }
+  #about-page .ab-team-social {
+    transform: translateY(0.75rem); opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+  }
+  #about-page .ab-team-card:hover .ab-team-social,
+  #about-page .ab-team-card:focus-within .ab-team-social { transform: translateY(0); opacity: 1; }
+  @media (hover: none) {
+    #about-page .ab-team-shade { opacity: 1; }
+    #about-page .ab-team-social { transform: none; opacity: 1; }
+  }
+  #about-page .ab-team-role { color: var(--ab-b700); }
+  #about-page .ab-team-rule { background: var(--ab-b700); transition: width 0.5s ease; }
+
+  /* FAQ */
+  #about-page .ab-faq-ico { color: var(--ab-b700); box-shadow: 0 0 0 1px rgba(110, 26, 48, 0.3); transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease; }
+  #about-page .ab-faq-open { background: var(--ab-b700); color: #fff; }
+
+  #about-page a:focus-visible,
+  #about-page button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+</style>
+
 <!-- ============ HERO ============ -->
-<section class="relative overflow-hidden isolate bg-brand-ink-900">
-  <div class="absolute inset-0 z-0">
-    <img src="{% static 'images/static_images/lady-justice.webp' %}" alt=""
-         aria-hidden="true"
-         class="absolute inset-0 h-full w-full object-cover object-[center_25%] opacity-40">
-    <div class="absolute inset-0 bg-gradient-to-br from-brand-ink-900/95 via-brand-ink-900/85 to-brand-teal-900/80"></div>
+<section class="relative isolate overflow-hidden bg-brand-ink-900">
+  <div class="absolute inset-0 z-0 overflow-hidden">
+    <img data-hero-img src="{% static 'images/static_images/lady-justice.webp' %}" alt="" aria-hidden="true"
+         class="absolute inset-x-0 top-0 h-[115%] w-full object-cover object-[center_25%] opacity-40">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-ink-900/95 via-brand-ink-900/85 to-brand-ink-900/70"></div>
+    <div class="ab-hero-glow absolute inset-0"></div>
   </div>
 
   <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" aria-hidden="true"
        class="pointer-events-none select-none absolute -right-24 -top-24 z-[5] w-[32rem] opacity-[0.06] rotate-6">
 
-  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-24 sm:pb-28">
-    <nav class="animate-fade-up flex items-center gap-2 text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-24 sm:pb-32">
+    <nav data-hero-a class="flex items-center gap-2 text-sm text-gray-400" aria-label="Breadcrumb">
       <a href="{% url 'core:home' %}" class="hover:text-white transition-colors">Home</a>
       <i class="fa-solid fa-chevron-right text-[0.6rem]"></i>
-      <span class="text-white">About Us</span>
+      <span class="text-white">About us</span>
     </nav>
 
-    <p class="animate-fade-up [animation-delay:100ms] inline-flex items-center gap-2 text-brand-teal-500 font-semibold text-sm tracking-wide uppercase mb-5">
-      <span class="h-1.5 w-1.5 rounded-full bg-brand-orange-500"></span>
-      Who We Are
-    </p>
+    <span data-hero-a class="mt-8 block h-[3px] w-14 rounded-full bg-brand-orange-500"></span>
 
-    <h1 class="animate-fade-up [animation-delay:150ms] font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] max-w-3xl">
-      The Firm Behind Your Legal Strategy
+    <h1 class="mt-6 max-w-3xl font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] text-white">
+      <span class="block overflow-hidden pb-1"><span data-hero-line class="block">The firm behind</span></span>
+      <span class="block overflow-hidden pb-1"><span data-hero-line class="block">your legal strategy</span></span>
     </h1>
 
-    <p class="animate-fade-up [animation-delay:250ms] mt-6 text-lg text-gray-300 max-w-2xl leading-relaxed">
-      Ngima Wangai & Company Advocates is a full-service law firm built on a simple idea.
+    <p data-hero-a class="mt-6 max-w-2xl text-lg leading-relaxed text-gray-300">
+      Ngima Wangai &amp; Company Advocates is a full-service law firm built on a simple idea.
       Every client deserves counsel that is personal, accessible, and genuinely invested
       in their outcome, not just their case file.
     </p>
 
-    <div class="animate-fade-up [animation-delay:350ms] mt-10 flex flex-wrap gap-x-10 gap-y-4">
-      <div>
-        <p class="font-serif text-3xl font-bold text-white" x-data="{ foundedYear: 2018 }" x-text="(new Date().getFullYear() - foundedYear) + '+'"></p>
-        <p class="text-sm text-gray-400 mt-1">Years in Practice</p>
+    <div data-hero-a class="mt-12 grid max-w-xl grid-cols-3 gap-4 sm:flex sm:max-w-none sm:gap-x-14">
+      <div class="border-l border-white/20 pl-4 sm:pl-6">
+        <p class="font-serif text-3xl sm:text-4xl font-bold text-white" data-count="0" data-years-from="2018" data-suffix="+">8+</p>
+        <p class="mt-1 text-sm text-gray-400">Years in practice</p>
       </div>
-      <div>
-        <p class="font-serif text-3xl font-bold text-white">{{ practice_area_count }}</p>
-        <p class="text-sm text-gray-400 mt-1">Practice Areas</p>
+      <div class="border-l border-white/20 pl-4 sm:pl-6">
+        <p class="font-serif text-3xl sm:text-4xl font-bold text-white" data-count="{{ practice_area_count|default:0 }}">{{ practice_area_count }}</p>
+        <p class="mt-1 text-sm text-gray-400">Practice areas</p>
       </div>
-      <div>
-        <p class="font-serif text-3xl font-bold text-white">3</p>
-        <p class="text-sm text-gray-400 mt-1">Court Levels Handled</p>
+      <div class="border-l border-white/20 pl-4 sm:pl-6">
+        <p class="font-serif text-3xl sm:text-4xl font-bold text-white" data-count="3">3</p>
+        <p class="mt-1 text-sm text-gray-400">Court levels handled</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============ OUR STORY ============ -->
-<section x-data="{ shown: false }" x-intersect.once="shown = true"
-         class="bg-white py-16 sm:py-20 lg:py-24">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<section class="bg-white py-20 lg:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
 
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-         class="transition-all duration-700">
-      <p class="text-sm font-medium text-[#A9824C] mb-4">Our story</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-[1.15] tracking-tight">
-        Built on Accessibility, Not Bureaucracy
-      </h2>
-
-      <div class="mt-6 space-y-5 text-brand-ink-700 leading-relaxed text-base sm:text-lg text-left sm:text-center">
-        <p>
-          Too many clients experience the law as slow and hard to reach. We built this firm
-          around the opposite idea, that sound legal counsel should be close at hand, clearly
-          explained, and responsive to the pace of your matter, not the pace of the courts.
-        </p>
-        <p>
-          From our base in Nairobi, we've grown into a full-service commercial and corporate
-          practice while keeping the working style of a firm that still answers its own phone.
-          Every matter gets a customized approach and a direct line to the advocate handling it.
-        </p>
+    <div class="lg:col-span-5">
+      <div class="lg:sticky lg:top-28">
+        <span data-a="draw" class="ab-bar block h-[3px] w-14 rounded-full"></span>
+        <h2 class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1] text-brand-ink-900">
+          <span data-a="line" class="block">Built on accessibility,</span>
+          <span data-a="line" data-delay="0.12" class="block">not bureaucracy</span>
+        </h2>
       </div>
+    </div>
+
+    <div class="lg:col-span-7 flex flex-col gap-6 text-lg leading-relaxed text-brand-ink-700">
+      <p data-a="rise">
+        Too many clients experience the law as slow and hard to reach. We built this firm
+        around the opposite idea, that sound legal counsel should be close at hand, clearly
+        explained, and responsive to the pace of your matter, not the pace of the courts.
+      </p>
+      <p data-a="rise">
+        From our base in Nairobi, we've grown into a full-service commercial and corporate
+        practice while keeping the working style of a firm that still answers its own phone.
+        Every matter gets a customized approach and a direct line to the advocate handling it.
+      </p>
+
+      <figure data-a="rise" data-morph-card class="ab-quote mt-4 overflow-hidden rounded-[3.5rem] p-8 sm:p-10 text-white">
+        <i class="fa-solid fa-quote-left text-2xl text-brand-orange-500"></i>
+        <blockquote class="mt-5 font-serif text-2xl sm:text-3xl leading-snug">
+          A firm that still answers its own phone.
+        </blockquote>
+        <figcaption class="mt-5 text-sm text-white/70">Ngima Wangai &amp; Company Advocates, Nairobi</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
-<!-- ============ HOW WE WORK ============ -->
-<section x-data="{ shown: false }" x-intersect.once="shown = true"
-         class="bg-brand-mist-50 py-16 sm:py-20 lg:py-28">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- ============ VALUES ============ -->
+<section class="bg-brand-mist-50 pt-20 pb-32 sm:pb-40 lg:pt-28 lg:pb-44">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
 
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-         class="transition-all duration-700 text-center max-w-2xl mx-auto mb-14">
-      <p class="text-sm font-medium text-[#A9824C] mb-4">Our process</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
-        How We Work With You
+    <div class="lg:col-span-4">
+      <span data-a="draw" class="ab-bar block h-[3px] w-14 rounded-full"></span>
+      <h2 class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl font-bold leading-tight text-brand-ink-900">
+        <span data-a="line" class="block">The principles we work by</span>
       </h2>
-    </div>
-
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-         class="transition-all duration-700 delay-150 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 relative">
-
-      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
-        <span class="font-serif text-sm text-[#A9824C]">01</span>
-        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Initial Consultation</p>
-        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
-          We listen to your matter in full before offering any view on strategy or cost.
-        </p>
-      </div>
-
-      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
-        <span class="font-serif text-sm text-[#A9824C]">02</span>
-        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Tailored Strategy</p>
-        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
-          A plan built for your specific goals, timeline, and appetite for risk.
-        </p>
-      </div>
-
-      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
-        <span class="font-serif text-sm text-[#A9824C]">03</span>
-        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Active Representation</p>
-        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
-          Regular updates and direct access to the advocate handling your case.
-        </p>
-      </div>
-
-      <div class="relative bg-white rounded-3xl ring-1 ring-brand-ink-900/5 p-7 sm:p-8">
-        <span class="font-serif text-sm text-[#A9824C]">04</span>
-        <p class="font-serif font-semibold text-lg text-brand-ink-900 mt-3">Resolution</p>
-        <p class="text-sm text-brand-ink-700 mt-2 leading-relaxed">
-          A clear outcome, with follow-through on anything the resolution requires.
-        </p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ============ MISSION / VALUES ============ -->
-<section x-data="{ shown: false }" x-intersect.once="shown = true"
-         class="bg-white py-16 sm:py-20 lg:py-28">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-         class="transition-all duration-700 text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-      <p class="text-sm font-medium text-[#A9824C] mb-4">What guides us</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
-        Our Values
-      </h2>
-    </div>
-
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-         class="transition-all duration-700 delay-150 rounded-3xl ring-1 ring-brand-ink-900/5 bg-brand-mist-50/40 overflow-hidden">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y divide-brand-ink-900/10 sm:divide-y-0 sm:divide-x">
-
-        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
-          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
-            <i class="fa-solid fa-scale-balanced"></i>
-          </span>
-          <div class="min-w-0">
-            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Integrity</p>
-            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">Honest counsel, even when it isn't easy to hear</p>
-          </div>
-        </div>
-
-        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
-          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
-            <i class="fa-solid fa-bolt"></i>
-          </span>
-          <div class="min-w-0">
-            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Accessibility</p>
-            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">A direct line to your advocate, always</p>
-          </div>
-        </div>
-
-        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
-          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
-            <i class="fa-solid fa-user-check"></i>
-          </span>
-          <div class="min-w-0">
-            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Client-Centered</p>
-            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">No templated advice, no cookie-cutter files</p>
-          </div>
-        </div>
-
-        <div class="group flex items-start gap-4 p-6 sm:p-7 lg:p-8 transition-colors duration-300 hover:bg-white">
-          <span class="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white ring-1 ring-brand-teal-600/20 text-brand-teal-600 text-lg shrink-0 group-hover:bg-brand-teal-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
-            <i class="fa-solid fa-briefcase"></i>
-          </span>
-          <div class="min-w-0">
-            <p class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900 leading-snug">Excellence</p>
-            <p class="text-sm sm:text-[0.9rem] text-brand-ink-700 mt-1.5 leading-relaxed">Thorough handling, first call to resolution</p>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FAQ ============ -->
-<section x-data="{ shown: false, open: 'q1',
-    toggle(id) { this.open = this.open === id ? null : id }
-  }"
-  x-intersect.once="shown = true"
-  class="bg-brand-mist-50 py-16 sm:py-20 lg:py-28">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-         class="transition-all duration-700 text-center mb-12 lg:mb-16">
-      <p class="text-sm font-medium text-[#A9824C] mb-4">Frequently asked</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900 leading-tight">
-        Questions Clients Often Ask
-      </h2>
-      <p class="mt-4 text-brand-ink-700 leading-relaxed text-base sm:text-lg">
-        Can't find what you're looking for? <a href="{% url 'core:contact' %}" class="text-brand-teal-600 font-semibold hover:underline">Get in touch</a> directly.
+      <p data-a="rise" class="mt-3 max-w-sm leading-relaxed text-brand-ink-700">
+        Four commitments that shape how every matter is handled, from the first call to the final resolution.
       </p>
     </div>
 
-    <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-         class="transition-all duration-700 delay-150 rounded-3xl bg-white ring-1 ring-brand-ink-900/5 divide-y divide-brand-ink-900/10 overflow-hidden">
+    <ul data-a-group="fly" class="lg:col-span-8 grid gap-x-10 gap-y-12 sm:grid-cols-2">
+      <li class="ab-value group pt-7">
+        <div class="flex items-start gap-5">
+          <span class="ab-value-ico"><i class="fa-solid fa-scale-balanced"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-serif text-xl font-semibold text-brand-ink-900">Integrity</h3>
+            <p class="mt-2 leading-relaxed text-brand-ink-700">Honest counsel, even when it isn't easy to hear.</p>
+          </div>
+        </div>
+      </li>
+      <li class="ab-value group pt-7">
+        <div class="flex items-start gap-5">
+          <span class="ab-value-ico"><i class="fa-solid fa-bolt"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-serif text-xl font-semibold text-brand-ink-900">Accessibility</h3>
+            <p class="mt-2 leading-relaxed text-brand-ink-700">A direct line to your advocate, always.</p>
+          </div>
+        </div>
+      </li>
+      <li class="ab-value group pt-7">
+        <div class="flex items-start gap-5">
+          <span class="ab-value-ico"><i class="fa-solid fa-user-check"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-serif text-xl font-semibold text-brand-ink-900">Client-centered</h3>
+            <p class="mt-2 leading-relaxed text-brand-ink-700">No templated advice, no cookie-cutter files.</p>
+          </div>
+        </div>
+      </li>
+      <li class="ab-value group pt-7">
+        <div class="flex items-start gap-5">
+          <span class="ab-value-ico"><i class="fa-solid fa-briefcase"></i></span>
+          <div class="min-w-0">
+            <h3 class="font-serif text-xl font-semibold text-brand-ink-900">Excellence</h3>
+            <p class="mt-2 leading-relaxed text-brand-ink-700">Thorough handling, first call to resolution.</p>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
 
+<!-- ============ TEAM (leadership + wider team) ============ -->
+{% include 'core/team.html' %}
+
+<!-- ============ FAQ ============ -->
+{% if faqs %}
+<section x-data="{ open: 'q1', toggle(id) { this.open = this.open === id ? null : id } }"
+         class="bg-brand-mist-50 py-20 lg:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
+
+    <div class="lg:col-span-4">
+      <div class="lg:sticky lg:top-28">
+        <span data-a="draw" class="ab-bar block h-[3px] w-14 rounded-full"></span>
+        <h2 class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl font-bold leading-tight text-brand-ink-900">
+          <span data-a="line" class="block">Questions clients often ask</span>
+        </h2>
+        <p data-a="rise" class="mt-3 leading-relaxed text-brand-ink-700">
+          Can't find what you're looking for?
+          <a href="{% url 'core:contact' %}" class="font-semibold text-[#6E1A30] underline underline-offset-4 hover:text-[#4A0F1F]">Get in touch</a> directly.
+        </p>
+      </div>
+    </div>
+
+    <div data-a="rise" class="lg:col-span-8 overflow-hidden rounded-3xl bg-white ring-1 ring-brand-ink-900/5 divide-y divide-brand-ink-900/10">
       {% for faq in faqs %}
       <div>
         <button type="button" @click="toggle('q{{ forloop.counter }}')"
-                class="w-full flex items-center justify-between gap-4 text-left px-6 sm:px-8 py-5 sm:py-6 hover:bg-brand-mist-50/60 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal-600/50">
-          <span class="font-serif font-semibold text-base sm:text-lg text-brand-ink-900">{{ faq.question }}</span>
-          <span :class="open === 'q{{ forloop.counter }}' ? 'rotate-45 bg-brand-teal-600 text-white' : 'text-brand-teal-600'"
-                class="flex items-center justify-center h-8 w-8 rounded-full ring-1 ring-brand-teal-600/30 shrink-0 transition-all duration-300">
+                :aria-expanded="open === 'q{{ forloop.counter }}'"
+                class="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-colors duration-300 hover:bg-brand-mist-50/60 sm:px-8 sm:py-6">
+          <span class="font-serif text-base font-semibold text-brand-ink-900 sm:text-lg">{{ faq.question }}</span>
+          <span :class="open === 'q{{ forloop.counter }}' ? 'rotate-45 ab-faq-open' : ''"
+                class="ab-faq-ico flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
             <i class="fa-solid fa-plus text-xs"></i>
           </span>
         </button>
         <div x-show="open === 'q{{ forloop.counter }}'" x-collapse x-cloak>
-          <p class="px-6 sm:px-8 pb-6 sm:pb-7 text-brand-ink-700 leading-relaxed text-[15px] sm:text-base max-w-2xl">
+          <p class="max-w-2xl px-6 pb-6 text-[15px] leading-relaxed text-brand-ink-700 sm:px-8 sm:pb-7 sm:text-base">
             {{ faq.answer }}
           </p>
         </div>
       </div>
       {% endfor %}
-
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- ============ CTA ============ -->
-<section class="py-20 bg-gradient-to-br from-brand-ink-900 to-brand-teal-800 relative overflow-hidden">
+<section class="relative overflow-hidden bg-gradient-to-br from-brand-ink-900 via-brand-ink-900 to-[#5C1427] py-20 lg:py-24">
   <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" aria-hidden="true"
        class="pointer-events-none select-none absolute -left-20 -bottom-20 w-96 opacity-[0.05] -rotate-6">
 
   <div class="relative max-w-2xl mx-auto px-4 text-center">
-    <i class="fa-solid fa-scale-balanced text-brand-teal-400 text-3xl mb-5"></i>
-    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white">Ready to Talk to an Advocate?</h2>
-    <p class="mt-4 text-gray-300">
+    <i data-a="rise" class="fa-solid fa-scale-balanced inline-block text-3xl text-brand-orange-500"></i>
+    <h2 data-a="rise" class="mt-5 font-serif text-3xl sm:text-4xl font-bold text-white">Ready to talk to an advocate?</h2>
+    <p data-a="rise" class="mt-4 text-gray-300">
       Tell us about your matter and we'll respond promptly with the next steps.
     </p>
-    <a href="{% url 'core:contact' %}"
-       class="mt-8 inline-flex items-center justify-center gap-2 bg-brand-orange-500 hover:bg-brand-orange-600 text-white font-semibold px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand-orange-500/20">
-      Book a Consultation
-      <i class="fa-solid fa-arrow-right text-sm"></i>
-    </a>
+    <div data-a="rise" class="mt-8 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-8">
+      <a href="{% url 'core:contact' %}"
+         class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-orange-500 px-8 py-4 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-orange-600 hover:shadow-xl hover:shadow-brand-orange-500/20">
+        Book a consultation
+        <i class="fa-solid fa-arrow-right text-sm"></i>
+      </a>
+      <a href="{% url 'core:contact' %}#hours-location"
+         class="text-sm font-medium text-white/80 underline underline-offset-4 transition-colors hover:text-white">
+        Visit or call us
+      </a>
+    </div>
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var page = document.getElementById('about-page');
+  if (!page) return;
+
+  /* ---------- Counters (always set to their real value first) ---------- */
+  var counters = Array.prototype.slice.call(page.querySelectorAll('[data-count]'));
+  counters.forEach(function (el) {
+    var from = el.getAttribute('data-years-from');
+    el._target = from ? new Date().getFullYear() - parseInt(from, 10) : parseInt(el.getAttribute('data-count'), 10) || 0;
+    el._suffix = el.getAttribute('data-suffix') || '';
+    el.textContent = el._target + el._suffix;
+  });
+
+  var g = window.gsap;
+  if (!g || !page.classList.contains('ab-anim')) {
+    page.classList.remove('ab-anim');
+    return;
+  }
+
+  var hasST = !!window.ScrollTrigger;
+  if (hasST) g.registerPlugin(window.ScrollTrigger);
+
+  try {
+
+    function countUp(el) {
+      var o = { v: 0 };
+      g.to(o, {
+        v: el._target, duration: 1.6, ease: 'power2.out',
+        onUpdate: function () { el.textContent = Math.round(o.v) + el._suffix; }
+      });
+    }
+
+    function reveal(trigger, tween, start) {
+      if (hasST) {
+        window.ScrollTrigger.create({
+          trigger: trigger, start: start || 'top 86%', once: true,
+          onEnter: function () { tween.play(); }
+        });
+      } else if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) { tween.play(); io.disconnect(); }
+        }, { threshold: 0.12 });
+        io.observe(trigger);
+      } else {
+        tween.play();
+      }
+    }
+
+    var effects = {
+      rise:  { y: 44 },
+      left:  { x: -80 },
+      right: { x: 80 },
+      fly:   { y: 90, rotation: 3, scale: 0.95 },
+      draw:  { scaleX: 0, transformOrigin: 'left center' },
+      line:  { yPercent: 110, keepOpacity: true }
+    };
+
+    function build(targets, type, extra) {
+      extra = extra || {};
+      if (type === 'wipe') {
+        return g.fromTo(targets,
+          { clipPath: 'inset(100% 0% 0% 0%)', opacity: 1 },
+          {
+            clipPath: 'inset(0% 0% 0% 0%)', duration: 1.2, ease: 'power4.inOut',
+            delay: extra.delay || 0, paused: true,
+            onComplete: function () { g.set(targets, { clearProps: 'clipPath' }); }
+          });
+      }
+      var fx = effects[type] || effects.rise;
+      var from = { opacity: fx.keepOpacity ? 1 : 0 };
+      Object.keys(fx).forEach(function (k) { if (k !== 'keepOpacity') from[k] = fx[k]; });
+      return g.fromTo(targets, from, {
+        opacity: 1, x: 0, y: 0, rotation: 0, scale: 1, scaleX: 1, yPercent: 0,
+        duration: 0.9, ease: 'power3.out',
+        delay: extra.delay || 0, stagger: extra.stagger || 0, paused: true,
+        onComplete: function () { g.set(targets, { clearProps: 'transform' }); }
+      });
+    }
+
+    /* ---------- Hero: plays on load ---------- */
+    var heroLines = page.querySelectorAll('[data-hero-line]');
+    var heroItems = page.querySelectorAll('[data-hero-a]');
+    var heroImg = page.querySelector('[data-hero-img]');
+
+    counters.forEach(function (el) { el.textContent = '0' + el._suffix; });
+
+    g.timeline({ defaults: { ease: 'power3.out' } })
+      .fromTo(heroLines, { yPercent: 110, opacity: 1 }, { yPercent: 0, duration: 1, stagger: 0.12 })
+      .fromTo(heroItems, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.12 }, '-=0.7')
+      .add(function () { counters.forEach(countUp); }, '-=0.5');
+
+    if (heroImg) {
+      g.fromTo(heroImg, { scale: 1.2 }, { scale: 1, duration: 2.4, ease: 'power2.out' });
+      if (hasST) {
+        g.to(heroImg, {
+          yPercent: -8, ease: 'none',
+          scrollTrigger: { trigger: heroImg.closest('section'), start: 'top top', end: 'bottom top', scrub: true }
+        });
+      }
+    }
+
+    /* ---------- Scroll reveals ---------- */
+    Array.prototype.forEach.call(page.querySelectorAll('[data-a]'), function (el) {
+      var delay = parseFloat(el.getAttribute('data-delay')) || 0;
+      reveal(el, build(el, el.getAttribute('data-a'), { delay: delay }));
+    });
+
+    Array.prototype.forEach.call(page.querySelectorAll('[data-a-group]'), function (group) {
+      var kids = Array.prototype.slice.call(group.children);
+      reveal(group, build(kids, group.getAttribute('data-a-group'), { stagger: 0.12 }));
+    });
+
+    Array.prototype.forEach.call(page.querySelectorAll('[data-zoom]'), function (img) {
+      var tw = g.fromTo(img, { scale: 1.25 }, {
+        scale: 1, duration: 1.8, ease: 'power2.out', paused: true,
+        onComplete: function () { g.set(img, { clearProps: 'transform' }); }
+      });
+      reveal(img.parentNode, tw);
+    });
+
+    /* ---------- Morphs: shapes that change as you scroll ---------- */
+    if (hasST) {
+      var big = window.innerWidth >= 640 ? '4rem' : '2.5rem';
+      Array.prototype.forEach.call(page.querySelectorAll('[data-morph-top]'), function (sec) {
+        g.fromTo(sec,
+          { borderTopLeftRadius: big, borderTopRightRadius: big },
+          {
+            borderTopLeftRadius: '0rem', borderTopRightRadius: '0rem', ease: 'none',
+            scrollTrigger: { trigger: sec, start: 'top 95%', end: 'top 30%', scrub: true }
+          });
+      });
+
+      Array.prototype.forEach.call(page.querySelectorAll('[data-morph-card]'), function (card) {
+        g.fromTo(card,
+          { borderRadius: '3.5rem' },
+          {
+            borderRadius: '1.25rem', ease: 'none',
+            scrollTrigger: { trigger: card, start: 'top 90%', end: 'top 40%', scrub: true }
+          });
+      });
+
+      window.addEventListener('load', function () { window.ScrollTrigger.refresh(); });
+    }
+
+  } catch (err) {
+    // If anything goes wrong, show the page as plain content rather than leave it hidden.
+    page.classList.remove('ab-anim');
+    g.set(page.querySelectorAll('[data-a], [data-a-group] > *, [data-hero-a], [data-hero-line]'), { clearProps: 'all' });
+  }
+});
+</script>
+
+</div>
 
 {% endblock %}

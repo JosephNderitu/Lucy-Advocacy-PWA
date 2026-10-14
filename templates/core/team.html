@@ -1,99 +1,64 @@
-{% extends 'base.html' %}
-
-{% block title %}Our Team | Ngima Wangai &amp; Company Advocates{% endblock %}
-{% block meta_description %}Meet the advocates of Ngima Wangai &amp; Company Advocates - experienced, accessible legal counsel in Nairobi, Kenya.{% endblock %}
-
-{% block content %}
-
+{% load static %}
 {% comment %}
   ============================================================
-  TEAM PAGE - DYNAMIC
-  Data (from core.views.team):
-    leadership   - active TeamMember rows with is_leadership=True
-    team_members - active TeamMember rows with is_leadership=False
-  Manage everything in /admin/ > Team Members.
-  If your site has a shared page-header partial, swap it in for
-  the dark band below.
+  ABOUT PAGE TEAM SECTION (leadership + wider team)
+  Save as: templates/core/partials/_about_team.html
+  Used by: core/about.html only. The home page keeps using
+           partials/_leadership.html.
+  Data:    leadership   - TeamMember rows, is_leadership=True
+           team_members - TeamMember rows, is_leadership=False
+  Needs the styles and script from about.html (classes ab-*, data-a, data-zoom).
+  Anchors: #team (leadership) and #wider-team.
   ============================================================
 {% endcomment %}
 
-<!-- ============ PAGE HEADER ============ -->
-<section class="relative bg-brand-ink-900 text-white overflow-hidden">
-  <div
-    x-data="{ shown: false }"
-    x-init="requestAnimationFrame(() => shown = true)"
-    :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-    class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-center transition-all duration-700 motion-reduce:transition-none"
-  >
-    <nav aria-label="Breadcrumb" class="text-xs tracking-[0.2em] uppercase text-white/60 mb-6">
-      <a href="{% url 'core:home' %}" class="hover:text-white transition-colors">Home</a>
-      <span class="mx-2">/</span>
-      <span class="text-white">Our Team</span>
-    </nav>
-    <h1 class="font-serif text-4xl sm:text-5xl font-bold">Our Team</h1>
-    <div class="h-px w-16 bg-brand-orange-500 mx-auto mt-6 mb-6"></div>
-    <p class="max-w-2xl mx-auto text-white/75 leading-relaxed">
-      A personal approach to every client's concerns, constant accessibility,
-      and prompt, comprehensive service from the advocates who handle your matter.
-    </p>
-  </div>
-</section>
+{% if leadership %}
+<!-- ============ LEADERSHIP (burgundy) ============ -->
+<section id="team" data-morph-top
+         class="ab-burgundy relative z-10 -mt-10 sm:-mt-16 scroll-mt-20 overflow-hidden rounded-t-[2.5rem] sm:rounded-t-[4rem] py-20 lg:py-28 text-white">
 
-{% if not leadership and not team_members %}
-<section class="py-24 bg-white text-center">
-  <p class="text-brand-ink-700">Our team profiles are coming soon.</p>
-</section>
-{% endif %}
+  <img src="{% static 'images/static_images/logo-on-teal.png' %}" alt="" aria-hidden="true"
+       class="pointer-events-none select-none absolute -right-24 top-10 w-[28rem] opacity-[0.05] rotate-6">
 
-<!-- ============ LEADERSHIP ============ -->
-{% include 'core/partials/_leadership.html' with eyebrow="Leadership" %}
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-<!-- ============ TEAM GRID ============ -->
-{% if team_members %}
-<section id="team" class="py-20 lg:py-28 bg-gray-50 overflow-x-clip">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <div
-      x-data="{ shown: false }"
-      x-intersect.once.threshold.20="shown = true"
-      :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-      class="transition-all duration-700 motion-reduce:transition-none text-center max-w-xl mx-auto mb-16"
-    >
-      <p class="text-brand-teal-600 font-semibold text-xs tracking-[0.3em] uppercase mb-4">The Firm</p>
-      <h2 class="font-serif text-3xl sm:text-4xl font-bold text-brand-ink-900">Meet the Team</h2>
-      <div class="h-px w-16 bg-brand-orange-500 mx-auto mt-6"></div>
+    <div class="max-w-xl">
+      <span data-a="draw" class="block h-[3px] w-14 rounded-full bg-brand-orange-500"></span>
+      <h2 class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1]">
+        <span data-a="line" class="block">Meet our leadership</span>
+      </h2>
+      <p data-a="rise" class="mt-3 leading-relaxed text-white/75">
+        The advocates who set the standard for how every matter is handled.
+      </p>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-14">
-      {% for member in team_members %}
-      <article
-        x-data="{ shown: false }"
-        x-intersect.once.threshold.15="shown = true"
-        :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'"
-        style="transition-delay: {% cycle '0ms' '100ms' '200ms' %}"
-        class="group transition-all duration-700 ease-out motion-reduce:transition-none"
-      >
-        <div class="relative aspect-[4/5] overflow-hidden bg-brand-ink-900">
+    <div class="mt-14 lg:mt-16 grid gap-x-14 gap-y-16 sm:grid-cols-2">
+      {% for member in leadership %}
+      {% cycle 'left' 'right' as slide silent %}
+      <article class="group sm:odd:last:col-span-2 sm:odd:last:justify-self-center sm:odd:last:w-full sm:odd:last:max-w-[calc(50%-1.75rem)]">
+
+        <!-- Photo -->
+        <div data-a="wipe" class="relative aspect-[4/5] lg:aspect-[16/11] overflow-hidden rounded-2xl bg-black/20">
           {% if member.photo %}
-            <img src="{{ member.photo.url }}" alt="{{ member.name }}" loading="lazy"
-                 class="w-full h-full object-cover {% if member.photo_focus == 'top' %}object-top{% else %}object-center{% endif %} transition-transform duration-700 ease-out group-hover:scale-[1.03]">
+            <img data-zoom src="{{ member.photo.url }}" alt="{{ member.name }}" loading="lazy"
+                 class="h-full w-full object-cover {% if member.photo_focus == 'top' %}object-top{% else %}object-center{% endif %}">
+            <div class="ab-photo-shade pointer-events-none absolute inset-0"></div>
           {% else %}
-            <div class="w-full h-full flex items-center justify-center" aria-hidden="true">
-              <span class="font-serif text-6xl text-white/25 tracking-widest">{{ member.initials }}</span>
+            <div class="ab-initials flex h-full w-full items-center justify-center" aria-hidden="true">
+              <span class="font-serif text-6xl tracking-widest text-white/30">{{ member.initials }}</span>
             </div>
           {% endif %}
 
           {% if member.linkedin_url or member.email %}
-          <div class="absolute bottom-4 right-4 flex items-center gap-2.5">
+          <div class="absolute bottom-5 right-5 flex items-center gap-2.5">
             {% if member.linkedin_url %}
-            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" aria-label="Connect with {{ member.name }} on LinkedIn"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
+            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer"
+               aria-label="Connect with {{ member.name }} on LinkedIn" class="ab-social">
               <i class="fa-brands fa-linkedin-in text-sm"></i>
             </a>
             {% endif %}
             {% if member.email %}
-            <a href="mailto:{{ member.email }}" aria-label="Email {{ member.name }}"
-               class="flex items-center justify-center h-9 w-9 rounded-full border border-white/70 bg-brand-ink-900/80 backdrop-blur-sm text-white hover:bg-white hover:text-brand-ink-900 hover:border-white transition-colors duration-300">
+            <a href="mailto:{{ member.email }}" aria-label="Email {{ member.name }}" class="ab-social">
               <i class="fa-solid fa-envelope text-sm"></i>
             </a>
             {% endif %}
@@ -101,12 +66,27 @@
           {% endif %}
         </div>
 
-        <div class="pt-5">
-          <h3 class="font-serif text-xl font-bold text-brand-ink-900">{{ member.name }}</h3>
-          <p class="text-brand-teal-600 text-xs font-semibold tracking-[0.2em] uppercase mt-1.5">{{ member.role }}</p>
-          <div class="h-px w-10 bg-brand-orange-500 my-3.5 transition-all duration-500 group-hover:w-20"></div>
-          {% if member.bio %}
-            <p class="text-sm text-brand-ink-700 leading-relaxed">{{ member.bio|truncatewords:32 }}</p>
+        <!-- Copy -->
+        <div data-a="{{ slide }}" class="pt-6">
+          <h3 class="font-serif text-2xl font-bold text-white">{{ member.name }}</h3>
+          <p class="mt-1.5 text-sm font-medium text-[#E9CBD3]">{{ member.role }}</p>
+
+          <div class="my-4 h-px w-10 bg-brand-orange-500 transition-all duration-500 group-hover:w-20"></div>
+
+          {% if member.bio_paragraphs %}
+          <div class="flex flex-col gap-3.5 text-[15px] leading-relaxed text-white/75">
+            {% for para in member.bio_paragraphs %}
+              <p>{{ para }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if member.credential_list %}
+          <ul class="mt-5 flex flex-wrap gap-2">
+            {% for item in member.credential_list %}
+            <li class="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">{{ item }}</li>
+            {% endfor %}
+          </ul>
           {% endif %}
         </div>
       </article>
@@ -116,21 +96,70 @@
 </section>
 {% endif %}
 
-<!-- ============ CTA ============ -->
-<section class="bg-white py-16 lg:py-20 border-t border-gray-100">
-  <div
-    x-data="{ shown: false }"
-    x-intersect.once.threshold.20="shown = true"
-    :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'"
-    class="max-w-2xl mx-auto px-4 text-center transition-all duration-700 motion-reduce:transition-none"
-  >
-    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-brand-ink-900">Speak to one of our advocates</h2>
-    <div class="h-px w-16 bg-brand-orange-500 mx-auto my-6"></div>
-    <a href="{% url 'core:contact' %}"
-       class="inline-flex items-center justify-center gap-3 border border-brand-ink-900 text-brand-ink-900 hover:bg-brand-ink-900 hover:text-white text-xs font-semibold tracking-[0.2em] uppercase px-9 py-4 transition-colors duration-300">
-      Schedule a Consultation
-    </a>
+{% if team_members %}
+<!-- ============ WIDER TEAM ============ -->
+<section id="wider-team" class="scroll-mt-20 bg-white py-20 lg:py-28">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-xl">
+      <span data-a="draw" class="ab-bar block h-[3px] w-14 rounded-full"></span>
+      <h2 class="mt-6 overflow-hidden pb-2 font-serif text-3xl sm:text-4xl font-bold leading-tight text-brand-ink-900">
+        <span data-a="line" class="block">The wider team</span>
+      </h2>
+      <p data-a="rise" class="mt-3 leading-relaxed text-brand-ink-700">
+        The advocates and staff behind every matter we take on.
+      </p>
+    </div>
+
+    <div data-a-group="fly" class="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      {% for member in team_members %}
+      <article class="ab-team-card group">
+        <div class="ab-team-photo relative aspect-[4/5] overflow-hidden rounded-2xl bg-brand-ink-900">
+          {% if member.photo %}
+            <img src="{{ member.photo.url }}" alt="{{ member.name }}" loading="lazy"
+                 class="h-full w-full object-cover {% if member.photo_focus == 'top' %}object-top{% else %}object-center{% endif %}">
+          {% else %}
+            <div class="ab-initials flex h-full w-full items-center justify-center" aria-hidden="true">
+              <span class="font-serif text-6xl tracking-widest text-white/30">{{ member.initials }}</span>
+            </div>
+          {% endif %}
+
+          <div class="ab-team-shade pointer-events-none absolute inset-0"></div>
+
+          {% if member.linkedin_url or member.email %}
+          <div class="ab-team-social absolute bottom-4 right-4 flex items-center gap-2.5">
+            {% if member.linkedin_url %}
+            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer"
+               aria-label="Connect with {{ member.name }} on LinkedIn" class="ab-social">
+              <i class="fa-brands fa-linkedin-in text-sm"></i>
+            </a>
+            {% endif %}
+            {% if member.email %}
+            <a href="mailto:{{ member.email }}" aria-label="Email {{ member.name }}" class="ab-social">
+              <i class="fa-solid fa-envelope text-sm"></i>
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="pt-5">
+          <h3 class="font-serif text-xl font-bold text-brand-ink-900">{{ member.name }}</h3>
+          <p class="ab-team-role mt-1.5 text-sm font-medium">{{ member.role }}</p>
+          <div class="ab-team-rule my-3.5 h-px w-10 group-hover:w-20"></div>
+          {% if member.bio %}
+            <p class="text-sm leading-relaxed text-brand-ink-700">{{ member.bio|truncatewords:32 }}</p>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
   </div>
 </section>
+{% endif %}
 
-{% endblock %}
+{% if not leadership and not team_members %}
+<section class="bg-white py-20 text-center">
+  <p class="text-brand-ink-700">Our team profiles are coming soon.</p>
+</section>
+{% endif %}
