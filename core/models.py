@@ -241,13 +241,9 @@ class Review(models.Model):
     
 REVIEWS_CACHE_KEY = "reviews:home:v1"
 
-
 @receiver([post_save, post_delete], sender=Review)
 def _clear_reviews_cache(sender, **kwargs):
     cache.delete(REVIEWS_CACHE_KEY)
-    
-
-# Uses your existing User model (django.contrib.auth.models.User) as the login account.
 
 class ClientProfile(models.Model):
     """Links a Django User to a portal client. Admin creates the User (name as
@@ -259,7 +255,6 @@ class ClientProfile(models.Model):
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
-
 
 class Case(models.Model):
     STATUS_CHOICES = [("open", "Open"), ("closed", "Closed"), ("on_hold", "On hold")]
@@ -274,10 +269,8 @@ class Case(models.Model):
     def __str__(self):
         return f"{self.case_number} — {self.title}"
 
-
 def case_document_path(instance, filename):
     return f"case_documents/{instance.case.case_number}/{filename}"
-
 
 class CaseDocument(models.Model):
     STATUS_CHOICES = [("pending", "Pending review"), ("confirmed", "Confirmed"), ("rejected", "Rejected")]
@@ -304,6 +297,7 @@ class CaseDocument(models.Model):
 
     class Meta:
         ordering = ["-uploaded_at"]
+        indexes = [models.Index(fields=["case", "-uploaded_at"])]
 
     def save(self, *args, **kwargs):
         if self.file and not self.original_filename:
@@ -319,7 +313,6 @@ class CaseDocument(models.Model):
     def __str__(self):
         return f"{self.original_filename} ({self.case.case_number})"
 
-
 class DocumentRequest(models.Model):
     STATUS_CHOICES = [("pending", "Pending"), ("fulfilled", "Fulfilled")]
 
@@ -330,9 +323,10 @@ class DocumentRequest(models.Model):
     fulfilled_document = models.ForeignKey(CaseDocument, on_delete=models.SET_NULL, null=True, blank=True, related_name="fulfills_request")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [models.Index(fields=["case", "status"])]
     def __str__(self):
         return f"{self.description} ({self.case.case_number})"
-
 
 class ActivityLog(models.Model):
     ACTOR_ROLE_CHOICES = [("client", "Client"), ("admin", "Admin"), ("system", "System")]
@@ -352,12 +346,12 @@ class ActivityLog(models.Model):
 
     class Meta:
         ordering = ["-timestamp"]
+        indexes = [models.Index(fields=["case", "-timestamp"])]
 
     def __str__(self):
         return f"[{self.case.case_number}] {self.get_action_display()}"
     
 WORDS_PER_MINUTE = 200
-
 
 def unique_slug(model, value, instance_pk=None, max_length=200, fallback="item"):
     """Slugify `value` and add -2, -3, ... until it is unique for `model`."""
@@ -566,7 +560,6 @@ class TeamMember(models.Model):
 
 PROCESS_CACHE_KEY = "process:section:v1"
 
-
 class ProcessSection(models.Model):
     """The words of the 'Our Process' section. There is only ever one. Design lives in the template."""
 
@@ -587,7 +580,6 @@ class ProcessSection(models.Model):
         self.pk = 1  # singleton
         super().save(*args, **kwargs)
 
-
 class ProcessStep(models.Model):
     section = models.ForeignKey(ProcessSection, related_name="steps", on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
@@ -600,7 +592,6 @@ class ProcessStep(models.Model):
 
     def __str__(self):
         return self.title
-
 
 @receiver([post_save, post_delete], sender=ProcessSection)
 @receiver([post_save, post_delete], sender=ProcessStep)

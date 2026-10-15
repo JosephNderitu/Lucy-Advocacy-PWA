@@ -462,23 +462,18 @@ def portal_logout(request):
     logout(request)
     return redirect("core:portal_login")
 
+from collections import Counter
 @login_required
 def portal_dashboard(request):
     case = _get_client_case(request)
     if not case:
         messages.error(request, "No case is linked to your account yet. Contact the firm.")
         return redirect("core:portal_login")
-
-    documents = case.documents.select_related("confirmed_by")
-    pending_requests = case.document_requests.filter(status="pending")
-    recent_activity = case.activity_log.all()[:6]
-    doc_counts = {
-        "total": documents.count(),
-        "pending": documents.filter(status="pending").count(),
-        "confirmed": documents.filter(status="confirmed").count(),
-        "rejected": documents.filter(status="rejected").count(),
-    }
-
+ 
+    wants_json = request.headers.get("x-requested-with") == "XMLHttpRequest"
+ 
+    # Handle the upload first. A successful POST redirects, so it never pays
+    # for the read queries below.
     if request.method == "POST":
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -488,13 +483,37 @@ def portal_dashboard(request):
             doc.save()
             _log_activity(case, request.user, "client", "uploaded", doc.original_filename)
             messages.success(request, "Document uploaded and pending review.")
+            if wants_json:
+                return JsonResponse({"ok": True})
             return redirect("core:portal_dashboard")
+ 
+        if wants_json:
+            errors = [e for errs in form.errors.values() for e in errs]
+            return JsonResponse({"ok": False, "error": errors[0] if errors else "Upload failed."}, status=400)
+        # Non-JS fallback: fall through and re-render the page with form errors.
     else:
         form = DocumentUploadForm()
-
+ 
+    # Three small queries. Counts come from the list we already loaded, so the
+    # four extra COUNT queries and the unused select_related join are gone.
+    documents = list(case.documents.all())
+    by_status = Counter(d.status for d in documents)
+    doc_counts = {
+        "total": len(documents),
+        "pending": by_status["pending"],
+        "confirmed": by_status["confirmed"],
+        "rejected": by_status["rejected"],
+    }
+    pending_requests = list(case.document_requests.filter(status="pending").order_by("created_at"))
+    recent_activity = list(case.activity_log.all()[:6])
+ 
     return render(request, "core/dashboard.html", {
-        "case": case, "documents": documents, "pending_requests": pending_requests,
-        "recent_activity": recent_activity, "form": form, "doc_counts": doc_counts,
+        "case": case,
+        "documents": documents,
+        "pending_requests": pending_requests,
+        "recent_activity": recent_activity,
+        "form": form,
+        "doc_counts": doc_counts,
     })
 
 @login_required
