@@ -110,27 +110,33 @@
 
     <!-- Image -->
     <div class="order-2 lg:order-1 lg:col-span-6">
-      <div data-ab-frame class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-brand-ink-900 sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[26rem]">
-        <!-- Optional: set a focal point on the frame, e.g. data-focus="50% 20%" (x y), so the crop keeps faces/subject in view -->
-        <div data-ab-fallback aria-hidden="true" class="absolute inset-0 items-center justify-center bg-gradient-to-br from-brand-teal-900 to-brand-ink-900">
-          <i class="fa-solid fa-scale-balanced text-6xl text-white/25"></i>
+      <div data-ab-frame class="relative flex flex-col overflow-hidden rounded-2xl bg-brand-ink-900 lg:block lg:h-full lg:min-h-[26rem]">
+        <!-- Media: own aspect box on phones/tablets, fills the frame on desktop -->
+        <div data-ab-media class="relative aspect-[4/3] w-full overflow-hidden sm:aspect-[16/10] lg:absolute lg:inset-0 lg:aspect-auto">
+          <div data-ab-fallback aria-hidden="true" class="absolute inset-0 items-center justify-center bg-gradient-to-br from-brand-teal-900 to-brand-ink-900">
+            <i class="fa-solid fa-scale-balanced text-6xl text-white/25"></i>
+          </div>
+          <img data-ab-bg aria-hidden="true" alt="" data-src="{% static 'images/hero/hero2.png' %}"
+              class="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl" decoding="async">
+          <img
+            data-ab-img
+            src="{% static 'images/hero/hero2.png' %}"
+            alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            class="ab-img absolute inset-0 h-full w-full object-cover"
+            loading="lazy" decoding="async" draggable="false"
+          >
+          <div class="absolute inset-0 bg-brand-teal-900/35 mix-blend-multiply"></div>
+          <!-- desktop: caption sits on the image, so darken the bottom -->
+          <div class="absolute inset-0 hidden bg-gradient-to-t from-brand-ink-900/80 via-transparent to-transparent lg:block"></div>
+          <!-- phones/tablets: only the last sliver melts into the panel below, so the wordmark stays clear -->
+          <div class="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-brand-ink-900 to-transparent lg:hidden"></div>
         </div>
-        <!-- blurred copy of the same image: fills the bars when the photo is contained instead of cropped (src is set by JS only when needed) -->
-        <img data-ab-bg aria-hidden="true" alt="" data-src="{% static 'images/hero/hero2.png' %}"
-             class="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl" decoding="async">
-        <img
-          data-ab-img
-          src="{% static 'images/hero/hero2.png' %}"
-          alt="Bronze statue of Lady Justice holding scales and a sword, symbolizing fairness and impartiality"
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          class="ab-img absolute inset-0 h-full w-full object-cover"
-          loading="lazy" decoding="async" draggable="false"
-        >
-        <div class="absolute inset-0 bg-brand-teal-900/35 mix-blend-multiply"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-brand-ink-900/80 via-transparent to-transparent"></div>
-        <div data-ab-caption class="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-          <p class="mb-0 font-serif text-lg font-bold leading-snug text-white sm:text-xl">Ngima Wangai &amp; Company Advocates</p>
-          <p class="mb-0 mt-1 flex items-center gap-2 text-sm text-white/80"><i class="fa-solid fa-location-dot text-xs"></i> Nairobi, Kenya &middot; Members of the Law Society of Kenya</p>
+
+        <!-- Caption: in flow on phones/tablets, overlay on desktop -->
+        <div data-ab-caption class="relative flex flex-col gap-1 px-5 pb-5 pt-1 sm:px-6 sm:pb-6 lg:absolute lg:inset-x-0 lg:bottom-0 lg:p-6">
+          <p class="font-serif text-base font-bold leading-snug text-white sm:text-lg lg:text-xl">Ngima Wangai &amp; Company Advocates</p>
+          <p class="flex items-start gap-2 text-[0.8125rem] leading-relaxed text-white/80 sm:text-sm"><i class="fa-solid fa-location-dot mt-1 text-xs"></i> <span>Nairobi, Kenya &middot; Members of the Law Society of Kenya</span></p>
         </div>
       </div>
     </div>
@@ -356,7 +362,7 @@
        contain    when it is very different (tall portrait / panorama): nothing important is cropped, the bars get a blurred copy
        scale-down when it is too small to enlarge without going soft
        Also: automatic focal point, transparent-PNG backdrop, skeleton while loading, branded fallback if it fails. */
-    var imgFrame = $('[data-ab-frame]'), imgEl = $('[data-ab-img]'), imgBg = $('[data-ab-bg]');
+    var imgFrame = $('[data-ab-frame]'), imgBox = $('[data-ab-media]') || imgFrame, imgEl = $('[data-ab-img]'), imgBg = $('[data-ab-bg]');
     var imgFit = { parallax: true };
 
     function imgHasAlpha(img) {
@@ -370,7 +376,7 @@
     }
     function fitImage() {
       if (!imgEl || !imgFrame) return;
-      var nw = imgEl.naturalWidth, nh = imgEl.naturalHeight, fw = imgFrame.clientWidth, fh = imgFrame.clientHeight;
+      var nw = imgEl.naturalWidth, nh = imgEl.naturalHeight, fw = imgBox.clientWidth, fh = imgBox.clientHeight;
       if (!nw || !nh || !fw || !fh) return;
       var ir = nw / nh, fr = fw / fh, gap = Math.max(ir / fr, fr / ir);
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -402,7 +408,7 @@
       }
       if (window.ResizeObserver) {
         var imgRaf = 0;
-        new ResizeObserver(function () { cancelAnimationFrame(imgRaf); imgRaf = requestAnimationFrame(fitImage); }).observe(imgFrame);
+        new ResizeObserver(function () { cancelAnimationFrame(imgRaf); imgRaf = requestAnimationFrame(fitImage); }).observe(imgBox);
       }
     }
 
