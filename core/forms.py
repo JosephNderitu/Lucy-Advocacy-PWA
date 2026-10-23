@@ -84,27 +84,16 @@ class CaseAdminForm(forms.ModelForm):
 class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
-        fields = ["name", "message", "rating"]
+        fields = ["name", "message", "rating"]   # explicit, so device_id and ip_address can never come from the form
 
     def clean_name(self):
-        return self.cleaned_data["name"].strip()
+        name = " ".join(self.cleaned_data["name"].split())
+        if len(name) < 2:
+            raise forms.ValidationError("Please enter your name.")
+        return name
 
     def clean_message(self):
-        return self.cleaned_data["message"].strip()
-
-    def clean_rating(self):
-        rating = self.cleaned_data["rating"]
-        if rating not in (1, 2, 3, 4, 5):
-            raise forms.ValidationError("Rating must be between 1 and 5.")
-        return rating
-    def clean_name(self):
-         name = " ".join(self.cleaned_data["name"].split())
-         if len(name) < 2:
-             raise forms.ValidationError("Please enter your name.")
-         return name
-
-    def clean_message(self):
-         message = self.cleaned_data["message"].strip()
-         if len(message) < 10:
-             raise forms.ValidationError("Please write a little more about your experience.")
-         return message
+        message = self.cleaned_data["message"].strip()
+        if len(message) < 10:
+            raise forms.ValidationError("Please write a little more about your experience.")
+        return message

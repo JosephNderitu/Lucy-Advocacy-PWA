@@ -111,9 +111,10 @@ def submit_review(request):
             "new_total": stats["total"],
             "review": serialize_review(review, include_private=True),
         }), device_id)
+    first = next((errs[0] for errs in form.errors.values() if errs), None)
     return JsonResponse({
         "status": "error",
-        "message": "Please fill in your name, a star rating, and your review.",
+        "message": first or "Please fill in your name, a star rating, and your review.",
     }, status=400)
  
 @require_POST
@@ -137,7 +138,11 @@ def update_review(request, review_id):
             "new_avg": stats["avg"],
             "review": serialize_review(review, include_private=True),
         })
-    return JsonResponse({"status": "error", "message": "Please check your review and try again."}, status=400)
+    first = next((errs[0] for errs in form.errors.values() if errs), None)
+    return JsonResponse({
+        "status": "error",
+        "message": first or "Please fill in your name, a star rating, and your review.",
+    }, status=400)
  
 @require_POST
 def delete_review(request, review_id):
