@@ -703,12 +703,12 @@ class ArticleAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     """Client testimonials. Read-only by design: the firm can remove spam but never rewrite a client's words."""
-    list_display = ("name", "stars", "excerpt", "ip_address", "created_at")
+    list_display = ("name", "stars", "excerpt", "ip_address", "short_device", "created_at")
     list_filter = ("rating", ("created_at", admin.DateFieldListFilter))
-    search_fields = ("name", "message", "ip_address")
+    search_fields = ("name", "message", "ip_address", "device_id")
     date_hierarchy = "created_at"
     list_per_page = 25
-    fields = ("name", "rating", "message", "ip_address", "created_at")
+    fields = ("name", "rating", "message", "ip_address", "device_id", "created_at")
     readonly_fields = fields
 
     @admin.display(description="Rating", ordering="rating")
@@ -721,6 +721,10 @@ class ReviewAdmin(admin.ModelAdmin):
     def excerpt(self, obj):
         return obj.message[:80] + ("..." if len(obj.message) > 80 else "")
 
+    @admin.display(description="Device")
+    def short_device(self, obj):
+        return obj.device_id[:8] or "-"
+    
     def has_add_permission(self, request):
         return False
   
