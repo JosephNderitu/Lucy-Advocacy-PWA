@@ -328,7 +328,7 @@ function reviewsSection() {
   }
 
   return {
-    reviews: [], stats: normaliseStats(), urls: {}, csrf: '',
+    reviews: [], stats: normaliseStats(), urls: {}, csrf: '', deviceId: '',
     paused: false, inView: false, progress: 0, canScroll: false, timer: null,
     modalOpen: false, modalState: 'form', submitting: false, formError: '', notice: '', hoverRating: 0,
     form: { name: '', rating: 0, message: '' },
@@ -340,6 +340,7 @@ function reviewsSection() {
       this.stats = normaliseStats(readJson('rv-stats', {}));
       this.urls = { submit: el.dataset.submitUrl, update: el.dataset.updateUrl, remove: el.dataset.deleteUrl };
       this.csrf = el.dataset.csrf;
+      this.deviceId = this.loadDeviceId();
 
       this.$nextTick(function () { self.onScroll(); self.animateIn(); });
       window.addEventListener('resize', function () { self.onScroll(); }, { passive: true });
@@ -368,7 +369,18 @@ function reviewsSection() {
     ratingLabel(n) { return ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'][n] || 'Tap a star to rate'; },
     headers() { return { 'X-CSRFToken': this.csrf, 'X-Requested-With': 'XMLHttpRequest' }; },
     urlFor(base, id) { return base.replace(/\/0(\/|$)/, '/' + id + '$1'); },
-
+    loadDeviceId() {
+      var id = '';
+      try { id = localStorage.getItem('rv_device') || ''; } catch (e) {}
+      if (!/^[0-9a-f]{32}$/.test(id)) {
+        id = (window.crypto && crypto.randomUUID)
+          ? crypto.randomUUID().replace(/-/g, '')
+          : (Date.now().toString(16) + Math.random().toString(16).slice(2) + '00000000000000000000000000000000').slice(0, 32);
+        try { localStorage.setItem('rv_device', id); } catch (e) {}
+      }
+      return id;
+    },
+    
     /* ---------- carousel ---------- */
     step(dir) {
       var t = this.$refs.track; if (!t) return;

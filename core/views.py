@@ -3,6 +3,7 @@ import json
 import random
 import re
 import secrets
+import uuid
 from io import BytesIO
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
@@ -33,6 +34,29 @@ from xhtml2pdf import pisa
 
 from .reviews_support import home_review_context, review_stats, serialize_review
 
+DEVICE_COOKIE = "rv_device"
+DEVICE_SALT = "rv-device"
+DEVICE_COOKIE_AGE = 60 * 60 * 24 * 365 * 2
+DEVICE_DAILY_LIMIT = 2      # reviews per device per rolling 24 hours
+IP_DAILY_BACKSTOP = 20      # generous safety net so shared wifi still works
+
+
+def _device_id(request):
+    """Signed cookie first, then the id the browser kept in localStorage, else a brand new device."""
+    raw = request.get_signed_cookie(DEVICE_COOKIE, default="", salt=DEVICE_SALT) or request.POST.get("device_id", "")
+    try:
+        return uuid.UUID(str(raw)).hex
+    except (ValueError, AttributeError, TypeError):
+        return uuid.uuid4().hex
+
+
+def _remember_device(request, response, device_id):
+    response.set_signed_cookie(
+        DEVICE_COOKIE, device_id, salt=DEVICE_SALT, max_age=DEVICE_COOKIE_AGE,
+        httponly=True, samesite="Lax", secure=request.is_secure(),
+    )
+    return response
+
 def get_client_ip(request):
     forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if forwarded_for:
@@ -60,27 +84,33 @@ def _token_ok(review, request):
 @require_POST
 def submit_review(request):
     ip = get_client_ip(request)
-    one_week_ago = timezone.now() - timedelta(days=7)
-    if ip and Review.objects.filter(ip_address=ip, created_at__gte=one_week_ago).exists():
-        return JsonResponse({
-            "status": "error",
-            "message": "Only one review per week is allowed from your connection. Please check back soon.",
-        }, status=429)
+    device_id = _device_id(request)
+    since = timezone.now() - timedelta(hours=24)
+
+    too_many = {
+        "status": "error",
+        "message": "You have reached the limit of 2 reviews per day on this device. Please try again tomorrow.",
+    }
+    if Review.objects.filter(device_id=device_id, created_at__gte=since).count() >= DEVICE_DAILY_LIMIT:
+        return _remember_device(request, JsonResponse(too_many, status=429), device_id)
+    if ip and Review.objects.filter(ip_address=ip, created_at__gte=since).count() >= IP_DAILY_BACKSTOP:
+        return _remember_device(request, JsonResponse(too_many, status=429), device_id)
  
     form = ReviewForm(request.POST)
     if form.is_valid():
         review = form.save(commit=False)
         review.ip_address = ip
+        review.device_id = device_id
         review.save()
         stats = review_stats()
-        return JsonResponse({
+        return _remember_device(request, JsonResponse({
             "status": "success",
             "message": "Thank you for sharing your experience.",
             "stats": stats,
             "new_avg": stats["avg"],      # kept for older scripts
             "new_total": stats["total"],
             "review": serialize_review(review, include_private=True),
-        })
+        }), device_id)
     return JsonResponse({
         "status": "error",
         "message": "Please fill in your name, a star rating, and your review.",

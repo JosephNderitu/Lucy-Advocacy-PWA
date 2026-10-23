@@ -216,12 +216,16 @@ class Review(models.Model):
     message = models.TextField(max_length=600)
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+    device_id = models.CharField(max_length=32, blank=True, default="")
     edit_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [models.Index(fields=["ip_address", "created_at"])]
+        indexes = [
+            models.Index(fields=["ip_address", "created_at"]),
+            models.Index(fields=["device_id", "created_at"]),
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.rating} stars"
