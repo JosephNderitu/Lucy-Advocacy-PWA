@@ -41,7 +41,8 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    padding: 2.75rem 1.25rem;
+    --nl-pad-x: 1.25rem;
+    padding: 2.75rem max(var(--nl-pad-x), env(safe-area-inset-right)) 2.75rem max(var(--nl-pad-x), env(safe-area-inset-left));
     color: #fff;
     background: linear-gradient(135deg, var(--nl-deep) 0%, var(--nl-teal) 100%);
   }
@@ -73,9 +74,12 @@
     max-width: 64rem;
     margin: 0 auto;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
     align-items: center;
   }
+  .nl__inner > * { min-width: 0; }
+
   .nl__inner.is-visible { animation: nl-rise .6s ease both; }
 
   /* Copy */
@@ -203,9 +207,16 @@
     white-space: nowrap;
   }
 
-  @media (min-width: 768px) {
-    .nl { padding: 3rem 1.5rem; }
-    .nl__inner { grid-template-columns: 1fr minmax(0, 26rem); gap: 3rem; }
+  /* Very small phones: drop the field icon and tighten the button so the input keeps room */
+  @media (max-width: 23.75rem) {
+    .nl__field { padding-left: 1rem; }
+    .nl__field-icon { display: none; }
+    .nl__button { padding: .65rem 1rem; }
+  }
+
+  @media (min-width: 48rem) {
+    .nl { --nl-pad-x: 1.5rem; padding-block: 3rem; }
+    .nl__inner { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: 3rem; }
     .nl__watermark { right: 2rem; font-size: 12rem; }
   }
   @keyframes nl-rise {
@@ -218,14 +229,8 @@
   }
 </style>
 
-
 <!-- 2. MARKUP -->
-<section
-  class="nl"
-  aria-labelledby="newsletter-heading"
-  x-data="newsletter('{% url 'core:newsletter_subscribe' %}')"
-  x-intersect.once="shown = true"
->
+<section class="nl" aria-labelledby="newsletter-heading" x-data="newsletter('{% url 'core:newsletter_subscribe' %}')" x-intersect.once="shown = true">
   <i class="fa-solid fa-scale-balanced nl__watermark" aria-hidden="true"></i>
 
   <div class="nl__inner" :class="{ 'is-visible': shown }">
