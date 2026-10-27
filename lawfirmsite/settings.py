@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-*=9pk2h!0lzy(jmfln+$-fh&s4%s_5cr3yy8yq$2pgqyu9ou)&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'gikurucodes.pythonanywhere.com']  # Allow all hosts for development; restrict in production
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'gikurucodes.pythonanywhere.com', 'wangaiadvocates.co.ke']  # Allow all hosts for development; restrict in production
 
 
 # Application definition
