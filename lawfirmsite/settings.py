@@ -88,23 +88,34 @@ WSGI_APPLICATION = 'lawfirmsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'wangaiad_NGW_DB',
-        'USER': 'wangaiad_NgimaWangai',
-        'PASSWORD': 'NgimaWangaidb@2026',
-        'HOST': 'localhost',
-        'PORT': '3306',
+import os
+
+# Check if we are running locally or on the server
+# (You can check if a local database file or environment variable exists, or check hostname)
+import socket
+is_local = socket.gethostname() != "hostname_of_hostpinnacle_server" # or a simpler local check
+
+if DEBUG:
+    # Use SQLite for local development on your PC
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-DATABASES["default"]["CONN_MAX_AGE"] = 60
+else:
+    # Use MySQL when running live on HostPinnacle
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'wangaiad_NGW_DB',
+            'USER': 'wangaiad_NgimaWangai',
+            'PASSWORD': 'NgimaWangaidb@2026',
+            'HOST': 'localhost',
+            'PORT': '3306',
+        }
+    }
+    DATABASES["default"]["CONN_MAX_AGE"] = 60
 
 
 # Password validation
