@@ -35,6 +35,7 @@ propcache==0.5.4
 pycparser==3.0
 pyHanko==0.37.0
 pyhanko-certvalidator==0.32.1
+PyMySQL==1.2.3
 pyOpenSSL==26.4.0
 pypdf==6.19.0
 python-bidi==0.6.11
