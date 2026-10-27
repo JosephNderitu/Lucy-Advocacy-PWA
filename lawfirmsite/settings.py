@@ -26,7 +26,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = 'django-insecure-*=9pk2h!0lzy(jmfln+$-fh&s4%s_5cr3yy8yq$2pgqyu9ou)&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=True)
+DEBUG = False  # Set to False in production; use .env to override for local development
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'gikurucodes.pythonanywhere.com', 'wangaiadvocates.co.ke', 'www.wangaiadvocates.co.ke']  # Allow all hosts for development; restrict in production
 
