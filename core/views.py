@@ -729,3 +729,41 @@ def custom_500_view(request):
     Note: Does NOT accept 'exception' argument.
     """
     return render(request, '500.html', status=500)
+
+from django.http import HttpResponse
+from django.urls import reverse
+
+
+def custom_sitemap_view(request):
+  """Custom dynamic XML sitemap view that bypasses database site table dependencies."""
+  domain = "https://ngimawangaiadvocates.co.ke"
+
+  # Named routes defined in core/urls.py
+  named_urls = [
+      "core:home",
+      "core:about",
+      "core:contact",
+      "core:team",
+      "core:article_list",
+      "core:privacy_policy",
+      "core:terms_conditions",
+      "core:cookie_policy",
+  ]
+
+  urls_xml = ""
+  for name in named_urls:
+    try:
+      path_url = reverse(name)
+      urls_xml += f"""  <url>
+    <loc>{domain}{path_url}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>\n"""
+    except Exception:
+      continue
+
+  xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls_xml}</urlset>"""
+
+  return HttpResponse(xml_content, content_type="application/xml")
