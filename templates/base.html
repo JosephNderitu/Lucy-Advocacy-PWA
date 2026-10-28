@@ -4,8 +4,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Ngima Wangai & Company Advocates | Nairobi Law Firm{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Ngima Wangai & Company Advocates is a full-service law firm in Nairobi specializing in commercial, corporate, banking, dispute resolution, and family law.{% endblock %}">
+  
+  <!-- SEO: Page Title & Descriptions -->
+  <title>{% block title %}Ngima Wangai & Company Advocates | Top Law Firm in Nairobi, Kenya{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Ngima Wangai & Company Advocates is a full-service law firm in Nairobi specializing in commercial, corporate, banking, dispute resolution, property conveyancing, and family law in Kenya.{% endblock %}">
+  
+  <!-- Keywords (English + Swahili terms for local search accessibility) -->
+  <meta name="keywords" content="Lawyers in Nairobi, Advocates in Kenya, Law firms in Nairobi, Law firms near me, Conveyancing Law Firm Nairobi, Commercial Litigation Kenya, Ngima Wangai Advocates, Wanasheria Nairobi, Mawakili Kenya, Kisheria, Kazi za Ardhi, Hati miliki za ardhi, Divorces Kenya">
+  
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ngimawangaiadvocates.co.ke{{ request.path }}">
+  
+  <!-- Multilingual & Regional Targeting for Kenya -->
+  <meta name="geo.region" content="KE-30">
+  <meta name="geo.placename" content="Nairobi">
+  <meta name="geo.position" content="-1.2921;36.8219">
+  <meta name="ICBM" content="-1.2921, 36.8219">
+  <link rel="alternate" hreflang="en" href="https://ngimawangaiadvocates.co.ke{{ request.path }}">
+  <link rel="alternate" hreflang="sw" href="https://ngimawangaiadvocates.co.ke{{ request.path }}">
+  <link rel="alternate" hreflang="x-default" href="https://ngimawangaiadvocates.co.ke{{ request.path }}">
+
+  <!-- Open Graph / Social Sharing Meta Tags -->
+  <meta property="og:site_name" content="Ngima Wangai & Company Advocates">
+  <meta property="og:title" content="{% block og_title %}Ngima Wangai & Company Advocates | Nairobi Law Firm{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Professional legal representation, corporate advisory, and property conveyancing services in Nairobi, Kenya.{% endblock %}">
+  <meta property="og:url" content="https://ngimawangaiadvocates.co.ke{{ request.path }}">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_KE">
+  <meta property="og:locale:alternate" content="sw_KE">
+  <meta property="og:image" content="https://ngimawangaiadvocates.co.ke{% static 'images/static_images/og-banner.jpg' %}">
+
+  <!-- Schema.org Structured Data (Google Local 3-Pack & Rich Snippets) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LegalService",
+    "name": "Ngima Wangai & Company Advocates",
+    "alternateName": "NWC Advocates",
+    "url": "https://ngimawangaiadvocates.co.ke",
+    "logo": "https://ngimawangaiadvocates.co.ke{% static 'images/static_images/favicons/favicon-32x32.png' %}",
+    "image": "https://ngimawangaiadvocates.co.ke{% static 'images/static_images/og-banner.jpg' %}",
+    "description": "Full-service law firm in Nairobi specializing in commercial law, conveyancing, corporate advisory, and family law.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Nairobi Legal District",
+      "addressLocality": "Nairobi",
+      "addressCountry": "KE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "-1.2921",
+      "longitude": "36.8219"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "opens": "08:00",
+      "closes": "17:00"
+    },
+    "telephone": "+254 714 535 492 | +254 728 472 202",
+    "priceRange": "$$"
+  }
+  </script>
+
   <meta name="theme-color" content="#22252E">
 
   <!-- Favicons -->
