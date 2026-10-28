@@ -714,3 +714,18 @@ def article_pdf(request, slug):
     response = HttpResponse(_html_to_pdf(html, request), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{article.slug}.pdf"'
     return response
+
+#custom error handlers for 404 and 500
+def custom_404_view(request, exception):
+    """
+    Custom 404 handler.
+    Note: Must accept 'exception' argument.
+    """
+    return render(request, '404.html', status=404)
+
+def custom_500_view(request):
+    """
+    Custom 500 handler.
+    Note: Does NOT accept 'exception' argument.
+    """
+    return render(request, '500.html', status=500)
