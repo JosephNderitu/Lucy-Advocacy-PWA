@@ -4,9 +4,9 @@ from django.urls import reverse
 class StaticViewSitemap(Sitemap):
     priority = 0.8
     changefreq = 'weekly'
+    protocol = 'https'
 
     def items(self):
-        # List of view names inside core/urls.py
         return [
             'core:home',
             'core:about',
@@ -20,3 +20,7 @@ class StaticViewSitemap(Sitemap):
 
     def location(self, item):
         return reverse(item)
+
+    def get_urls(self, site=None, **kwargs):
+        # Override to bypass Site matching query database check
+        return super().get_urls(site=site, **kwargs)
