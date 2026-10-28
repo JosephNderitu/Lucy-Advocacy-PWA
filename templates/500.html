@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Server Error | Ngima Wangai & Company Advocates{% endblock %}
+{% block content %}
+<div class="container py-5 text-center" style="min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h1 class="display-1 fw-bold text-danger">500</h1>
+    <h2 class="mb-3">Internal Server Error</h2>
+    <p class="text-muted mb-4" style="max-width: 500px;">
+        We are experiencing an internal server issue. Our technical team has been notified. Please try again shortly.
+    </p>
+    <div>
+        <a href="{% url 'core:home' %}" class="btn btn-primary px-4 py-2">Return Home</a>
+    </div>
+</div>
+{% endblock %}

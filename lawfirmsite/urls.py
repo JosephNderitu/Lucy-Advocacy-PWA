@@ -25,6 +25,9 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
+# Explicit Custom Error Handlers
+handler404 = 'core.views.custom_404_view'  # Optional if using templates/404.html directly
+handler500 = 'core.views.custom_500_view'
 # Serve media files in development only — nginx/whitenoise handles this in production
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
