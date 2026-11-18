@@ -12,7 +12,7 @@ LEADERS = [
         "name": "Lucy Ngima Wangai",
         "role": "Managing Partner",
         "order": 1,
-        "email": "nwangailawadvocates@gmail.com",
+        "email": "contacts@ngimawangaiadvocates.co.ke",
         "credentials": "LLB, University of Nairobi | PG Diploma, Kenya School of Law | Law Society of Kenya | Certified Mediator",
         "bio": (
             "Ms. Wangai holds a Bachelor of Laws (LLB) degree from the University of Nairobi "
@@ -34,7 +34,7 @@ LEADERS = [
         "name": "William Kathuku Mutua",
         "role": "Partner",
         "order": 2,
-        "email": "nwangailawadvocates@gmail.com",
+        "email": "contacts@ngimawangaiadvocates.co.ke",
         "credentials": "Law Degree, University of Nairobi | PG Diploma, Kenya School of Law | Law Society of Kenya",
         "bio": (
             "Mr. Mutua is a Partner in the firm. He holds a law degree from the University "

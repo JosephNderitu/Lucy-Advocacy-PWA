@@ -583,7 +583,7 @@ def service_worker(request):
     return HttpResponse(content, content_type='application/javascript')
 
 # Move these into settings.py when convenient (FIRM_CONTACT_EMAIL / FIRM_CONTACT_PHONE).
-FIRM_EMAIL = getattr(settings, "FIRM_CONTACT_EMAIL", "nwangailawadvocates@gmail.com")
+FIRM_EMAIL = getattr(settings, "FIRM_CONTACT_EMAIL", "contacts@ngimawangaiadvocates.co.ke")
 FIRM_PHONE = getattr(settings, "FIRM_CONTACT_PHONE", "+254 714 535 492")
 
 def paginate_article_body(body, words_per_page=550):
