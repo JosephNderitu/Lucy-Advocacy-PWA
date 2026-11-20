@@ -153,89 +153,53 @@
   <!-- Brand accent bar: mirrors the one at the top of the footer, bookending every page -->
   <div class="h-1 bg-gradient-to-r from-brand-teal-500 via-brand-teal-600 to-brand-orange-500"></div>
 
- <!-- Trust bar: contacts + socials, plus a live news-style ticker. Scrolls away naturally with the page. -->
-<style>
-  .nt-bar { --nt-1:#5b1229; --nt-2:#48101f; --nt-3:#36081a; background:var(--nt-1); color:#f1e4e8; }
-  .nt-ticker { background:var(--nt-2); border-top:1px solid rgba(255,255,255,.08); }
-  .nt-label  { background:var(--nt-3); }
+ <!-- Contact bar: scrolling details on the left, portal and socials on the right. Scrolls away with the page. -->
+<style>@keyframes nt{to{transform:translateX(-50%)}}</style>
 
-  /* pulsing live dot */
-  .nt-dot { position:relative; width:.5rem; height:.5rem; border-radius:9999px; background:#fff; flex-shrink:0; }
-  .nt-dot::after { content:""; position:absolute; inset:0; border-radius:inherit; background:#fff; animation:nt-pulse 1.8s ease-out infinite; }
-  @keyframes nt-pulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(3);opacity:0} }
+<div class="bg-[#5b1229] text-[0.72rem] text-white/85 sm:text-xs">
+  <div class="mx-auto flex h-10 max-w-7xl items-stretch">
 
-  /* scrolling track: two identical groups, shifted by exactly one group for a seamless loop */
-  .nt-viewport {
-    overflow:hidden;
-    -webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);
-            mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);
-  }
-  .nt-track { display:flex; width:max-content; animation:nt-scroll 60s linear infinite; will-change:transform; }
-  .nt-viewport:hover .nt-track,
-  .nt-viewport:focus-within .nt-track { animation-play-state:paused; }
-  .nt-group { display:flex; flex-shrink:0; align-items:center; }
-  .nt-item  { display:inline-flex; align-items:center; gap:.5rem; padding-inline:1.25rem; white-space:nowrap; transition:color .2s; }
-  .nt-item::after { content:""; width:.3rem; height:.3rem; margin-left:1.25rem; transform:rotate(45deg); background:rgba(255,255,255,.35); }
-  a.nt-item:hover { color:#2dd4bf; }
-  @keyframes nt-scroll { to { transform:translate3d(-50%,0,0); } }
-
-  @media (prefers-reduced-motion:reduce) {
-    .nt-track { animation:none; }
-    .nt-viewport { overflow-x:auto; -webkit-mask-image:none; mask-image:none; }
-    .nt-group[inert] { display:none; }
-    .nt-dot::after { animation:none; }
-  }
-</style>
-
-<div class="nt-bar text-xs">
-
-  <!-- Row 1: contacts, portal, socials (desktop and up) -->
-  <div class="hidden md:block border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6 py-2.5">
-      <div class="flex items-center gap-6">
-        <a href="tel:+254714535492" class="hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-phone mr-1.5"></i>+254 714 535 492</a>
-        <a href="mailto:contacts@ngimawangaiadvocates.co.ke" class="hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-envelope mr-1.5"></i>contacts@ngimawangaiadvocates.co.ke</a>
-        <a href="https://www.google.com/maps/search/?api=1&query=Maendeleo+House+3+Monrovia+Street+Nairobi" target="_blank" rel="noopener"
-           class="hidden lg:inline hover:text-brand-teal-400 transition-colors"><i class="fa-solid fa-location-dot mr-1.5"></i>Maendeleo House, Suite 216, Nairobi</a>
-        <span class="hidden xl:inline"><i class="fa-regular fa-clock mr-1.5"></i>Mon to Fri, 8:00 AM to 5:00 PM</span> {# CONFIRM hours #}
-      </div>
-      <div class="flex items-center gap-5">
-        <a href="{% url 'core:portal_login' %}" class="hover:text-brand-teal-400 transition-colors font-medium"><i class="fa-solid fa-lock mr-1.5"></i>Client Portal</a>
-        <div class="flex items-center gap-4 border-l border-white/15 pl-5">
-          <a href="#" aria-label="Facebook" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" aria-label="LinkedIn" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
-          <a href="#" aria-label="X (Twitter)" class="hover:text-brand-teal-400 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+    <!-- Ticker -->
+    <div class="group min-w-0 flex-1 overflow-hidden motion-reduce:overflow-x-auto [mask-image:linear-gradient(90deg,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] motion-reduce:[mask-image:none]">
+      <div class="flex h-full w-max animate-[nt_55s_linear_infinite] items-center will-change-transform group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+        {% for _ in "ab" %}
+        <div class="flex h-full shrink-0 items-center divide-x divide-white/15 border-r border-white/15 {% if not forloop.first %}motion-reduce:hidden{% endif %}"{% if not forloop.first %} inert aria-hidden="true"{% endif %}>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=Maendeleo+House+3+Monrovia+Street+Nairobi" target="_blank" rel="noopener"
+             class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+            <i class="fa-solid fa-location-dot text-white/50"></i>Maendeleo House, 2nd Floor, Suite 216, Monrovia Street, Nairobi
+          </a>
+          <span class="flex items-center gap-2 whitespace-nowrap px-5">
+            <i class="fa-regular fa-clock text-white/50"></i>Mon to Fri, 8:00 AM to 5:00 PM {# CONFIRM hours #}
+          </span>
+          <a href="tel:+254714535492" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+            <i class="fa-solid fa-phone text-white/50"></i>+254 714 535 492
+          </a>
+          <a href="mailto:contacts@ngimawangaiadvocates.co.ke" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+            <i class="fa-solid fa-envelope text-white/50"></i>contacts@ngimawangaiadvocates.co.ke
+          </a>
+          <span class="flex items-center gap-2 whitespace-nowrap px-5">
+            <i class="fa-solid fa-envelope-open-text text-white/50"></i>P.O. Box 46114-00100, Nairobi
+          </span>
+          <span class="flex items-center gap-2 whitespace-nowrap px-5">
+            <i class="fa-solid fa-scale-balanced text-white/50"></i>Commercial and Corporate Law
+          </span>
         </div>
+        {% endfor %}
       </div>
     </div>
-  </div>
 
-  <!-- Row 2: live ticker (all screen sizes) -->
-  <div class="nt-ticker">
-    <div class="max-w-7xl mx-auto flex items-stretch h-9">
-      <div class="nt-label flex items-center gap-2 px-3 sm:px-5 font-semibold uppercase tracking-wider text-[0.65rem] sm:text-[0.7rem] text-white shrink-0">
-        <span class="nt-dot" aria-hidden="true"></span>Firm Updates
-      </div>
-
-      <div class="nt-viewport flex-1 min-w-0" role="marquee" aria-label="Firm announcements and contact details">
-        <div class="nt-track">
-          {% for _ in "ab" %}
-          <div class="nt-group"{% if not forloop.first %} inert aria-hidden="true"{% endif %}>
-            <a class="nt-item" href="https://www.google.com/maps/dir/?api=1&destination=Maendeleo+House+3+Monrovia+Street+Nairobi" target="_blank" rel="noopener">
-              <i class="fa-solid fa-location-dot text-brand-teal-400"></i>Visit us: Maendeleo House, 2nd Floor, Suite 216, Monrovia Street, Nairobi
-            </a>
-            <span class="nt-item"><i class="fa-regular fa-clock text-brand-teal-400"></i>Open Mon to Fri, 8:00 AM to 5:00 PM</span> {# CONFIRM hours #}
-            <a class="nt-item" href="tel:+254714535492"><i class="fa-solid fa-phone text-brand-teal-400"></i>Call us: +254 714 535 492</a>
-            <a class="nt-item" href="mailto:contacts@ngimawangaiadvocates.co.ke"><i class="fa-solid fa-envelope text-brand-teal-400"></i>Email: contacts@ngimawangaiadvocates.co.ke</a>
-            <span class="nt-item"><i class="fa-solid fa-scale-balanced text-brand-teal-400"></i>Commercial and corporate law advisory for businesses across Nairobi</span>
-            <a class="nt-item" href="{% url 'core:portal_login' %}"><i class="fa-solid fa-lock text-brand-teal-400"></i>Clients: follow your matter and documents on the secure Client Portal</a>
-            <a class="nt-item" href="{% url 'core:contact' %}"><i class="fa-solid fa-comments text-brand-teal-400"></i>Chat with our front desk, no appointment needed to start</a>
-            <span class="nt-item"><i class="fa-solid fa-envelope-open-text text-brand-teal-400"></i>P.O. Box 46114-00100, Nairobi</span>
-          </div>
-          {% endfor %}
-        </div>
+    <!-- Portal + socials -->
+    <div class="flex shrink-0 items-center gap-4 bg-[#48101f] px-3 sm:gap-5 sm:px-5">
+      <a href="{% url 'core:portal_login' %}" class="flex items-center gap-2 font-medium transition-colors hover:text-white">
+        <i class="fa-solid fa-lock"></i><span class="hidden sm:inline">Client Portal</span>
+      </a>
+      <div class="hidden items-center gap-4 border-l border-white/15 pl-5 md:flex">
+        <a href="#" aria-label="Facebook" class="transition-colors hover:text-white"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" aria-label="LinkedIn" class="transition-colors hover:text-white"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="#" aria-label="X (Twitter)" class="transition-colors hover:text-white"><i class="fa-brands fa-x-twitter"></i></a>
       </div>
     </div>
+
   </div>
 </div>
 
