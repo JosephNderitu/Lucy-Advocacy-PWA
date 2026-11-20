@@ -153,55 +153,111 @@
   <!-- Brand accent bar: mirrors the one at the top of the footer, bookending every page -->
   <div class="h-1 bg-gradient-to-r from-brand-teal-500 via-brand-teal-600 to-brand-orange-500"></div>
 
- <!-- Contact bar: scrolling details on the left, portal and socials on the right. Scrolls away with the page. -->
-<style>@keyframes nt{to{transform:translateX(-50%)}}</style>
+  <!-- Contact bar: live hours + contacts ticker on the left, portal and socials on the right. -->
+  <style>@keyframes nt{to{transform:translateX(-50%)}}</style>
 
-<div class="bg-[#5b1229] text-[0.72rem] text-white/85 sm:text-xs">
-  <div class="mx-auto flex h-10 max-w-7xl items-stretch">
+  <div class="bg-[#5b1229] text-[0.72rem] text-white/85 sm:text-xs">
+    <div class="mx-auto flex h-10 max-w-7xl items-stretch">
 
-    <!-- Ticker -->
-    <div class="group min-w-0 flex-1 overflow-hidden motion-reduce:overflow-x-auto [mask-image:linear-gradient(90deg,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] motion-reduce:[mask-image:none]">
-      <div class="flex h-full w-max animate-[nt_55s_linear_infinite] items-center will-change-transform group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] motion-reduce:animate-none">
-        {% for _ in "ab" %}
-        <div class="flex h-full shrink-0 items-center divide-x divide-white/15 border-r border-white/15 {% if not forloop.first %}motion-reduce:hidden{% endif %}"{% if not forloop.first %} inert aria-hidden="true"{% endif %}>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=Maendeleo+House+3+Monrovia+Street+Nairobi" target="_blank" rel="noopener"
-             class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
-            <i class="fa-solid fa-location-dot text-white/50"></i>Maendeleo House, 2nd Floor, Suite 216, Monrovia Street, Nairobi
-          </a>
-          <span class="flex items-center gap-2 whitespace-nowrap px-5">
-            <i class="fa-regular fa-clock text-white/50"></i>Mon to Fri, 8:00 AM to 5:00 PM {# CONFIRM hours #}
-          </span>
-          <a href="tel:+254714535492" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
-            <i class="fa-solid fa-phone text-white/50"></i>+254 714 535 492
-          </a>
-          <a href="mailto:contacts@ngimawangaiadvocates.co.ke" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
-            <i class="fa-solid fa-envelope text-white/50"></i>contacts@ngimawangaiadvocates.co.ke
-          </a>
-          <span class="flex items-center gap-2 whitespace-nowrap px-5">
-            <i class="fa-solid fa-envelope-open-text text-white/50"></i>P.O. Box 46114-00100, Nairobi
-          </span>
-          <span class="flex items-center gap-2 whitespace-nowrap px-5">
-            <i class="fa-solid fa-scale-balanced text-white/50"></i>Commercial and Corporate Law
-          </span>
+      <!-- Ticker -->
+      <div class="group min-w-0 flex-1 overflow-hidden motion-reduce:overflow-x-auto [mask-image:linear-gradient(90deg,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)] motion-reduce:[mask-image:none]">
+        <div class="flex h-full w-max animate-[nt_70s_linear_infinite] items-center will-change-transform group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+          {% for _ in "ab" %}
+          <div class="flex h-full shrink-0 items-center divide-x divide-white/15 border-r border-white/15 {% if not forloop.first %}motion-reduce:hidden{% endif %}"{% if not forloop.first %} inert aria-hidden="true"{% endif %}>
+
+            <!-- Live status -->
+            <span class="flex items-center gap-2 whitespace-nowrap px-5 font-semibold text-white">
+              <span data-hours-state data-state="closed" class="h-2 w-2 rounded-full bg-white/40 data-[state=open]:bg-emerald-400 data-[state=closed]:bg-rose-400"></span>
+              <span data-hours-text>Working hours</span>
+            </span>
+
+            <!-- Schedule: today is highlighted by JS -->
+            <span data-days="1,2,3,4,5" class="flex items-center gap-2 whitespace-nowrap px-5 data-[today=true]:font-semibold data-[today=true]:text-white">
+              <i class="fa-regular fa-clock text-white/50"></i>Mon to Fri, 8:00 AM to 5:00 PM
+              <em class="hidden rounded bg-white/15 px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase not-italic tracking-wider [[data-today=true]_&]:inline-block">Today</em>
+            </span>
+            <span data-days="6" class="flex items-center gap-2 whitespace-nowrap px-5 data-[today=true]:font-semibold data-[today=true]:text-white">
+              Sat, 9:00 AM to 1:00 PM
+              <em class="hidden rounded bg-white/15 px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase not-italic tracking-wider [[data-today=true]_&]:inline-block">Today</em>
+            </span>
+            <span data-days="0" class="flex items-center gap-2 whitespace-nowrap px-5 data-[today=true]:font-semibold data-[today=true]:text-white">
+              Sun, Closed
+              <em class="hidden rounded bg-white/15 px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase not-italic tracking-wider [[data-today=true]_&]:inline-block">Today</em>
+            </span>
+
+            <a href="tel:+254714535492" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+              <i class="fa-solid fa-phone text-white/50"></i>+254 714 535 492
+            </a>
+            <a href="mailto:contacts@ngimawangaiadvocates.co.ke" class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+              <i class="fa-solid fa-envelope text-white/50"></i>contacts@ngimawangaiadvocates.co.ke
+            </a>
+            <span class="flex items-center gap-2 whitespace-nowrap px-5">
+              <i class="fa-solid fa-envelope-open-text text-white/50"></i>P.O. Box 46114-00100, Nairobi
+            </span>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=Maendeleo+House+3+Monrovia+Street+Nairobi" target="_blank" rel="noopener"
+              class="flex items-center gap-2 whitespace-nowrap px-5 transition-colors hover:text-white">
+              <i class="fa-solid fa-location-dot text-white/50"></i>Maendeleo House, 2nd Floor, Suite 216, Monrovia Street, Nairobi
+            </a>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
 
-    <!-- Portal + socials -->
-    <div class="flex shrink-0 items-center gap-4 bg-[#48101f] px-3 sm:gap-5 sm:px-5">
-      <a href="{% url 'core:portal_login' %}" class="flex items-center gap-2 font-medium transition-colors hover:text-white">
-        <i class="fa-solid fa-lock"></i><span class="hidden sm:inline">Client Portal</span>
-      </a>
-      <div class="hidden items-center gap-4 border-l border-white/15 pl-5 md:flex">
-        <a href="#" aria-label="Facebook" class="transition-colors hover:text-white"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="#" aria-label="LinkedIn" class="transition-colors hover:text-white"><i class="fa-brands fa-linkedin-in"></i></a>
-        <a href="#" aria-label="X (Twitter)" class="transition-colors hover:text-white"><i class="fa-brands fa-x-twitter"></i></a>
+      <!-- Portal + socials -->
+      <div class="flex shrink-0 items-center gap-4 bg-[#48101f] px-3 sm:gap-5 sm:px-5">
+        <a href="{% url 'core:portal_login' %}" class="flex items-center gap-2 font-medium transition-colors hover:text-white">
+          <i class="fa-solid fa-lock"></i><span class="hidden sm:inline">Client Portal</span>
+        </a>
+        <div class="hidden items-center gap-4 border-l border-white/15 pl-5 md:flex">
+          <a href="#" aria-label="Facebook" class="transition-colors hover:text-white"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" aria-label="LinkedIn" class="transition-colors hover:text-white"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="X (Twitter)" class="transition-colors hover:text-white"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
       </div>
-    </div>
 
+    </div>
   </div>
-</div>
+
+  <script>
+  (() => {
+    // Opening hours in minutes from midnight, Nairobi time. null = closed all day.
+    const HOURS = { 0: null, 1: [480, 1020], 2: [480, 1020], 3: [480, 1020], 4: [480, 1020], 5: [480, 1020], 6: [540, 780] };
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const fmt = m => `${Math.floor(m / 60) % 12 || 12}:${String(m % 60).padStart(2, '0')} ${m < 720 ? 'AM' : 'PM'}`;
+
+    function update() {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Africa/Nairobi', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23'
+      }).formatToParts(new Date());
+      const get = t => parts.find(p => p.type === t).value;
+      const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
+      const mins = (+get('hour') % 24) * 60 + +get('minute');
+      const today = HOURS[day];
+
+      let state = 'closed', text;
+      if (today && mins >= today[0] && mins < today[1]) {
+        state = 'open';
+        text = `Open now, closes today at ${fmt(today[1])}`;
+      } else if (today && mins < today[0]) {
+        text = `Closed, opens today at ${fmt(today[0])}`;
+      } else {
+        for (let i = 1; i <= 7; i++) {
+          const d = (day + i) % 7;
+          if (HOURS[d]) { text = `Closed, opens ${i === 1 ? 'tomorrow' : DAYS[d]} at ${fmt(HOURS[d][0])}`; break; }
+        }
+      }
+
+      document.querySelectorAll('[data-hours-state]').forEach(el => el.dataset.state = state);
+      document.querySelectorAll('[data-hours-text]').forEach(el => el.textContent = text);
+      document.querySelectorAll('[data-days]').forEach(el => {
+        el.dataset.today = el.dataset.days.split(',').includes(String(day));
+      });
+    }
+
+    update();
+    setInterval(update, 60000);
+  })();
+  </script>
 
   <!-- ============ MAIN NAV: dark, premium, matches the footer's palette exactly ============ -->
   <header
